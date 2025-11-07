@@ -46,14 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PENTING: GANTI DENGAN KONFIGURASI ANDA ---
     // --- 
     const firebaseConfig = {
-        apiKey: "GANTI_DENGAN_API_KEY_ANDA",
-        authDomain: "GANTI_DENGAN_AUTH_DOMAIN_ANDA",
-        projectId: "GANTI_DENGAN_PROJECT_ID_ANDA",
-        storageBucket: "GANTI_DENGAN_STORAGE_BUCKET_ANDA",
-        messagingSenderId: "GANTI_DENGAN_MESSAGING_SENDER_ID_ANDA",
-        appId: "GANTI_DENGAN_APP_ID_ANDA"
-    };
-    // -----------------------------------------------------------
+  apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
+  authDomain: "victory-app-isp.firebaseapp.com",
+  projectId: "victory-app-isp",
+  storageBucket: "victory-app-isp.firebasestorage.app",
+  messagingSenderId: "1023135709213",
+  appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
+  measurementId: "G-Q1DJ3BG41V"
+};-----------------------------------------------------------
 
     // === 3. INISIALISASI LAYANAN FIREBASE ===
     const app = initializeApp(firebaseConfig);
