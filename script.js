@@ -109,42 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Isi objek ini dengan relasi data yang benar.
     // Kunci (key) harus SAMA PERSIS dengan teks di dataJenisDevice.
     // ---
-    const deviceKnowledgeBase = {
-        // --- CONTOH 1: DWDM Huawei ---
-        "DWDM Huawei Module": {
-            // Modul Type apa saja yang ada di DWDM Huawei?
-            modulType: ["OTU", "Filter", "Control", "Power", "CrossConnect", "Fan DWDM", "Filter ROADM Board", "Interleaver", "Opt. Protection Modul"],
-            // Board Name apa saja?
-            boardName: ["V3T220", "S7N402", "S1EFI", "S1CTU", "U3N402", "V5T402", "S1PIU", "S1UXCS", "S1FAN", "V3T401"],
-            // Merk apa saja?
-            merk: ["Huawei"]
-        },
-        // --- CONTOH 2: OLT ZTE ---
-        "OLT C320v2 Module": {
-            modulType: ["GPON User Card", "Control Card", "XGSPON User Card", "Power Card"],
-            boardName: ["GTGH", "GPHF"], // (Saya hanya menebak, isi dengan data benar)
-            merk: ["ZTE"]
-        },
-        // --- CONTOH 3: Router ---
-        "Router": {
-            modulType: ["ASR 920 250W AC Power Supply", "8-port Gigabite Ethernet Interface", "ASR 9901 Fan Tray"],
-            boardName: ["ASR 920", "ASR 9901", "ASR 9903", "ASR XRV-9000"],
-            merk: ["Cisco", "Nokia", "Huawei"] // Router bisa banyak merk
-        },
-        
-        // --- TAMBAHKAN SEMUA RELASI LAINNYA DI SINI ---
-        "DWDM Nokia Module": {
-            modulType: [/*...isi data...*/],
-            boardName: [/*...isi data...*/],
-            merk: ["Nokia"]
-        },
-        "OLT Huawei Module": {
-            modulType: [/*...isi data...*/],
-            boardName: [/*...isi data...*/],
-            merk: ["Huawei"]
-        }
-        // ... dan seterusnya untuk SEMUA 'dataJenisDevice'
-    };
+    
 
 
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
@@ -498,27 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Fungsi untuk memfilter datalist berdasarkan pilihan 'Jenis Device'
      */
-    function updateDatalists(e) {
-        const selectedDevice = e.target.value;
-        const relations = deviceKnowledgeBase[selectedDevice];
-
-        // Kosongkan field bawahan agar user tidak salah pilih
-        modulType.value = "";
-        boardName.value = "";
-        deviceMerk.value = "";
-
-        if (relations) {
-            // Jika 'Jenis Device' ada di 'Knowledge Base', filter daftarnya
-            populateDatalist('listModulType', relations.modulType);
-            populateDatalist('listBoardName', relations.boardName);
-            populateDatalist('listDeviceMerk', relations.merk);
-        } else {
-            // Jika tidak ada (misal, dikosongkan), kembalikan ke daftar penuh
-            populateDatalist('listModulType', allModulTypes);
-            populateDatalist('listBoardName', allBoardNames);
-            populateDatalist('listDeviceMerk', allDeviceMerks);
-        }
-    }
+    
 
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
