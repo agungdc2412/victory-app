@@ -251,7 +251,36 @@ textarea {
     margin-top: 5px;
     width: 100%;
 }
+.btn-ocr:disabled {
+    background-color: #aaa;
+}
 
+/* PERUBAHAN 1: Tambahkan kode CSS di bawah ini 
+*/
+
+/* Grid untuk 2 tombol (OCR dan Scan) */
+.button-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+/* Tombol Scan QR baru (warna hijau) */
+.btn-scan {
+    background-color: #28a745; /* Warna hijau */
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.btn-scan:disabled {
+    background-color: #aaa;
+}
 /* === Upload & Preview === */
 .upload-section {
     border: 1px dashed #ccc;

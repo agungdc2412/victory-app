@@ -1,22 +1,22 @@
 /*
- * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.1 (FIREBASE + DOM LOAD FIX)
- * File ini menangani semua logika aplikasi.
+ * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.2 (Fitur Relasi + QR Scan)
  *
- * PERUBAHAN v3.1:
- * - Seluruh kode dibungkus dalam listener 'DOMContentLoaded'
- * Ini untuk memastikan HTML selesai dimuat sebelum script 
- * mencari elemen (getElementById) dan memasang listener (addEventListener).
- * Ini memperbaiki bug "tombol tidak bisa diklik".
+ * PERUBAHAN v3.2:
+ * - Menambahkan library html5-qrcode (lihat index.html)
+ * - Menambahkan fungsi runQRScan() untuk memindai QR/Barcode dari file.
+ * - Merestrukturisasi data di BAGIAN 4 untuk relasi data (cascading dropdowns).
+ * - Menambahkan objek deviceKnowledgeBase sebagai "otak" relasi.
+ * - Menambahkan listener di jenisDevice untuk memfilter datalist di bawahnya.
  */
 
 // === 1. IMPORT MODUL FIREBASE ===
-// (Ini tetap di luar, karena 'import' harus ada di level atas)
+// (Ini harus ada di paling atas)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
     getAuth,
     onAuthStateChanged,
-    createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     signInWithPopup,
     GoogleAuthProvider,
     signOut
@@ -25,10 +25,10 @@ import {
     getFirestore,
     collection,
     addDoc,
-    query,
-    onSnapshot,
     doc,
-    deleteDoc
+    deleteDoc,
+    query,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
     getStorage,
@@ -38,26 +38,21 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // === PEMBUNGKUS UTAMA: DOMContentLoaded ===
-// Kode di dalam ini HANYA akan berjalan setelah HTML siap.
+// Memastikan semua HTML siap sebelum skrip dijalankan
 document.addEventListener('DOMContentLoaded', () => {
 
     // === 2. KONFIGURASI FIREBASE ===
-    // ---
     // --- 
-    // --- 
-    // --- PENTING: GANTI KONFIGURASI DI BAWAH INI DENGAN KODE DARI PROYEK FIREBASE ANDA ---
-    // --- (Lihat penjelasan saya sebelumnya tentang cara mendapatkan ini)
-    // --- 
+    // --- PENTING: GANTI DENGAN KONFIGURASI ANDA ---
     // --- 
     const firebaseConfig = {
-  apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
-  authDomain: "victory-app-isp.firebaseapp.com",
-  projectId: "victory-app-isp",
-  storageBucket: "victory-app-isp.firebasestorage.app",
-  messagingSenderId: "1023135709213",
-  appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
-  measurementId: "G-Q1DJ3BG41V"
-};
+        apiKey: "GANTI_DENGAN_API_KEY_ANDA",
+        authDomain: "GANTI_DENGAN_AUTH_DOMAIN_ANDA",
+        projectId: "GANTI_DENGAN_PROJECT_ID_ANDA",
+        storageBucket: "GANTI_DENGAN_STORAGE_BUCKET_ANDA",
+        messagingSenderId: "GANTI_DENGAN_MESSAGING_SENDER_ID_ANDA",
+        appId: "GANTI_DENGAN_APP_ID_ANDA"
+    };
     // -----------------------------------------------------------
 
     // === 3. INISIALISASI LAYANAN FIREBASE ===
@@ -68,19 +63,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const provider = new GoogleAuthProvider();
 
     // === 4. DATA UNTUK AUTACOMPLETE (DATALIST) ===
+    // Ini adalah 'Master List' yang berisi SEMUA kemungkinan
     const dataNamaRack = ["Modul", "DWDM", "Rectifier", "Battery", "OTB", "AC", "Lainnya"];
     const dataJenisDevice = [
         "DWDM Huawei Module", "DWDM Nokia Module", "OLT C320v2 Module", "OLT C620 Module", "OLT Huawei Module",
         "Router Cisco Module", "Router", "Switch", "OLT", "SWITCH", "Server", "RECTIFIER", "Sys. Controller Rectifier",
         "Module Rectifier", "Battery", "AC", "OTB"
     ];
-    const dataModulType = [
+    // MASTER LISTS (Nama diubah menjadi 'all...')
+    const allModulTypes = [
         "OTU", "Filter", "Control", "Power", "CrossConnect", "Fan", "Protection", "Amplifier", "Supervisory", "Subrack",
         "Panel", "SFP", "GPON User Card", "Control Card", "XGSPON User Card", "Power Card", "Power Board", "Main Board",
         "Uplink Board", "Service Board - Line Card", "Service Board", "ASR 920 250W AC Power Supply", "8-port Gigabite Ethernet Interface",
         "ASR 9901 Fan Tray", "1600W AC Power Module", "Simulated Power Tray IDPROM", "Modular" /* ...dan seterusnya... */
     ];
-    const dataBoardName = [
+    const allBoardNames = [
         "V3T220", "S7N402", "S1EFI", "S1CTU", "U3N402", "V5T402", "S1PIU", "S1UXCS", "S1FAN", "V3T401", "52SCC", "97M48V", "97D48",
         "18PIU", "18FAN", "18EFI", "F1EMR8", "OLPN", "F2LDX", "F2OBU", "F5APIU", "F5FAN", "F5SCC", "F5XCH", "F5STG", "97ITL", "97OPM8",
         "11AST2", "52DAPXF", "13DCP", "13OLP", "97ASE", "51RPC", "51ROP", "51LMU", "97ERPC", "97RPC", "12WSMD9", "55OPM8", "12M40V",
@@ -101,35 +98,78 @@ document.addEventListener('DOMContentLoaded', () => {
         "NC55-SC", "NC55-5504-FC", "NC55-RP-E", "NC55-PWR-3KW-AC", "NC55-MOD-AS 2MPA", "NC55-5504-Fan", "7750 SR12",
         "7750 SR7", "7750 SRa4", "Arista", "ASR 920", "ASR 9901", "ASR 9903", "ASR XRV-9000", "Edgecore"
     ];
-    const dataDeviceMerk = [
+    const allDeviceMerks = [
         "Nokia", "Arista", "Cisco", "Edgecore", "Huawei", "Alcatel", "Mikrotik", "BDCOM", "ZTE", "Alcatel-Lucent Enterprise", "Raisecom", "Siemens", "PAZ"
     ];
 
+    // ---
+    // === 4b. OTAK RELASI DATA (Knowledge Base) ===
+    // ---
+    // PENTING: Ini adalah "TUGAS" Anda.
+    // Isi objek ini dengan relasi data yang benar.
+    // Kunci (key) harus SAMA PERSIS dengan teks di dataJenisDevice.
+    // ---
+    const deviceKnowledgeBase = {
+        // --- CONTOH 1: DWDM Huawei ---
+        "DWDM Huawei Module": {
+            // Modul Type apa saja yang ada di DWDM Huawei?
+            modulType: ["OTU", "Filter", "Control", "Power", "CrossConnect", "Fan DWDM", "Filter ROADM Board", "Interleaver", "Opt. Protection Modul"],
+            // Board Name apa saja?
+            boardName: ["V3T220", "S7N402", "S1EFI", "S1CTU", "U3N402", "V5T402", "S1PIU", "S1UXCS", "S1FAN", "V3T401"],
+            // Merk apa saja?
+            merk: ["Huawei"]
+        },
+        // --- CONTOH 2: OLT ZTE ---
+        "OLT C320v2 Module": {
+            modulType: ["GPON User Card", "Control Card", "XGSPON User Card", "Power Card"],
+            boardName: ["GTGH", "GPHF"], // (Saya hanya menebak, isi dengan data benar)
+            merk: ["ZTE"]
+        },
+        // --- CONTOH 3: Router ---
+        "Router": {
+            modulType: ["ASR 920 250W AC Power Supply", "8-port Gigabite Ethernet Interface", "ASR 9901 Fan Tray"],
+            boardName: ["ASR 920", "ASR 9901", "ASR 9903", "ASR XRV-9000"],
+            merk: ["Cisco", "Nokia", "Huawei"] // Router bisa banyak merk
+        },
+        
+        // --- TAMBAHKAN SEMUA RELASI LAINNYA DI SINI ---
+        "DWDM Nokia Module": {
+            modulType: [/*...isi data...*/],
+            boardName: [/*...isi data...*/],
+            merk: ["Nokia"]
+        },
+        "OLT Huawei Module": {
+            modulType: [/*...isi data...*/],
+            boardName: [/*...isi data...*/],
+            merk: ["Huawei"]
+        }
+        // ... dan seterusnya untuk SEMUA 'dataJenisDevice'
+    };
+
 
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
-    let currentUser = null; // Menyimpan info user yang login
-    let currentUserId = null; // Menyimpan ID user yang login
-    let dataKunjungan = []; // Array LOKAL untuk menyimpan data dari database (untuk export)
-    let unsubscribeFromFirestore = null; // Fungsi untuk berhenti mendengarkan database
+    let currentUser = null;
+    let currentUserId = null;
+    let dataKunjungan = [];
+    let unsubscribeFromFirestore = null;
 
-    // Referensi DOM - Halaman Login
+    // Referensi Halaman
     const loginContainer = document.getElementById('login-container');
-    const googleLoginBtn = document.getElementById('google-login-btn');
+    const appContainer = document.getElementById('app-container');
+    const loginError = document.getElementById('login-error');
+    const userEmailDisplay = document.getElementById('user-email');
+
+    // Referensi Tombol Login/Logout
+    const loginForm = document.getElementById('login-form');
     const loginEmailInput = document.getElementById('login-email');
     const loginPasswordInput = document.getElementById('login-password');
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
-    const loginError = document.getElementById('login-error');
-
-    // Referensi DOM - Halaman Aplikasi
-    const appContainer = document.getElementById('app-container');
-    const userEmailDisplay = document.getElementById('user-email');
+    const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtn = document.getElementById('logout-btn');
-
-    // Referensi DOM - Form Input
-    const dataForm = document.getElementById('dataForm');
-    const formStatus = document.getElementById('form-status');
-    const btnCreateCard = document.getElementById('btnCreateCard');
+    
+    // Referensi Form Aplikasi
+    const dataForm = document.getElementById("dataForm");
     const inputTanggal = document.getElementById("inputTanggal");
     const siteName = document.getElementById("siteName");
     const picName = document.getElementById("picName");
@@ -141,18 +181,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceMerk = document.getElementById("deviceMerk");
     const deviceStatus = document.getElementById("deviceStatus");
     const remark = document.getElementById("remark");
+    const btnCreateCard = document.getElementById("btnCreateCard");
+    const formStatus = document.getElementById("formStatus");
 
-    // Referensi DOM - Upload & OCR
+    // Referensi DOM - Upload & OCR/Scan
     const fotoUploadSN = document.getElementById("fotoUploadSN");
     const imagePreviewSN = document.getElementById("imagePreviewSN");
     const btnGenerateSN = document.getElementById("btnGenerateSN");
+    const btnScanSN = document.getElementById("btnScanSN"); // TOMBOL BARU
     const hasilSN = document.getElementById("hasilSN");
     const ocrStatusSN = document.getElementById("ocrStatusSN");
+
     const fotoUploadPN = document.getElementById("fotoUploadPN");
     const imagePreviewPN = document.getElementById("imagePreviewPN");
     const btnGeneratePN = document.getElementById("btnGeneratePN");
+    const btnScanPN = document.getElementById("btnScanPN"); // TOMBOL BARU
     const hasilPN = document.getElementById("hasilPN");
     const ocrStatusPN = document.getElementById("ocrStatusPN");
+
     const fotoUploadGPS = document.getElementById("fotoUploadGPS");
     const imagePreviewGPS = document.getElementById("imagePreviewGPS");
 
@@ -166,11 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // === 6. FUNGSI HELPER (Alat Bantu) ===
-
+    
     /**
      * Mengisi <datalist> di HTML secara dinamis.
-     * @param {string} listId - ID dari elemen <datalist>.
-     * @param {string[]} dataArray - Array berisi string untuk opsi.
      */
     function populateDatalist(listId, dataArray) {
         const datalist = document.getElementById(listId);
@@ -185,8 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Menampilkan preview gambar saat file dipilih.
-     * @param {HTMLInputElement} fileInput - Elemen input file.
-     * @param {HTMLImageElement} previewImg - Elemen image untuk preview.
      */
     function setupImagePreview(fileInput, previewImg) {
         fileInput.addEventListener("change", (e) => {
@@ -207,10 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Menjalankan OCR (Text Recognition) pada gambar yang dipilih.
-     * @param {HTMLInputElement} fileInput - Elemen input file.
-     * @param {HTMLElement} statusEl - Elemen untuk menampilkan status OCR.
-     * @param {HTMLInputElement} resultEl - Elemen input untuk menampilkan hasil teks.
-     * @param {HTMLButtonElement} btnEl - Tombol generate yang memicu OCR.
      */
     async function runOCR(fileInput, statusEl, resultEl, btnEl) {
         const file = fileInput.files[0];
@@ -223,9 +261,14 @@ document.addEventListener('DOMContentLoaded', () => {
         statusEl.textContent = "Memulai proses OCR... (Mohon tunggu)";
         statusEl.style.color = "blue";
         btnEl.disabled = true;
-        btnEl.textContent = "Processing...";
+        btnEl.textContent = "Processing OCR...";
+        
+        // Nonaktifkan tombol scan
+        const scanBtn = btnEl.id === 'btnGenerateSN' ? btnScanSN : btnScanPN;
+        scanBtn.disabled = true;
 
         try {
+            // Tesseract.js di-load dari <head>
             const { data: { text } } = await Tesseract.recognize(
                 file, 'eng', {
                     logger: m => {
@@ -248,79 +291,126 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             btnEl.disabled = false;
             btnEl.textContent = btnEl.id === 'btnGenerateSN' ? "Generate SN (OCR)" : "Generate PN (OCR)";
+            scanBtn.disabled = false; // Aktifkan lagi tombol scan
         }
     }
 
+    // ---
+    // === 6b. FUNGSI HELPER BARU (QR SCAN) ===
+    // ---
+    /**
+     * Memindai QR Code / Barcode dari file gambar yang dipilih.
+     * Menggunakan library html5-qrcode
+     */
+    async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
+        const file = fileInput.files[0];
+        if (!file) {
+            statusEl.textContent = "Silakan pilih file gambar terlebih dahulu.";
+            statusEl.style.color = "red";
+            return;
+        }
+
+        statusEl.textContent = "Memulai proses Scan... (Mohon tunggu)";
+        statusEl.style.color = "blue";
+        btnEl.disabled = true;
+        btnEl.textContent = "Scanning...";
+
+        // Nonaktifkan tombol OCR
+        const ocrBtn = btnEl.id === 'btnScanSN' ? btnGenerateSN : btnGeneratePN;
+        ocrBtn.disabled = true;
+
+        // Buat instance baru
+        // Html5Qrcode di-load dari <head>
+        const html5QrCode = new Html5Qrcode(null, true);
+
+        try {
+            const decodedText = await html5QrCode.scanFile(file, false);
+            // 'false' di atas berarti tidak menggunakan kamera
+            
+            resultEl.value = decodedText; // Masukkan ke form
+            statusEl.textContent = "Scan Berhasil!";
+            statusEl.style.color = "green";
+
+        } catch (error) {
+            console.error("Error QR Scan:", error);
+            statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
+            statusEl.style.color = "red";
+        } finally {
+            btnEl.disabled = false;
+            btnEl.textContent = btnEl.id === 'btnScanSN' ? "Scan QR/Barcode" : "Scan QR/Barcode";
+            ocrBtn.disabled = false; // Aktifkan lagi tombol OCR
+        }
+    }
+
+
     /**
      * Meng-upload file ke Firebase Storage dan mengembalikan URL download.
-     * @param {File} file - File yang akan di-upload.
-     * @param {string} path - Path di Storage (misal: 'sn', 'pn').
-     * @returns {Promise<string>} URL download file.
      */
     async function uploadFile(file, path) {
         if (!file || !currentUserId) {
-            throw new Error("File atau User ID tidak ditemukan untuk upload.");
+            // Jika tidak ada file atau user, kembalikan null (bukan error)
+            return null;
         }
-        // Membuat nama file unik (misal: R1-SN-167888888.png)
-        const fileName = `${noRack.value || 'N-A'}-${path}-${Date.now()}-${file.name}`;
-        // Path lengkap di Firebase Storage: uploads/USER_ID/NAMA_FILE
+        
+        // Buat nama file yang lebih deskriptif
+        const fileName = `${siteName.value || 'NoSite'}-${noRack.value || 'NoRack'}-${path}-${Date.now()}-${file.name}`;
         const fileRef = ref(storage, `uploads/${currentUserId}/${fileName}`);
         
-        // Upload file
-        await uploadBytes(fileRef, file);
-        
-        // Dapatkan URL download
-        const url = await getDownloadURL(fileRef);
-        return url;
+        try {
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+            return url;
+        } catch (error) {
+            console.error(`Gagal upload file (${path}):`, error);
+            formStatus.textContent = `Gagal mengupload ${path}. Cek aturan Storage.`;
+            formStatus.style.color = 'red';
+            // Melempar error agar proses submit berhenti
+            throw new Error(`Upload gagal: ${path}`);
+        }
     }
 
 
     // === 7. LOGIKA AUTENTIKASI (LOGIN, REGISTER, LOGOUT) ===
-
+    
     // 7a. Listener Status Autentikasi (Fungsi Utama)
-    // Fungsi ini berjalan setiap kali status login berubah
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // --- Pengguna BERHASIL LOGIN ---
+            // Pengguna berhasil login
             currentUser = user;
             currentUserId = user.uid;
-
-            // Tampilkan aplikasi, sembunyikan login
-            appContainer.style.display = 'block';
-            loginContainer.style.display = 'none';
-
-            // Tampilkan email pengguna
-            userEmailDisplay.textContent = user.email;
-
-            // Mulai mengambil data dari database
+            appContainer.style.display = 'block'; // Tampilkan aplikasi
+            loginContainer.style.display = 'none'; // Sembunyikan login
+            userEmailDisplay.textContent = user.email; // Tampilkan email di header
+            
+            // Mulai "mendengarkan" data dari database
             setupFirestoreListener(currentUserId);
 
         } else {
-            // --- Pengguna LOGOUT atau TIDAK LOGIN ---
+            // Pengguna logout
             currentUser = null;
             currentUserId = null;
-
-            // Tampilkan login, sembunyikan aplikasi
-            appContainer.style.display = 'none';
-            loginContainer.style.display = 'flex';
-
-            // Berhenti mendengarkan database (jika sedang berjalan)
+            appContainer.style.display = 'none'; // Sembunyikan aplikasi
+            loginContainer.style.display = 'flex'; // Tampilkan login
+            
+            // Hentikan "mendengarkan" database
             if (unsubscribeFromFirestore) {
                 unsubscribeFromFirestore();
             }
-            // Kosongkan data
-            dataKunjungan = [];
+            dataKunjungan = []; // Kosongkan data
             hasilDataContainer.innerHTML = '<p>Silakan login untuk melihat data.</p>';
         }
     });
 
     // 7b. Tombol Login Email/Password
-    loginBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Mencegah form refresh halaman
+    });
+
+    loginBtn.addEventListener('click', async () => {
         loginError.textContent = '';
         try {
             await signInWithEmailAndPassword(auth, loginEmailInput.value, loginPasswordInput.value);
-            // onAuthStateChanged akan otomatis menangani sisanya
+            // onAuthStateChanged akan menangani sisanya
         } catch (error) {
             console.error("Error login:", error.message);
             loginError.textContent = "Email atau password salah.";
@@ -328,12 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 7c. Tombol Register Akun Baru
-    registerBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
+    registerBtn.addEventListener('click', async () => {
         loginError.textContent = '';
         try {
             await createUserWithEmailAndPassword(auth, loginEmailInput.value, loginPasswordInput.value);
-            // onAuthStateChanged akan otomatis menangani sisanya
+            // onAuthStateChanged akan menangani sisanya
         } catch (error) {
             console.error("Error register:", error.message);
             if (error.code === 'auth/weak-password') {
@@ -351,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginError.textContent = '';
         try {
             await signInWithPopup(auth, provider);
-            // onAuthStateChanged akan otomatis menangani sisanya
+            // onAuthStateChanged akan menangani sisanya
         } catch (error) {
             console.error("Error Google login:", error.message);
             loginError.textContent = 'Gagal login dengan Google.';
@@ -362,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', async () => {
         try {
             await signOut(auth);
-            // onAuthStateChanged akan otomatis menangani sisanya
+            // onAuthStateChanged akan menangani sisanya
         } catch (error) {
             console.error("Error logout:", error.message);
         }
@@ -373,12 +462,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 8a. Setup Awal (sudah di dalam DOMContentLoaded)
     
-    // Isi semua datalist (autocomplete)
+    // Isi semua datalist (autocomplete) dengan 'MASTER LIST'
     populateDatalist('listNamaRack', dataNamaRack);
     populateDatalist('listJenisDevice', dataJenisDevice);
-    populateDatalist('listModulType', dataModulType);
-    populateDatalist('listBoardName', dataBoardName);
-    populateDatalist('listDeviceMerk', dataDeviceMerk);
+    populateDatalist('listModulType', allModulTypes); // DIUBAH
+    populateDatalist('listBoardName', allBoardNames); // DIUBAH
+    populateDatalist('listDeviceMerk', allDeviceMerks); // DIUBAH
 
     // Setup semua preview gambar
     setupImagePreview(fotoUploadSN, imagePreviewSN);
@@ -393,26 +482,67 @@ document.addEventListener('DOMContentLoaded', () => {
         runOCR(fotoUploadPN, ocrStatusPN, hasilPN, btnGeneratePN);
     });
 
+    // --- BARU: Setup tombol QR Scan ---
+    btnScanSN.addEventListener("click", () => {
+        runQRScan(fotoUploadSN, ocrStatusSN, hasilSN, btnScanSN);
+    });
+    btnScanPN.addEventListener("click", () => {
+        runQRScan(fotoUploadPN, ocrStatusPN, hasilPN, btnScanPN);
+    });
+
+
+    // --- BARU: Listener untuk Relasi Data ---
+    // 'input' event lebih responsif daripada 'change'
+    jenisDevice.addEventListener('input', updateDatalists);
+
+    /**
+     * Fungsi untuk memfilter datalist berdasarkan pilihan 'Jenis Device'
+     */
+    function updateDatalists(e) {
+        const selectedDevice = e.target.value;
+        const relations = deviceKnowledgeBase[selectedDevice];
+
+        // Kosongkan field bawahan agar user tidak salah pilih
+        modulType.value = "";
+        boardName.value = "";
+        deviceMerk.value = "";
+
+        if (relations) {
+            // Jika 'Jenis Device' ada di 'Knowledge Base', filter daftarnya
+            populateDatalist('listModulType', relations.modulType);
+            populateDatalist('listBoardName', relations.boardName);
+            populateDatalist('listDeviceMerk', relations.merk);
+        } else {
+            // Jika tidak ada (misal, dikosongkan), kembalikan ke daftar penuh
+            populateDatalist('listModulType', allModulTypes);
+            populateDatalist('listBoardName', allBoardNames);
+            populateDatalist('listDeviceMerk', allDeviceMerks);
+        }
+    }
+
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
     dataForm.addEventListener('submit', handleFormSubmit);
 
     async function handleFormSubmit(e) {
-        e.preventDefault(); // Hentikan form dari reload halaman
-
-        // Validasi sederhana
+        e.preventDefault(); 
+        if (!currentUserId) {
+            formStatus.textContent = "Error: Anda tidak login.";
+            formStatus.style.color = 'red';
+            return;
+        }
+        
+        // Validasi form
         if (!siteName.value || !picName.value || !jenisDevice.value) {
             formStatus.textContent = "Error: Harap isi Nama Site, Nama PIC, dan Jenis Device.";
             formStatus.style.color = 'red';
             return;
         }
-        
-        // Cek file
+
         const fileSN = fotoUploadSN.files[0];
         const filePN = fotoUploadPN.files[0];
         const fileGPS = fotoUploadGPS.files[0];
-        
-        // Minimal 1 foto harus ada
+
         if (!fileSN && !filePN && !fileGPS) {
             formStatus.textContent = "Error: Harap upload minimal 1 foto (SN, PN, atau GPS).";
             formStatus.style.color = 'red';
@@ -424,17 +554,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreateCard.disabled = true;
 
         try {
-            // 1. Upload semua file yang ada ke Firebase Storage
-            formStatus.textContent = "Mengupload foto (1/3)...";
-            const snUrl = fileSN ? await uploadFile(fileSN, 'sn') : null;
-            
-            formStatus.textContent = "Mengupload foto (2/3)...";
-            const pnUrl = filePN ? await uploadFile(filePN, 'pn') : null;
-            
-            formStatus.textContent = "Mengupload foto (3/3)...";
-            const gpsUrl = fileGPS ? await uploadFile(fileGPS, 'gps') : null;
+            // 1. Upload semua file secara paralel
+            formStatus.textContent = "Mengupload foto...";
+            const [snUrl, pnUrl, gpsUrl] = await Promise.all([
+                uploadFile(fileSN, 'sn'),
+                uploadFile(filePN, 'pn'),
+                uploadFile(fileGPS, 'gps')
+            ]);
 
-            // 2. Siapkan objek data untuk disimpan
+            // 2. Siapkan objek data untuk Firestore
             const dataBaru = {
                 tanggal: inputTanggal.value,
                 site: siteName.value,
@@ -447,18 +575,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 merk: deviceMerk.value,
                 status: deviceStatus.value,
                 remark: remark.value,
-                serialNumber: hasilSN.value, // Teks dari OCR
-                partNumber: hasilPN.value,   // Teks dari OCR
-                fotoUrlSN: snUrl,   // URL dari Storage
-                fotoUrlPN: pnUrl,   // URL dari Storage
-                fotoUrlGPS: gpsUrl, // URL dari Storage
-                userId: currentUserId, // Simpan ID user yang input
-                createdAt: new Date().toISOString() // Simpan waktu input
+                serialNumber: hasilSN.value,
+                partNumber: hasilPN.value,
+                fotoUrlSN: snUrl,      // Hasil dari upload (bisa null)
+                fotoUrlPN: pnUrl,      // Hasil dari upload (bisa null)
+                fotoUrlGPS: gpsUrl,     // Hasil dari upload (bisa null)
+                userId: currentUserId,
+                createdAt: new Date().toISOString()
             };
 
-            // 3. Simpan objek data ke Firestore
+            // 3. Simpan data teks ke Firestore
             formStatus.textContent = "Menyimpan data ke database...";
-            // Path koleksi: users/USER_ID/devices
             const collectionRef = collection(db, 'users', currentUserId, 'devices');
             await addDoc(collectionRef, dataBaru);
 
@@ -466,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
             formStatus.textContent = "Data berhasil disimpan!";
             formStatus.style.color = 'green';
             dataForm.reset();
-            // Sembunyikan semua preview
             imagePreviewSN.style.display = "none";
             imagePreviewPN.style.display = "none";
             imagePreviewGPS.style.display = "none";
@@ -478,42 +604,41 @@ document.addEventListener('DOMContentLoaded', () => {
             formStatus.textContent = "Gagal menyimpan data. Coba lagi.";
             formStatus.style.color = 'red';
         } finally {
+            // Apapun hasilnya, aktifkan lagi tombolnya
             btnCreateCard.disabled = false;
-            // Hapus status setelah 3 detik
+            // Hilangkan status setelah 3 detik
             setTimeout(() => { formStatus.textContent = ''; }, 3000);
         }
     }
 
     // 8c. Listener Database (Mengambil Data Real-time)
     function setupFirestoreListener(userId) {
-        // Jika sudah ada listener, hentikan dulu
         if (unsubscribeFromFirestore) {
-            unsubscribeFromFirestore();
+            unsubscribeFromFirestore(); // Hentikan listener lama jika ada
         }
 
-        // Path koleksi: users/USER_ID/devices
         const collectionRef = collection(db, 'users', userId, 'devices');
-        const q = query(collectionRef); // (Nanti bisa ditambah sort/filter di sini)
+        const q = query(collectionRef); // Anda bisa menambah orderBy di sini nanti
 
-        // onSnapshot: Fungsi ini berjalan SETIAP KALI ada data baru,
-        // perubahan data, atau data dihapus di database.
         unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
-            dataKunjungan = []; // Kosongkan array lokal
-            
+            dataKunjungan = []; // Kosongkan data lokal
             if (snapshot.empty) {
                 hasilDataContainer.innerHTML = '<p>Belum ada data. Silakan isi form.</p>';
                 return;
             }
-
+            
             hasilDataContainer.innerHTML = ''; // Kosongkan container kartu
-
+            
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                data.id = doc.id; // Simpan ID dokumen (penting untuk hapus)
-                
-                dataKunjungan.push(data); // Simpan ke array lokal (untuk export)
-                buatKartuDOM(data); // Tampilkan kartu di HTML
+                data.id = doc.id; // Simpan ID dokumen
+                dataKunjungan.push(data);
+                buatKartuDOM(data); // Buat kartu untuk setiap data
             });
+            
+            // Urutkan data di client (jika perlu, misal berdasarkan tanggal)
+            // ... (implementasi sort jika dibutuhkan) ...
+
         }, (error) => {
             console.error("Error mengambil data:", error);
             hasilDataContainer.innerHTML = '<p style="color:red;">Gagal memuat data dari database.</p>';
@@ -525,15 +650,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement("div");
         card.className = "data-card";
         card.setAttribute('data-id', data.id); 
-
-        // Helper untuk menampilkan gambar atau placeholder
+        
+        // Helper kecil untuk render image atau placeholder
         const renderImage = (url, alt) => {
             if (url) {
-                return `<img src="${url}" alt="${alt}" target="_blank" rel="noopener noreferrer">`;
+                // Target _blank agar gambar dibuka di tab baru
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" alt="${alt}"></a>`;
             }
             return `<div class="img-placeholder">(${alt})</div>`;
         };
-        
+
         card.innerHTML = `
             <button class="btn-delete-card" data-doc-id="${data.id}">X</button>
             <h3>Data Visit Site: ${data.site} (Tgl: ${data.tanggal || 'N/A'})</h3>
@@ -554,21 +680,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p><strong>Remark:</strong> ${data.remark || '-'}</p>
                 </div>
             </div>
-            
             <hr>
             <div class="card-images-grid">
-                <div>
-                    <p>Foto SN:</p>
-                    ${renderImage(data.fotoUrlSN, 'Foto SN')}
-                </div>
-                <div>
-                    <p>Foto PN:</p>
-                    ${renderImage(data.fotoUrlPN, 'Foto PN')}
-                </div>
-                <div>
-                    <p>Foto GPS:</p>
-                    ${renderImage(data.fotoUrlGPS, 'Foto GPS')}
-                </div>
+                <div><p>Foto SN:</p>${renderImage(data.fotoUrlSN, 'Foto SN')}</div>
+                <div><p>Foto PN:</p>${renderImage(data.fotoUrlPN, 'Foto PN')}</div>
+                <div><p>Foto GPS:</p>${renderImage(data.fotoUrlGPS, 'Foto GPS')}</div>
             </div>
         `;
         hasilDataContainer.appendChild(card);
@@ -581,19 +697,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const docId = e.target.getAttribute('data-doc-id');
             if (!docId) return;
 
-            // Konfirmasi
-            if (!confirm(`Apakah Anda yakin ingin menghapus data ${docId}?`)) {
+            // Konfirmasi sebelum menghapus
+            if (!confirm(`Apakah Anda yakin ingin menghapus data ini?`)) {
                 return;
             }
-
+            
             try {
-                // Path dokumen: users/USER_ID/devices/DOKUMEN_ID
+                // Buat referensi ke dokumen
                 const docRef = doc(db, 'users', currentUserId, 'devices', docId);
+                // Hapus dokumen
                 await deleteDoc(docRef);
+                // (onSnapshot akan otomatis mengupdate UI)
                 
-                // Kartu akan otomatis hilang karena onSnapshot akan berjalan lagi
-                // (PERINGATAN: File di Storage belum terhapus, hanya data di Firestore)
-
+                // TODO: Hapus juga file dari Storage (fitur lanjutan)
+                
             } catch (error) {
                 console.error("Error hapus data:", error);
                 alert("Gagal menghapus data.");
@@ -603,24 +720,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // === 9. LOGIKA AKSI GLOBAL (EXPORT, ZIP, EMAIL) ===
-    // (Fungsi-fungsi ini menggunakan array 'dataKunjungan' yang diisi oleh listener Firestore)
-
+    
     // 9a. Export to Excel
     btnExportExcel.addEventListener("click", () => {
         if (dataKunjungan.length === 0) {
             alert("Tidak ada data untuk diekspor.");
             return;
         }
+        
+        // Menyiapkan data untuk Excel
         const dataUntukExcel = dataKunjungan.map(item => ({
-            "Tanggal": item.tanggal, "Nama Site": item.site, "Nama PIC": item.pic,
-            "No Rack": item.noRack, "Nama Rack": item.namaRack, "Jenis Device": item.jenisDevice,
-            "Modul Type": item.modulType, "Board Name": item.boardName, "Merk/Vendor": item.merk,
-            "Status": item.status, "Serial Number": item.serialNumber, "Part Number": item.partNumber,
-            "Remark": item.remark, "Link Foto SN": item.fotoUrlSN, "Link Foto PN": item.fotoUrlPN, "Link Foto GPS": item.fotoUrlGPS
+            "Tanggal": item.tanggal,
+            "Nama Site": item.site,
+            "Nama PIC": item.pic,
+            "No Rack": item.noRack,
+            "Nama Rack": item.namaRack,
+            "Jenis Device": item.jenisDevice,
+            "Modul Type": item.modulType,
+            "Board Name": item.boardName,
+            "Merk/Vendor": item.merk,
+            "Status": item.status,
+            "Serial Number": item.serialNumber,
+            "Part Number": item.partNumber,
+            "Remark": item.remark,
+            "Link Foto SN": item.fotoUrlSN,
+            "Link Foto PN": item.fotoUrlPN,
+            "Link Foto GPS": item.fotoUrlGPS
         }));
+
         const ws = XLSX.utils.json_to_sheet(dataUntukExcel);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Data Perangkat");
+        // Perlu memanggil 'XLSX.writeFile' bukan 'XF.writeFile'
+        // 'XLSX' di-load dari <head>
         XLSX.writeFile(wb, "RekapDataPerangkat.xlsx");
     });
 
@@ -630,24 +762,35 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Tidak ada data untuk diekspor.");
             return;
         }
+
         globalActionStatus.textContent = "Membuat PDF... mohon tunggu...";
+        
+        // Menggunakan jsPDF (di-load dari <head>)
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const container = hasilDataContainer;
+
+        // Menggunakan html2canvas (di-load dari <head>)
         html2canvas(container, { scale: 2 })
             .then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
-                const imgWidth = 210; const pageHeight = 295;
+                const imgWidth = 210; // Lebar A4 (mm)
+                const pageHeight = 295; // Tinggi A4 (mm)
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight; let position = 0;
+                let heightLeft = imgHeight;
+                let position = 0;
+
                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
+
+                // Jika konten lebih panjang dari 1 halaman
                 while (heightLeft > 0) {
                     position = heightLeft - imgHeight;
                     pdf.addPage();
                     pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                     heightLeft -= pageHeight;
                 }
+                
                 pdf.save('RekapDataPerangkat.pdf');
                 globalActionStatus.textContent = "";
             });
@@ -659,19 +802,31 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Tidak ada data (kartu) untuk diunduh gambarnya.");
             return;
         }
+
         globalActionStatus.textContent = "Mempersiapkan file ZIP... (Ini bisa lambat jika banyak foto)";
+        
         try {
+            // JSZip dan FileSaver di-load dari <head>
             const zip = new JSZip();
-            // Fungsi untuk mengambil file dari URL
+
+            // Fungsi untuk mengambil blob gambar dari URL
+            // Perlu penanganan CORS jika storage tidak di domain yg sama
             const fetchImage = async (url) => {
-                const response = await fetch(url);
+                // Menggunakan 'cors-anywhere' proxy untuk bypass CORS
+                // Ganti dengan proxy Anda sendiri jika diperlukan
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(proxyUrl + url);
                 if (!response.ok) throw new Error(`Gagal fetch ${url}`);
                 return response.blob();
             };
-
+            
             const promises = [];
+            
+            // Loop semua data kunjungan
             for (const data of dataKunjungan) {
                 const baseName = `${data.site || 'NA'}-${data.noRack || 'NA'}-${data.jenisDevice || 'NA'}`;
+                
+                // Tambahkan file ke promise
                 if (data.fotoUrlSN) {
                     promises.push(fetchImage(data.fotoUrlSN).then(blob => zip.file(`${baseName}_SN.jpg`, blob)));
                 }
@@ -682,19 +837,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     promises.push(fetchImage(data.fotoUrlGPS).then(blob => zip.file(`${baseName}_GPS.jpg`, blob)));
                 }
             }
-
+            
+            // Tunggu semua gambar di-fetch
             await Promise.all(promises);
 
+            // Generate ZIP
             globalActionStatus.textContent = "Mengompres file... mohon tunggu...";
             const content = await zip.generateAsync({ type: "blob" });
+            
+            // Trigger download
             saveAs(content, "Arsip_Foto_Perangkat.zip");
             globalActionStatus.textContent = "ZIP berhasil dibuat!";
+
         } catch (error) {
             console.error("Error creating ZIP:", error);
-            globalActionStatus.textContent = "Gagal membuat file ZIP.";
+            // Error CORS sering terjadi di sini
+            if (error.message.includes('fetch') || error.message.includes('CORS')) {
+                globalActionStatus.textContent = "Gagal mengunduh foto (Error CORS). Cek setup Firebase Storage.";
+            } else {
+                globalActionStatus.textContent = "Gagal membuat file ZIP.";
+            }
             globalActionStatus.style.color = 'red';
         } finally {
-            setTimeout(() => { globalActionStatus.textContent = ''; }, 3000);
+            setTimeout(() => { globalActionStatus.textContent = ''; globalActionStatus.style.color = 'blue'; }, 5000);
         }
     });
 
@@ -705,7 +870,9 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Tidak ada data untuk dikirim.");
             return;
         }
-        let bodyEmail = "Berikut adalah rekap data kunjungan site:\n\n";
+
+        let bodyEmail = "Berikut adalah rekap data kunjungan site:\n\Daftar ini dibuat otomatis oleh V.I.C.T.O.R.Y.\n\n";
+        
         dataKunjungan.forEach((item, index) => {
             bodyEmail += `--- Data #${index + 1} ---\n`;
             bodyEmail += `Site: ${item.site} (PIC: ${item.pic})\n`;
@@ -713,10 +880,16 @@ document.addEventListener('DOMContentLoaded', () => {
             bodyEmail += `SN/PN: ${item.serialNumber || '-'} / ${item.partNumber || '-'}\n`;
             bodyEmail += `Status: ${item.status}\n\n`;
         });
+
         bodyEmail += "Laporan selesai.\n";
-        const subjek = encodeURIComponent(`Laporan Kunjungan Site`);
+
+        const subjek = encodeURIComponent(`Laporan Kunjungan Site (Otomatis)`);
         const body = encodeURIComponent(bodyEmail);
+        
+        // Ganti "email@tujuan.com" dengan email admin data
         const mailtoLink = `mailto:email@tujuan.com?subject=${subjek}&body=${body}`;
+
+        // Buka aplikasi email default
         window.location.href = mailtoLink;
     });
 
