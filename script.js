@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BARU: Listener untuk Relasi Data ---
     // 'input' event lebih responsif daripada 'change'
-    jenisDevice.addEventListener('input', updateDatalists);
+  
 
     /**
      * Fungsi untuk memfilter datalist berdasarkan pilihan 'Jenis Device'
