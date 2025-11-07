@@ -887,7 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = encodeURIComponent(bodyEmail);
         
         // Ganti "email@tujuan.com" dengan email admin data
-        const mailtoLink = `mailto:Int-Asset.Management@fiberstar.co.id?subject=${subjek}&body=${body}`;
+        const mailtoLink = `mailto:email@tujuan.com?subject=${subjek}&body=${body}`;
 
         // Buka aplikasi email default
         window.location.href = mailtoLink;
