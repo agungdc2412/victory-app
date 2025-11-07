@@ -169,13 +169,21 @@
                         <div class="form-column">
                             <!-- UPLOAD FOTO SN -->
                             <div class="form-group upload-section">
-                                <label for="fotoUploadSN">12. Upload Foto Serial Number (SN)</label>
-                                <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
-                                <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
+                            <label for="fotoUploadSN">12. Upload Foto Serial Number (SN)</label>
+                            <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
+                            <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
+                            
+                            <!-- 
+                                PERUBAHAN 2: Ganti tombol "Generate SN" dengan grid 2 tombol 
+                            -->
+                            <div class="button-grid">
                                 <button type="button" id="btnGenerateSN" class="btn btn-ocr">Generate SN (OCR)</button>
-                                <input type="text" id="hasilSN" placeholder="Hasil OCR Serial Number...">
-                                <div id="ocrStatusSN" class="status-text"></div>
+                                <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode</button>
                             </div>
+
+                            <input type="text" id="hasilSN" placeholder="Hasil OCR / Scan Serial Number...">
+                            <div id="ocrStatusSN" class="status-text"></div>
+                        </div>
 
                             <!-- UPLOAD FOTO PN -->
                             <div class="form-group upload-section">
