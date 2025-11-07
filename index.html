@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data Perangkat ISP (v3.0 - Firebase)</title>
+    
+    <!-- Memuat Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Memuat Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 
+      Memuat Pustaka JavaScript (Library)
+      Kita muat Tesseract (OCR), SheetJS (Excel), jsPDF (PDF), JSZip (ZIP)
+    -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+
+    <!-- 
+      PENTING: Memuat skrip utama sebagai 'module' 
+      Ini diperlukan agar kita bisa menggunakan 'import' Firebase di dalam script.js
+    -->
+    <script src="script.js" type="module" defer></script>
+</head>
+<body>
+
+    <!-- 
+      BAGIAN 1: HALAMAN LOGIN
+      Secara default 'display: flex'. Akan disembunyikan oleh JavaScript jika sudah login.
+    -->
+    <div id="login-container">
+        <div class="login-box">
+            <h1 class="login-title">V.I.C.T.O.R.Y</h1>
+            <p class="login-subtitle">Silakan login untuk melanjutkan</p>
+
+            <!-- Tombol Login Google -->
+            <button id="google-login-btn" class="btn btn-google">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="google-icon">
+                Masuk dengan Google
+            </button>
+
+            <div class="login-separator">atau masuk dengan email</div>
+
+            <!-- Form Login Email -->
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="login-email" placeholder="email@anda.com" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="login-password" placeholder="Password Anda" required>
+            </div>
+
+            <!-- Tombol Aksi Login/Register -->
+            <div class="login-actions">
+                <button id="login-btn" class="btn btn-primary">Login</button>
+                <button id="register-btn" class="btn btn-secondary">Daftar Akun Baru</button>
+            </div>
+            <div id="login-error" class="status-text" style="color: red; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- 
+      BAGIAN 2: APLIKASI UTAMA
+      Secara default 'display: none'. Akan ditampilkan oleh JavaScript jika sudah login.
+    -->
+    <div id="app-container" style="display: none;">
+        
+        <header>
+            <h1>Tools Input Data Perangkat ISP</h1>
+            <div class="header-user">
+                <span id="user-email">Memuat...</span>
+                <button id="logout-btn" class="btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Kolom Input Data -->
+            <div class="input-form-card">
+                <h2>Formulir Input Data</h2>
+                <form id="dataForm">
+                    
+                    <div class="form-grid">
+                        <!-- Kolom Kiri Grid -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="inputTanggal">1. Tanggal</label>
+                                <input type="date" id="inputTanggal" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="siteName">2. Nama Site</label>
+                                <input type="text" id="siteName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="picName">3. Nama PIC</label>
+                                <input type="text" id="picName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="noRack">4. No Rack</label>
+                                <input type="text" id="noRack" list="listNoRack">
+                                <datalist id="listNoRack">
+                                    <option value="R1"></option>
+                                    <option value="R2"></option>
+                                    <option value="R3"></option>
+                                    <option value="R4"></option>
+                                    <option value="R5"></option>
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="namaRack">5. Nama Rack</label>
+                                <input type="text" id="namaRack" list="listNamaRack">
+                                <datalist id="listNamaRack">
+                                    <!-- Opsi akan diisi oleh JavaScript -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="jenisDevice">6. Jenis Device</label>
+                                <input type="text" id="jenisDevice" list="listJenisDevice" required>
+                                <datalist id="listJenisDevice">
+                                    <!-- Opsi akan diisi oleh JavaScript -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="modulType">7. Modul Type</label>
+                                <input type="text" id="modulType" list="listModulType">
+                                <datalist id="listModulType">
+                                    <!-- Opsi akan diisi oleh JavaScript -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="boardName">8. Board Name Device</label>
+                                <input type="text" id="boardName" list="listBoardName">
+                                <datalist id="listBoardName">
+                                    <!-- Opsi akan diisi oleh JavaScript -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="deviceMerk">9. Merk/Vendor Device</label>
+                                <input type="text" id="deviceMerk" list="listDeviceMerk" required>
+                                <datalist id="listDeviceMerk">
+                                    <!-- Opsi akan diisi oleh JavaScript -->
+                                </datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="deviceStatus">10. Status Device</label>
+                                <select id="deviceStatus" required>
+                                    <option value="Active">Active</option>
+                                    <option value="Not Active">Not Active</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="remark">11. Remark</label>
+                                <textarea id="remark" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Kolom Kanan Grid (Upload) -->
+                        <div class="form-column">
+                            <!-- UPLOAD FOTO SN -->
+                            <div class="form-group upload-section">
+                                <label for="fotoUploadSN">12. Upload Foto Serial Number (SN)</label>
+                                <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
+                                <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
+                                <button type="button" id="btnGenerateSN" class="btn btn-ocr">Generate SN (OCR)</button>
+                                <input type="text" id="hasilSN" placeholder="Hasil OCR Serial Number...">
+                                <div id="ocrStatusSN" class="status-text"></div>
+                            </div>
+
+                            <!-- UPLOAD FOTO PN -->
+                            <div class="form-group upload-section">
+                                <label for="fotoUploadPN">13. Upload Foto Part Number (PN)</label>
+                                <input type="file" id="fotoUploadPN" class="fotoUpload" accept="image/*">
+                                <img id="imagePreviewPN" src="" alt="Preview PN" class="image-preview"/>
+                                <button type="button" id="btnGeneratePN" class="btn btn-ocr">Generate PN (OCR)</button>
+                                <input type="text" id="hasilPN" placeholder="Hasil OCR Part Number...">
+                                <div id="ocrStatusPN" class="status-text"></div>
+                            </div>
+
+                            <!-- UPLOAD FOTO GPS -->
+                            <div class="form-group upload-section">
+                                <label for="fotoUploadGPS">14. Upload Foto Keseluruhan (GPS Map)</label>
+                                <input type="file" id="fotoUploadGPS" class="fotoUpload" accept="image/*">
+                                <img id="imagePreviewGPS" src="" alt="Preview GPS" class="image-preview"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Utama -->
+                    <div class="action-buttons">
+                        <button type="submit" id="btnCreateCard" class="btn btn-secondary">
+                            Simpan Data ke Database
+                        </button>
+                    </div>
+                    <div id="form-status" class="status-text" style="font-weight: bold; font-size: 1rem;"></div>
+                </form>
+            </div>
+
+            <!-- Kolom Hasil (Kartu) -->
+            <div class="results-area">
+                <h2>Hasil Rekap Data (dari Database)</h2>
+                <div class="global-actions">
+                    <button id="btnExportExcel" class="btn btn-success">Export to Excel</button>
+                    <button id="btnExportPDF" class="btn btn-danger">Export to PDF</button>
+                    <button id="btnDownloadImages" class="btn btn-primary">Download Semua Gambar (.zip)</button>
+                    <button id="btnSendEmail" class="btn btn-info">Send Email (Draft)</button>
+                </div>
+                <div id="globalActionStatus" class="status-text" style="font-weight: bold;"></div>
+                <hr>
+                <div id="hasilDataContainer">
+                    <!-- Kartu-kartu data visit dari Firebase akan muncul di sini -->
+                    <p>Memuat data dari database...</p>
+                </div>
+            </div>
+        </main>
+        
+    </div> <!-- Akhir dari #app-container -->
+
+</body>
+</html>
