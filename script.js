@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
   messagingSenderId: "1023135709213",
   appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
   measurementId: "G-Q1DJ3BG41V"
-};-----------------------------------------------------------
+}
 
     // === 3. INISIALISASI LAYANAN FIREBASE ===
     const app = initializeApp(firebaseConfig);
@@ -430,9 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Isi semua datalist (autocomplete) dengan 'MASTER LIST'
     populateDatalist('listNamaRack', dataNamaRack);
     populateDatalist('listJenisDevice', dataJenisDevice);
-    populateDatalist('listModulType', allModulTypes); // DIUBAH
-    populateDatalist('listBoardName', allBoardNames); // DIUBAH
-    populateDatalist('listDeviceMerk', allDeviceMerks); // DIUBAH
+ 
 
     // Setup semua preview gambar
     setupImagePreview(fotoUploadSN, imagePreviewSN);
