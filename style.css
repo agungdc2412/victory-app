@@ -242,35 +242,17 @@ textarea {
 .btn-info { background-color: #17a2b8; color: white; }
 .btn-clear { background-color: #ffc107; color: #333; padding: 5px 10px; font-size: 0.9rem; }
 
-/* === Tombol OCR === */
-.btn-ocr {
-    background-color: #007bff;
-    color: white;
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    margin-top: 5px;
-    width: 100%;
-}
-.btn-ocr:disabled {
-    background-color: #aaa;
-}
+/* === Tombol OCR (DIHAPUS di v3.5) === */
+/* .btn-ocr { ... } */
 
-/* PERUBAHAN 1: Tambahkan kode CSS di bawah ini 
-*/
-
-/* Grid untuk 2 tombol (OCR dan Scan) */
-.button-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px;
-}
-
-/* Tombol Scan QR baru (warna hijau) */
+/* === Tombol Scan QR (v3.5) === */
+/* Style .button-grid DIHAPUS */
+/* Tombol Scan QR sekarang full-width */
 .btn-scan {
     background-color: #28a745; /* Warna hijau */
     color: white;
-    padding: 8px 12px;
-    font-size: 0.9rem;
+    padding: 10px 12px; /* Dibuat sedikit lebih besar */
+    font-size: 1rem; /* Dibuat standar */
     margin-top: 5px;
     width: 100%;
     border: none;
@@ -281,6 +263,7 @@ textarea {
 .btn-scan:disabled {
     background-color: #aaa;
 }
+
 /* === Upload & Preview === */
 .upload-section {
     border: 1px dashed #ccc;
@@ -299,7 +282,7 @@ textarea {
     padding: 5px;
 }
 
-/* Status Teks (Untuk OCR) */
+/* Status Teks (Untuk Scan) */
 .status-text {
     margin-top: 10px;
     font-style: italic;
