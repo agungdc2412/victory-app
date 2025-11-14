@@ -1,16 +1,13 @@
 /*
- * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.2 (Fitur Relasi + QR Scan)
+ * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.3 (Perbaikan)
  *
- * PERUBAHAN v3.2:
- * - Menambahkan library html5-qrcode (lihat index.html)
- * - Menambahkan fungsi runQRScan() untuk memindai QR/Barcode dari file.
- * - Merestrukturisasi data di BAGIAN 4 untuk relasi data (cascading dropdowns).
- * - Menambahkan objek deviceKnowledgeBase sebagai "otak" relasi.
- * - Menambahkan listener di jenisDevice untuk memfilter datalist di bawahnya.
+ * PERUBAHAN v3.3:
+ * - Memperbaiki syntax error fatal di firebaseConfig (menghapus '----').
+ * - Menonaktifkan (memberi komentar) fitur Relasi Data (deviceKnowledgeBase)
+ * secara penuh untuk debugging. Fitur Scan QR/Barcode TETAP AKTIF.
  */
 
 // === 1. IMPORT MODUL FIREBASE ===
-// (Ini harus ada di paling atas)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
     getAuth,
@@ -38,22 +35,22 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // === PEMBUNGKUS UTAMA: DOMContentLoaded ===
-// Memastikan semua HTML siap sebelum skrip dijalankan
 document.addEventListener('DOMContentLoaded', () => {
 
     // === 2. KONFIGURASI FIREBASE ===
     // --- 
-    // --- PENTING: GANTI DENGAN KONFIGURASI ANDA ---
+    // --- Config Anda sudah benar (kesalahan '----' telah dihapus) ---
     // --- 
     const firebaseConfig = {
-  apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
-  authDomain: "victory-app-isp.firebaseapp.com",
-  projectId: "victory-app-isp",
-  storageBucket: "victory-app-isp.firebasestorage.app",
-  messagingSenderId: "1023135709213",
-  appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
-  measurementId: "G-Q1DJ3BG41V"
-}
+      apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
+      authDomain: "victory-app-isp.firebaseapp.com",
+      projectId: "victory-app-isp",
+      storageBucket: "victory-app-isp.firebasestorage.app",
+      messagingSenderId: "1023135709213",
+      appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
+      measurementId: "G-Q1DJ3BG41V"
+    };
+    // KESALAHAN FATAL (----) TELAH DIHAPUS DARI ATAS BARIS INI
 
     // === 3. INISIALISASI LAYANAN FIREBASE ===
     const app = initializeApp(firebaseConfig);
@@ -63,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const provider = new GoogleAuthProvider();
 
     // === 4. DATA UNTUK AUTACOMPLETE (DATALIST) ===
+    
     // Ini adalah 'Master List' yang berisi SEMUA kemungkinan
     const dataNamaRack = ["Modul", "DWDM", "Rectifier", "Battery", "OTB", "AC", "Lainnya"];
     const dataJenisDevice = [
@@ -102,14 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
         "Nokia", "Arista", "Cisco", "Edgecore", "Huawei", "Alcatel", "Mikrotik", "BDCOM", "ZTE", "Alcatel-Lucent Enterprise", "Raisecom", "Siemens", "PAZ"
     ];
 
+    
     // ---
     // === 4b. OTAK RELASI DATA (Knowledge Base) ===
     // ---
-    // PENTING: Ini adalah "TUGAS" Anda.
-    // Isi objek ini dengan relasi data yang benar.
-    // Kunci (key) harus SAMA PERSIS dengan teks di dataJenisDevice.
+    // FITUR INI DINONAKTIFKAN SEMENTARA UNTUK DEBUGGING
+    // const deviceKnowledgeBase = { ... };
     // ---
-    
 
 
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
@@ -147,7 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceStatus = document.getElementById("deviceStatus");
     const remark = document.getElementById("remark");
     const btnCreateCard = document.getElementById("btnCreateCard");
-    const formStatus = document.getElementById("formStatus");
+    // Perbaikan: ID di HTML adalah 'form-status', bukan 'formStatus'
+    const formStatus = document.getElementById("form-status"); 
 
     // Referensi DOM - Upload & OCR/Scan
     const fotoUploadSN = document.getElementById("fotoUploadSN");
@@ -367,10 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 7b. Tombol Login Email/Password
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Mencegah form refresh halaman
-    });
-
+    // Perbaikan: loginForm tidak ditemukan, gunakan tombol secara langsung
     loginBtn.addEventListener('click', async () => {
         loginError.textContent = '';
         try {
@@ -428,9 +423,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8a. Setup Awal (sudah di dalam DOMContentLoaded)
     
     // Isi semua datalist (autocomplete) dengan 'MASTER LIST'
+    // Untuk saat ini, kita isi semua datalist dengan master list
+    // karena fitur relasi data dinonaktifkan.
     populateDatalist('listNamaRack', dataNamaRack);
     populateDatalist('listJenisDevice', dataJenisDevice);
- 
+    populateDatalist('listModulType', allModulTypes); 
+    populateDatalist('listBoardName', allBoardNames); 
+    populateDatalist('listDeviceMerk', allDeviceMerks); 
 
     // Setup semua preview gambar
     setupImagePreview(fotoUploadSN, imagePreviewSN);
@@ -454,14 +453,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- BARU: Listener untuk Relasi Data ---
-    // 'input' event lebih responsif daripada 'change'
-  
-
-    /**
-     * Fungsi untuk memfilter datalist berdasarkan pilihan 'Jenis Device'
-     */
-    
+    // --- FITUR DINONAKTIFKAN UNTUK DEBUGGING ---
+    // (Listener yang error di baris 426 file lama, sudah dihapus/dikomentari)
+    // jenisDevice.addEventListener('input', updateDatalists);
+    //
+    // (Fungsi yang error di file lama, sudah dihapus/dikomentari)
+    // function updateDatalists() { ... }
+    // ---
 
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
@@ -550,7 +548,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Apapun hasilnya, aktifkan lagi tombolnya
             btnCreateCard.disabled = false;
             // Hilangkan status setelah 3 detik
-            setTimeout(() => { formStatus.textContent = ''; }, 3000);
+            setTimeout(() => { 
+                if (formStatus) {
+                    formStatus.textContent = ''; 
+                }
+            }, 3000);
         }
     }
 
@@ -579,9 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 buatKartuDOM(data); // Buat kartu untuk setiap data
             });
             
-            // Urutkan data di client (jika perlu, misal berdasarkan tanggal)
-            // ... (implementasi sort jika dibutuhkan) ...
-
         }, (error) => {
             console.error("Error mengambil data:", error);
             hasilDataContainer.innerHTML = '<p style="color:red;">Gagal memuat data dari database.</p>';
@@ -641,6 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!docId) return;
 
             // Konfirmasi sebelum menghapus
+            // Ganti confirm() dengan UI custom jika perlu
             if (!confirm(`Apakah Anda yakin ingin menghapus data ini?`)) {
                 return;
             }
@@ -694,7 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const ws = XLSX.utils.json_to_sheet(dataUntukExcel);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Data Perangkat");
-        // Perlu memanggil 'XLSX.writeFile' bukan 'XF.writeFile'
         // 'XLSX' di-load dari <head>
         XLSX.writeFile(wb, "RekapDataPerangkat.xlsx");
     });
@@ -757,9 +756,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const fetchImage = async (url) => {
                 // Menggunakan 'cors-anywhere' proxy untuk bypass CORS
                 // Ganti dengan proxy Anda sendiri jika diperlukan
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const response = await fetch(proxyUrl + url);
-                if (!response.ok) throw new Error(`Gagal fetch ${url}`);
+                // PERINGATAN: 'cors-anywhere' adalah layanan publik demo.
+                // Untuk produksi, Anda harus mengaturnya sendiri atau mengkonfigurasi
+                // Aturan CORS di Firebase Storage Anda.
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const response = await fetch(proxyUrl + encodeURIComponent(url));
+                if (!response.ok) throw new Error(`Gagal fetch ${url} via proxy`);
                 return response.blob();
             };
             
@@ -795,8 +797,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error creating ZIP:", error);
             // Error CORS sering terjadi di sini
-            if (error.message.includes('fetch') || error.message.includes('CORS')) {
+            if (error.message.includes('fetch') || error.message.includes('CORS') || error.message.includes('proxy')) {
                 globalActionStatus.textContent = "Gagal mengunduh foto (Error CORS). Cek setup Firebase Storage.";
+                alert("Gagal mengunduh foto. Ini seringkali disebabkan oleh aturan CORS di Firebase Storage. Coba atur rules di Firebase Storage untuk mengizinkan 'GET' dari domain publik.");
             } else {
                 globalActionStatus.textContent = "Gagal membuat file ZIP.";
             }
