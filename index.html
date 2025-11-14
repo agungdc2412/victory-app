@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Victory Apps</title>
+    <title>V.I.C.T.O.R.Y (v3.5 - Scan Only)</title>
     
     <!-- Memuat Stylesheet -->
     <link rel="stylesheet" href="style.css">
@@ -13,9 +13,8 @@
     
     <!-- 
       Memuat Pustaka JavaScript (Library)
-      Kita muat Tesseract (OCR), SheetJS (Excel), jsPDF (PDF), JSZip (ZIP)
+      Tesseract (OCR) TELAH DIHAPUS.
     -->
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -23,9 +22,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode/min.js"></script>
     
-    <!-- 5. SheetJS (Untuk Export Excel) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <!-- 
       PENTING: Memuat skrip utama sebagai 'module' 
       Ini diperlukan agar kita bisa menggunakan 'import' Firebase di dalam script.js
@@ -52,21 +48,23 @@
             <div class="login-separator">atau masuk dengan email</div>
 
             <!-- Form Login Email -->
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="login-email" placeholder="email@anda.com" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="login-password" placeholder="Password Anda" required>
-            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="login-email" placeholder="email@anda.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="login-password" placeholder="Password Anda" required>
+                </div>
 
-            <!-- Tombol Aksi Login/Register -->
-            <div class="login-actions">
-                <button id="login-btn" class="btn btn-primary">Login</button>
-                <button id="register-btn" class="btn btn-secondary">Daftar Akun Baru</button>
-            </div>
-            <div id="login-error" class="status-text" style="color: red; text-align: center;"></div>
+                <!-- Tombol Aksi Login/Register -->
+                <div class="login-actions">
+                    <button type="button" id="login-btn" class="btn btn-primary">Login</button>
+                    <button type="button" id="register-btn" class="btn btn-secondary">Daftar Akun Baru</button>
+                </div>
+                <div id="login-error" class="status-text" style="color: red; text-align: center;"></div>
+            </form>
         </div>
     </div>
 
@@ -174,14 +172,11 @@
                             <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
                             
                             <!-- 
-                                PERUBAHAN 2: Ganti tombol "Generate SN" dengan grid 2 tombol 
+                                PERUBAHAN v3.5: Tombol OCR dihapus, hanya scan.
                             -->
-                            <div class="button-grid">
-                                <button type="button" id="btnGenerateSN" class="btn btn-ocr">Generate SN (OCR)</button>
-                                <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode</button>
-                            </div>
+                            <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode</button>
 
-                            <input type="text" id="hasilSN" placeholder="Hasil OCR / Scan Serial Number...">
+                            <input type="text" id="hasilSN" placeholder="Hasil Scan Serial Number...">
                             <div id="ocrStatusSN" class="status-text"></div>
                         </div>
 
@@ -192,14 +187,11 @@
                             <img id="imagePreviewPN" src="" alt="Preview PN" class="image-preview"/>
 
                             <!-- 
-                                PERUBAHAN 3: Ganti tombol "Generate PN" dengan grid 2 tombol 
+                                PERUBAHAN v3.5: Tombol OCR dihapus, hanya scan.
                             -->
-                            <div class="button-grid">
-                                <button type="button" id="btnGeneratePN" class="btn btn-ocr">Generate PN (OCR)</button>
-                                <button type="button" id="btnScanPN" class="btn btn-scan">Scan QR/Barcode</button>
-                            </div>
+                            <button type="button" id="btnScanPN" class="btn btn-scan">Scan QR/Barcode</button>
 
-                            <input type="text" id="hasilPN" placeholder="Hasil OCR / Scan Part Number...">
+                            <input type="text" id="hasilPN" placeholder="Hasil Scan Part Number...">
                             <div id="ocrStatusPN" class="status-text"></div>
                         </div>
 
