@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.C.T.O.R.Y (v3.5.1 - Scan Only)</title> 
+    <meta name="viewport" content="width=device-width, initial-scale:1.0">
+    <title>V.I.C.T.O.R.Y (v3.5.2 - QR Fix)</title> 
     
     <!-- Memuat Stylesheet -->
     <link rel="stylesheet" href="style.css">
@@ -50,7 +50,6 @@
             <!-- 
               PERBAIKAN (v3.5.1):
               Menambahkan tag <form id="login-form"> yang hilang.
-              Inilah yang menyebabkan skrip v3.5 crash.
             -->
             <form id="login-form">
                 <div class="form-group">
@@ -80,6 +79,14 @@
     -->
     <div id="app-container" style="display: none;">
         
+        <!-- 
+          PERBAIKAN (v3.5.2): 
+          Tambahkan 'div' tersembunyi untuk library QR Scanner.
+          Pustaka ini MEMBUTUHKAN elemen DOM untuk "dipegang",
+          bahkan saat memindai file (bukan kamera).
+        -->
+        <div id="qr-reader" style="display: none;"></div>
+
         <header>
             <h1>Data Visit Site</h1>
             <div class="header-user">
