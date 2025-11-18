@@ -215,20 +215,40 @@
                         </div>
                         <!-- === MODAL KAMERA UNTUK SCAN QR/BARCODE === -->
                         <div id="camera-modal" class="camera-modal" style="display: none;">
-                            <div class="camera-modal-content">
-                                <h3>Scan QR/Barcode via Kamera</h3>
-                                
-                                <!-- 👇 Dropdown Pilihan Kamera -->
-                                <select id="cameraSelect" class="camera-select" style="width: 100%; margin-bottom: 10px; padding: 8px;">
-                                    <option value="">Loading camera...</option>
-                                </select>
-                                
-                                <div id="qr-reader-camera"></div>
-                                <div id="camera-status" class="status-text"></div>
-                                <button type="button" id="btnCloseCamera" class="btn btn-danger" style="width: 100%; margin-top: 10px;">
-                                    Tutup Kamera
-                                </button>
+                          <div class="camera-modal-content">
+                            <h3>Scan QR/Barcode via Kamera</h3>
+                        
+                            <!-- Pilih kamera depan/belakang -->
+                            <div class="camera-controls">
+                              <label for="cameraFacingSelect">Pilih kamera:</label>
+                              <select id="cameraFacingSelect">
+                                <option value="environment">Kamera Belakang</option>
+                                <option value="user">Kamera Depan</option>
+                              </select>
                             </div>
+                        
+                            <div id="qr-reader-camera"></div>
+                        
+                            <!-- Opsi extra -->
+                            <div class="camera-options">
+                              <label>
+                                <input type="checkbox" id="chkContinuousScan" checked>
+                                Continuous scan (jangan tutup setelah scan)
+                              </label>
+                              <label>
+                                <input type="checkbox" id="chkBrightnessBoost">
+                                Brightness boost (nyalakan flash jika tersedia)
+                              </label>
+                            </div>
+                        
+                            <div id="camera-status" class="status-text"></div>
+                        
+                            <button type="button" id="btnCloseCamera"
+                                    class="btn btn-danger"
+                                    style="width: 100%; margin-top: 10px;">
+                              Tutup Kamera
+                            </button>
+                          </div>
                         </div>
 
                             <!-- UPLOAD FOTO GPS -->
@@ -236,6 +256,8 @@
                                 <label for="fotoUploadGPS">14. Upload Foto Keseluruhan (GPS Map)</label>
                                 <input type="file" id="fotoUploadGPS" class="fotoUpload" accept="image/*">
                                 <img id="imagePreviewGPS" src="" alt="Preview GPS" class="image-preview"/>
+                                <!-- Tambahan: info GPS otomatis -->
+                                <div id="gpsInfo" class="status-text" style="margin-top: 4px;"></div>
                             </div>
                         </div>
                     </div>
@@ -272,6 +294,7 @@
 
 </body>
 </html>
+
 
 
 
