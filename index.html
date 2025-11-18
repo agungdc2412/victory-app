@@ -184,11 +184,14 @@
                             <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
                             <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
                             
-                            <!-- 
-                                PERUBAHAN v3.5: Tombol OCR dihapus, hanya scan.
-                            -->
-                            <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode</button>
-
+                            <!-- Scan dari gambar (upload file) -->
+                            <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode (File)</button>
+                            
+                            <!-- Scan langsung dari kamera -->
+                            <button type="button" id="btnCameraSN" class="btn btn-secondary btn-camera">
+                                Scan QR/Barcode (Kamera)
+                            </button>
+                            
                             <input type="text" id="hasilSN" placeholder="Hasil Scan Serial Number...">
                             <div id="ocrStatusSN" class="status-text"></div>
                         </div>
@@ -198,14 +201,28 @@
                             <label for="fotoUploadPN">13. Upload Foto Part Number (PN)</label>
                             <input type="file" id="fotoUploadPN" class="fotoUpload" accept="image/*">
                             <img id="imagePreviewPN" src="" alt="Preview PN" class="image-preview"/>
-
-                            <!-- 
-                                PERUBAHAN v3.5: Tombol OCR dihapus, hanya scan.
-                            -->
-                            <button type="button" id="btnScanPN" class="btn btn-scan">Scan QR/Barcode</button>
-
-                            <input type="text" id="hasilPN" placeholder="Hasil Scan Part Number...">
-                            <div id="ocrStatusPN" class="status-text"></div>
+                                
+                                <!-- Scan dari gambar (upload file) -->
+                                <button type="button" id="btnScanPN" class="btn btn-scan">Scan QR/Barcode (File)</button>
+                                
+                                <!-- Scan langsung dari kamera -->
+                                <button type="button" id="btnCameraPN" class="btn btn-secondary btn-camera">
+                                    Scan QR/Barcode (Kamera)
+                                </button>
+                                
+                                <input type="text" id="hasilPN" placeholder="Hasil Scan Part Number...">
+                                <div id="ocrStatusPN" class="status-text"></div>
+                        </div>
+                        <!-- === MODAL KAMERA UNTUK SCAN QR/BARCODE === -->
+                        <div id="camera-modal" class="camera-modal" style="display: none;">
+                            <div class="camera-modal-content">
+                                <h3>Scan QR/Barcode via Kamera</h3>
+                                <div id="qr-reader-camera"></div>
+                                <div id="camera-status" class="status-text"></div>
+                                <button type="button" id="btnCloseCamera" class="btn btn-danger" style="width: 100%; margin-top: 10px;">
+                                    Tutup Kamera
+                                </button>
+                            </div>
                         </div>
 
                             <!-- UPLOAD FOTO GPS -->
@@ -249,4 +266,5 @@
 
 </body>
 </html>
+
 
