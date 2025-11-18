@@ -217,38 +217,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Pastikan library sudah ter-load
+    // ✅ CEK: pastikan library html5-qrcode sudah ter-load
     if (!window.Html5Qrcode) {
         statusEl.textContent = "Library QR belum ter-load. Cek koneksi atau tag <script> html5-qrcode.";
         statusEl.style.color = "red";
+        console.error("Html5Qrcode global not found on window");
         return;
     }
 
-    statusEl.textContent = "Memulai proses scan... (mohon tunggu)";
+    statusEl.textContent = "Memulai proses Scan... (mohon tunggu)";
     statusEl.style.color = "blue";
+
     btnEl.disabled = true;
-    const originalText = btnEl.textContent;
+    const originalBtnText = btnEl.textContent;
     btnEl.textContent = "Scanning...";
 
     let html5QrCode = null;
 
     try {
-        // Pustaka butuh elemen DOM nyata dengan id 'qr-reader'
+        // ✅ PENTING: pakai window.Html5Qrcode, bukan Html5Qrcode langsung
         html5QrCode = new window.Html5Qrcode("qr-reader");
 
-        // true = tampilkan image di elemen anchor (meski div-nya hidden, tetap oke)
-        const decodedText = await html5QrCode.scanFile(file, true);
+        // true/false hanya soal menampilkan preview, boleh tetap false
+        const decodedText = await html5QrCode.scanFile(file, false);
 
         resultEl.value = decodedText || "";
-        statusEl.textContent = "Scan berhasil!";
+        statusEl.textContent = "Scan Berhasil!";
         statusEl.style.color = "green";
 
     } catch (error) {
         console.error("Error QR Scan:", error);
-        statusEl.textContent = "Gagal memindai. Pastikan gambar jelas dan benar-benar kode QR / barcode.";
+        statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
         statusEl.style.color = "red";
     } finally {
-        // Bersihkan instance agar tidak mengunci resource
+        // bersihkan instance supaya tidak lock resource
         if (html5QrCode) {
             try {
                 await html5QrCode.clear();
@@ -258,10 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         btnEl.disabled = false;
-        btnEl.textContent = originalText || "Scan QR/Barcode";
+        btnEl.textContent = originalBtnText || "Scan QR/Barcode";
     }
 }
-
 
     /**
      * Meng-upload file ke Firebase Storage dan mengembalikan URL download.
@@ -781,4 +782,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
