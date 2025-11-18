@@ -153,6 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCameraSN = document.getElementById("btnCameraSN");
     const btnCameraPN = document.getElementById("btnCameraPN");
     const btnCloseCamera = document.getElementById("btnCloseCamera");
+    const btnUseBack = document.getElementById("btnUseBack");
+    const btnUseFront = document.getElementById("btnUseFront");
 
     const fotoUploadGPS = document.getElementById("fotoUploadGPS");
     const imagePreviewGPS = document.getElementById("imagePreviewGPS");
@@ -258,9 +260,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 }
 // === Scan QR/Barcode LANGSUNG dari KAMERA ===
+// === Scan QR/Barcode LANGSUNG dari KAMERA (bisa pilih depan/belakang) ===
 let liveQrCode = null;
-let liveScanTarget = null; // "SN" atau "PN"
+let liveScanTarget = null;   // "SN" atau "PN"
+let frontCameraId = null;
+let backCameraId = null;
+let currentCameraId = null;
 
+// Fungsi bantuan untuk memulai kamera dengan ID tertentu
+async function startCameraWithId(cameraId) {
+    const statusEl = document.getElementById("camera-status");
+    const cameraDivId = "qr-reader-camera";
+
+    if (!window.Html5Qrcode) {
+        statusEl.textContent = "Library QR belum ter-load.";
+        statusEl.style.color = "red";
+        return;
+    }
+
+    // Matikan instance lama (kalau ada)
+    if (liveQrCode) {
+        try { await liveQrCode.stop(); } catch (e) { console.warn(e); }
+        try { await liveQrCode.clear(); } catch (e) { console.warn(e); }
+    }
+
+    liveQrCode = new window.Html5Qrcode(cameraDivId);
+    currentCameraId = cameraId;
+
+    statusEl.textContent = "Membuka kamera...";
+    statusEl.style.color = "#007bff";
+
+    await liveQrCode.start(
+        cameraId,
+        {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+        },
+        (decodedText, decodedResult) => {
+            // Callback ketika berhasil scan
+            if (liveScanTarget === "SN") {
+                const hasil = document.getElementById("hasilSN");
+                const st = document.getElementById("ocrStatusSN");
+                hasil.value = decodedText;
+                st.textContent = "Scan Berhasil (kamera)";
+                st.style.color = "green";
+            } else if (liveScanTarget === "PN") {
+                const hasil = document.getElementById("hasilPN");
+                const st = document.getElementById("ocrStatusPN");
+                hasil.value = decodedText;
+                st.textContent = "Scan Berhasil (kamera)";
+                st.style.color = "green";
+            }
+
+            // Setelah dapat 1 hasil, langsung tutup kamera
+            stopCameraScan();
+        },
+        (errorMessage) => {
+            // Dipanggil berkali-kali kalau belum nemu kode, ini normal
+            statusEl.textContent = "Mencari kode QR/Barcode...";
+            statusEl.style.color = "#007bff";
+        }
+    );
+}
+
+// 🔥 GANTI FUNGSI openCameraScan() MENJADI:
 async function openCameraScan(targetField) {
     const modal = document.getElementById("camera-modal");
     const statusEl = document.getElementById("camera-status");
@@ -278,14 +341,6 @@ async function openCameraScan(targetField) {
     statusEl.style.color = "#007bff";
     liveScanTarget = targetField;
 
-    const cameraDivId = "qr-reader-camera";
-
-    // kalau sebelumnya sudah ada instance, clear dulu
-    if (liveQrCode) {
-        try { await liveQrCode.clear(); } catch (e) { console.warn(e); }
-    }
-    liveQrCode = new window.Html5Qrcode(cameraDivId);
-
     try {
         const devices = await window.Html5Qrcode.getCameras();
         if (!devices || devices.length === 0) {
@@ -294,43 +349,50 @@ async function openCameraScan(targetField) {
             return;
         }
 
-        const cameraId = devices[0].id; // pakai kamera pertama
+        // Reset mapping kamera
+        frontCameraId = null;
+        backCameraId = null;
 
-        await liveQrCode.start(
-            cameraId,
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 }
-            },
-            (decodedText, decodedResult) => {
-                // Callback saat berhasil scan
-                if (liveScanTarget === "SN") {
-                    const hasil = document.getElementById("hasilSN");
-                    const st = document.getElementById("ocrStatusSN");
-                    hasil.value = decodedText;
-                    st.textContent = "Scan Berhasil (kamera)";
-                    st.style.color = "green";
-                } else if (liveScanTarget === "PN") {
-                    const hasil = document.getElementById("hasilPN");
-                    const st = document.getElementById("ocrStatusPN");
-                    hasil.value = decodedText;
-                    st.textContent = "Scan Berhasil (kamera)";
-                    st.style.color = "green";
-                }
-
-                // Setelah dapat 1 hasil, langsung tutup kamera
-                stopCameraScan();
-            },
-            (errorMessage) => {
-                // callback error per frame (boleh diabaikan, ini normal saat belum nemu kode)
-                statusEl.textContent = "Mencari kode QR/Barcode...";
-                statusEl.style.color = "#007bff";
+        devices.forEach(d => {
+            const label = (d.label || "").toLowerCase();
+            if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+                backCameraId = d.id;
+            } else if (label.includes("front") || label.includes("user")) {
+                frontCameraId = d.id;
             }
-        );
+        });
+
+        // Default: coba kamera belakang dulu, kalau tidak ada pakai kamera pertama
+        let firstCameraId = backCameraId || devices[0].id;
+
+        // Kalau belum ketemu frontCameraId, coba pilih device lain
+        if (!frontCameraId) {
+            const alt = devices.find(d => d.id !== firstCameraId);
+            frontCameraId = alt ? alt.id : firstCameraId;
+        }
+
+        await startCameraWithId(firstCameraId);
+        statusEl.textContent = "Arahkan kamera ke QR/Barcode";
+        statusEl.style.color = "#007bff";
+
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
         statusEl.textContent = "Gagal membuka kamera: " + err;
         statusEl.style.color = "red";
+    }
+}
+
+// Fungsi untuk switch ke kamera depan
+async function switchToFrontCamera() {
+    if (frontCameraId && frontCameraId !== currentCameraId) {
+        await startCameraWithId(frontCameraId);
+    }
+}
+
+// Fungsi untuk switch ke kamera belakang
+async function switchToBackCamera() {
+    if (backCameraId && backCameraId !== currentCameraId) {
+        await startCameraWithId(backCameraId);
     }
 }
 
@@ -345,6 +407,7 @@ async function stopCameraScan() {
 
     modal.style.display = "none";
     statusEl.textContent = "";
+    currentCameraId = null;
 }
     
     /**
@@ -498,6 +561,15 @@ async function stopCameraScan() {
     // Tombol tutup kamera
     btnCloseCamera.addEventListener("click", () => {
         stopCameraScan();
+    });
+
+    // Tombol pilih kamera depan / belakang
+    btnUseBack.addEventListener("click", () => {
+        switchToBackCamera();
+    });
+    
+    btnUseFront.addEventListener("click", () => {
+        switchToFrontCamera();
     });
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
@@ -878,6 +950,7 @@ async function stopCameraScan() {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
