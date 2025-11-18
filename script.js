@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
     let currentUser = null;
     let currentGpsLocation = null;   // { latitude, longitude } kalau berhasil
-    let liveQrCode = null;           // instance Html5Qrcode untuk kamera
     let liveScanTarget = null;       // "SN" atau "PN"
     let liveTorchOn = false;         // status torch
     let currentUserId = null;
@@ -1101,6 +1100,7 @@ async function setTorchIfSupported(powerOn) {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
