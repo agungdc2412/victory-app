@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
     let currentUser = null;
+    let currentGpsLocation = null;   // { latitude, longitude } kalau berhasil
+    let liveQrCode = null;           // instance Html5Qrcode untuk kamera
+    let liveScanTarget = null;       // "SN" atau "PN"
+    let liveTorchOn = false;         // status torch
     let currentUserId = null;
     let dataKunjungan = [];
     let unsubscribeFromFirestore = null;
@@ -153,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCameraSN = document.getElementById("btnCameraSN");
     const btnCameraPN = document.getElementById("btnCameraPN");
     const btnCloseCamera = document.getElementById("btnCloseCamera");
+    const chkBrightness = document.getElementById("chkBrightnessBoost");
     const btnUseBack = document.getElementById("btnUseBack");
     const btnUseFront = document.getElementById("btnUseFront");
 
@@ -169,7 +174,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // === 6. FUNGSI HELPER (Alat Bantu) ===
-    
+    // === HELPER: GPS otomatis + preview link Maps ===
+function initAutoGps() {
+    const gpsInfo = document.getElementById("gpsInfo");
+    if (!gpsInfo) return;
+
+    if (!navigator.geolocation) {
+        gpsInfo.textContent = "GPS tidak didukung di browser ini.";
+        gpsInfo.style.color = "red";
+        return;
+    }
+
+    gpsInfo.textContent = "Mengambil lokasi GPS...";
+    gpsInfo.style.color = "#007bff";
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            currentGpsLocation = { latitude, longitude };
+
+            const link = document.createElement("a");
+            link.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            link.target = "_blank";
+            link.textContent = `Lokasi: ${latitude.toFixed(5)}, ${longitude.toFixed(5)} (buka di Maps)`;
+
+            gpsInfo.innerHTML = "";
+            gpsInfo.appendChild(link);
+            gpsInfo.style.color = "green";
+        },
+        (err) => {
+            gpsInfo.textContent = "Gagal mendapatkan GPS: " + err.message;
+            gpsInfo.style.color = "red";
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 600000 // 10 menit cache
+        }
+    );
+}
+
     /**
      * Mengisi <datalist> di HTML secara dinamis.
      */
@@ -183,6 +227,27 @@ document.addEventListener('DOMContentLoaded', () => {
             datalist.appendChild(option);
         });
     }
+    // === HELPER: Auto-save hasil scan ke Firestore ===
+async function autoSaveScanResult(targetField, decodedText, source) {
+    // targetField: "SN" / "PN"
+    // source: "file" / "camera"
+    if (!currentUserId || !decodedText) return;
+
+    try {
+        const scanRef = collection(db, 'users', currentUserId, 'scanLogs');
+        await addDoc(scanRef, {
+            type: targetField,
+            value: decodedText,
+            source,
+            gpsLat: currentGpsLocation ? currentGpsLocation.latitude : null,
+            gpsLng: currentGpsLocation ? currentGpsLocation.longitude : null,
+            createdAt: new Date().toISOString()
+        });
+        console.log("Auto-save scan OK:", targetField, decodedText);
+    } catch (err) {
+        console.warn("Gagal auto-save scan:", err);
+    }
+}
 
     /**
      * Menampilkan preview gambar saat file dipilih.
@@ -215,7 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Memindai QR Code / Barcode dari file gambar yang dipilih.
      * Menggunakan library html5-qrcode
      */
-    async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
+    // === Scan QR/Barcode dari FILE (upload gambar) ===
+async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
     const file = fileInput.files[0];
     if (!file) {
         statusEl.textContent = "Silakan pilih file gambar terlebih dahulu.";
@@ -245,6 +311,17 @@ document.addEventListener('DOMContentLoaded', () => {
         resultEl.value = decodedText || "";
         statusEl.textContent = "Scan Berhasil!";
         statusEl.style.color = "green";
+
+        // Tentukan ini SN atau PN berdasarkan field hasil
+        let targetField = "UNKNOWN";
+        if (resultEl === hasilSN) targetField = "SN";
+        else if (resultEl === hasilPN) targetField = "PN";
+
+        // Auto-save ke Firestore + ikutkan GPS
+        if (targetField !== "UNKNOWN") {
+            await autoSaveScanResult(targetField, decodedText, "file");
+        }
+
     } catch (error) {
         console.error("Error QR Scan:", error);
         statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
@@ -259,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEl.textContent = originalBtnText || "Scan QR/Barcode (File)";
     }
 }
+
 // === Scan QR/Barcode LANGSUNG dari KAMERA ===
 // === Scan QR/Barcode LANGSUNG dari KAMERA (bisa pilih depan/belakang) ===
 let liveQrCode = null;
@@ -323,57 +401,97 @@ async function startCameraWithId(cameraId) {
     );
 }
 
-// 🔥 GANTI FUNGSI openCameraScan() MENJADI:
+// === Scan QR/Barcode lewat KAMERA (continuous + auto-focus + brightness) ===
 async function openCameraScan(targetField) {
     const modal = document.getElementById("camera-modal");
     const statusEl = document.getElementById("camera-status");
+    const facingSelect = document.getElementById("cameraFacingSelect");
+    const chkContinuous = document.getElementById("chkContinuousScan");
+    const chkBrightness = document.getElementById("chkBrightnessBoost");
 
     if (!window.Html5Qrcode) {
+        modal.style.display = "flex";
         statusEl.textContent = "Library QR belum ter-load. Cek koneksi / script html5-qrcode.";
         statusEl.style.color = "red";
         console.error("Html5Qrcode global not found on window");
-        modal.style.display = "flex";
         return;
     }
 
     modal.style.display = "flex";
     statusEl.textContent = "Menginisialisasi kamera...";
     statusEl.style.color = "#007bff";
+
     liveScanTarget = targetField;
 
-    try {
-        const devices = await window.Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-            statusEl.textContent = "Tidak ada kamera terdeteksi.";
-            statusEl.style.color = "red";
-            return;
+    const cameraDivId = "qr-reader-camera";
+
+    // Bersihkan instance lama jika ada
+    if (liveQrCode) {
+        try { await liveQrCode.stop(); } catch (e) { console.warn(e); }
+        try { await liveQrCode.clear(); } catch (e) { console.warn(e); }
+    }
+    liveQrCode = new window.Html5Qrcode(cameraDivId);
+
+    // Gunakan facingMode agar bisa pilih depan/belakang
+    const facingMode = facingSelect.value || "environment";
+    const constraints = { facingMode: { exact: facingMode } };
+
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+    };
+
+    const onSuccess = async (decodedText, decodedResult) => {
+        // 1) Tampilkan hasil di input SN/PN
+        if (liveScanTarget === "SN") {
+            hasilSN.value = decodedText;
+            ocrStatusSN.textContent = "Scan Berhasil (kamera)";
+            ocrStatusSN.style.color = "green";
+            await autoSaveScanResult("SN", decodedText, "camera");
+        } else if (liveScanTarget === "PN") {
+            hasilPN.value = decodedText;
+            ocrStatusPN.textContent = "Scan Berhasil (kamera)";
+            ocrStatusPN.style.color = "green";
+            await autoSaveScanResult("PN", decodedText, "camera");
         }
 
-        // Reset mapping kamera
-        frontCameraId = null;
-        backCameraId = null;
-
-        devices.forEach(d => {
-            const label = (d.label || "").toLowerCase();
-            if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
-                backCameraId = d.id;
-            } else if (label.includes("front") || label.includes("user")) {
-                frontCameraId = d.id;
-            }
-        });
-
-        // Default: coba kamera belakang dulu, kalau tidak ada pakai kamera pertama
-        let firstCameraId = backCameraId || devices[0].id;
-
-        // Kalau belum ketemu frontCameraId, coba pilih device lain
-        if (!frontCameraId) {
-            const alt = devices.find(d => d.id !== firstCameraId);
-            frontCameraId = alt ? alt.id : firstCameraId;
+        // 2) Kalau continuous TIDAK dicentang -> tutup kamera setelah 1 scan
+        if (!chkContinuous.checked) {
+            await stopCameraScan();
+        } else {
+            // kalau continuous, tetap scanning, cuma update status
+            statusEl.textContent = "Scan berhasil, siap membaca kode berikutnya...";
+            statusEl.style.color = "green";
         }
+    };
 
-        await startCameraWithId(firstCameraId);
-        statusEl.textContent = "Arahkan kamera ke QR/Barcode";
+    const onError = (errMsg) => {
+        // Error per-frame, normal saat belum dapat kode
+        statusEl.textContent = "Mencari kode QR/Barcode...";
         statusEl.style.color = "#007bff";
+    };
+
+    try {
+        await liveQrCode.start(constraints, config, onSuccess, onError);
+
+        statusEl.textContent = "Arahkan kamera ke barcode/QR.";
+        statusEl.style.color = "#007bff";
+
+        // === AUTO-FOCUS (selama device dukung) ===
+        try {
+            await liveQrCode.applyVideoConstraints({
+                focusMode: "continuous",
+                advanced: [{ focusMode: "continuous" }]
+            });
+            console.log("Auto-focus constraints applied");
+        } catch (e) {
+            console.log("Auto-focus tidak didukung / gagal:", e);
+        }
+
+        // === BRIGHTNESS BOOST / TORCH (opsional) ===
+        if (chkBrightness.checked) {
+            await setTorchIfSupported(true);
+        }
 
     } catch (err) {
         console.error("Gagal membuka kamera:", err);
@@ -406,9 +524,32 @@ async function stopCameraScan() {
     }
 
     modal.style.display = "none";
-    statusEl.textContent = "";
-    currentCameraId = null;
+    if (statusEl) statusEl.textContent = "";
+    liveTorchOn = false;
 }
+
+    // === TORCH / FLASH (BRIGHTNESS BOOST) ===
+async function setTorchIfSupported(powerOn) {
+    if (!liveQrCode) return;
+
+    try {
+        const capabilities = liveQrCode.getRunningTrackCapabilities();
+        if (!capabilities || !("torch" in capabilities)) {
+            console.log("Torch tidak didukung di device ini.");
+            return;
+        }
+
+        await liveQrCode.applyVideoConstraints({
+            advanced: [{ torch: powerOn }]
+        });
+
+        liveTorchOn = powerOn;
+        console.log("Torch set to:", powerOn);
+    } catch (err) {
+        console.warn("Gagal mengatur torch:", err);
+    }
+}
+
     
     /**
      * Meng-upload file ke Firebase Storage dan mengembalikan URL download.
@@ -443,11 +584,13 @@ async function stopCameraScan() {
     onAuthStateChanged(auth, (user) => {
         if (user) {
             // Pengguna berhasil login
+            initAutoGps();   // ambil koordinat GPS begitu user login
             currentUser = user;
             currentUserId = user.uid;
             appContainer.style.display = 'block'; // Tampilkan aplikasi
             loginContainer.style.display = 'none'; // Sembunyikan login
             userEmailDisplay.textContent = user.email; // Tampilkan email di header
+            
             
             // Mulai "mendengarkan" data dari database
             setupFirestoreListener(currentUserId);
@@ -563,6 +706,13 @@ async function stopCameraScan() {
         stopCameraScan();
     });
 
+    chkBrightness.addEventListener("change", async (e) => {
+    // kalau kamera lagi jalan, toggle torch
+    if (liveQrCode) {
+        await setTorchIfSupported(e.target.checked);
+    }
+    });
+    
     // Tombol pilih kamera depan / belakang
     btnUseBack.addEventListener("click", () => {
         switchToBackCamera();
@@ -582,7 +732,8 @@ async function stopCameraScan() {
             formStatus.style.color = 'red';
             return;
         }
-        
+        gpsLat: currentGpsLocation ? currentGpsLocation.latitude : null,
+        gpsLng: currentGpsLocation ? currentGpsLocation.longitude : null,
         // Validasi form
         if (!siteName.value || !picName.value || !jenisDevice.value) {
             formStatus.textContent = "Error: Harap isi Nama Site, Nama PIC, dan Jenis Device.";
@@ -950,6 +1101,7 @@ async function stopCameraScan() {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
