@@ -1071,35 +1071,9 @@ async function setTorchIfSupported(powerOn) {
 
 
     // 9d. Send Email (Draft)
-    btnSendEmail.addEventListener("click", () => {
-        if (dataKunjungan.length === 0) {
-            alert("Tidak ada data untuk dikirim.");
-            return;
-        }
-
-        let bodyEmail = "Berikut adalah rekap data kunjungan site:\n\Daftar ini dibuat otomatis oleh V.I.C.T.O.R.Y.\n\n";
-        
-        dataKunjungan.forEach((item, index) => {
-            bodyEmail += `--- Data #${index + 1} ---\n`;
-            bodyEmail += `Site: ${item.site} (PIC: ${item.pic})\n`;
-            bodyEmail += `Device: ${item.jenisDevice} (${item.merk})\n`;
-            bodyEmail += `SN/PN: ${item.serialNumber || '-'} / ${item.partNumber || '-'}\n`;
-            bodyEmail += `Status: ${item.status}\n\n`;
-        });
-
-        bodyEmail += "Laporan selesai.\n";
-
-        const subjek = encodeURIComponent(`Laporan Kunjungan Site (Otomatis)`);
-        const body = encodeURIComponent(bodyEmail);
-        
-        // Ganti "email@tujuan.com" dengan email admin data
-        const mailtoLink = `mailto:email@tujuan.com?subject=${subjek}&body=${body}`;
-
-        // Buka aplikasi email default
-        window.location.href = mailtoLink;
-    });
-
+   
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
