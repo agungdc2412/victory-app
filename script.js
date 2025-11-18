@@ -210,44 +210,57 @@ document.addEventListener('DOMContentLoaded', () => {
      * Menggunakan library html5-qrcode
      */
     async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
-        const file = fileInput.files[0];
-        if (!file) {
-            statusEl.textContent = "Silakan pilih file gambar terlebih dahulu.";
-            statusEl.style.color = "red";
-            return;
-        }
-
-        statusEl.textContent = "Memulai proses Scan... (Mohon tunggu)";
-        statusEl.style.color = "blue";
-        btnEl.disabled = true;
-        btnEl.textContent = "Scanning...";
-
-        try {
-            // --- 
-            // PERBAIKAN v3.5.2:
-            // Ganti 'null' dengan ID elemen DOM "qr-reader" yang tersembunyi.
-            // Pustaka ini tampaknya membutuhkan 'anchor' elemen DOM.
-            // ---
-            const html5QrCode = new Html5Qrcode("qr-reader");
-            
-            const decodedText = await html5QrCode.scanFile(file, false);
-            // 'false' di atas berarti tidak menggunakan kamera
-            
-            resultEl.value = decodedText; // Masukkan ke form
-            statusEl.textContent = "Scan Berhasil!";
-            statusEl.style.color = "green";
-
-        } catch (error) {
-            console.error("Error QR Scan:", error);
-            statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
-            statusEl.style.color = "red";
-        } finally {
-            // 'finally' block ini SEKARANG DIJAMIN berjalan
-            btnEl.disabled = false;
-            // Teks tombol dikembalikan ke teks aslinya
-            btnEl.textContent = "Scan QR/Barcode";
-        }
+    const file = fileInput.files[0];
+    if (!file) {
+        statusEl.textContent = "Silakan pilih file gambar terlebih dahulu.";
+        statusEl.style.color = "red";
+        return;
     }
+
+    // Pastikan library sudah ter-load
+    if (!window.Html5Qrcode) {
+        statusEl.textContent = "Library QR belum ter-load. Cek koneksi atau tag <script> html5-qrcode.";
+        statusEl.style.color = "red";
+        return;
+    }
+
+    statusEl.textContent = "Memulai proses scan... (mohon tunggu)";
+    statusEl.style.color = "blue";
+    btnEl.disabled = true;
+    const originalText = btnEl.textContent;
+    btnEl.textContent = "Scanning...";
+
+    let html5QrCode = null;
+
+    try {
+        // Pustaka butuh elemen DOM nyata dengan id 'qr-reader'
+        html5QrCode = new window.Html5Qrcode("qr-reader");
+
+        // true = tampilkan image di elemen anchor (meski div-nya hidden, tetap oke)
+        const decodedText = await html5QrCode.scanFile(file, true);
+
+        resultEl.value = decodedText || "";
+        statusEl.textContent = "Scan berhasil!";
+        statusEl.style.color = "green";
+
+    } catch (error) {
+        console.error("Error QR Scan:", error);
+        statusEl.textContent = "Gagal memindai. Pastikan gambar jelas dan benar-benar kode QR / barcode.";
+        statusEl.style.color = "red";
+    } finally {
+        // Bersihkan instance agar tidak mengunci resource
+        if (html5QrCode) {
+            try {
+                await html5QrCode.clear();
+            } catch (e) {
+                console.warn("Gagal clear Html5Qrcode:", e);
+            }
+        }
+
+        btnEl.disabled = false;
+        btnEl.textContent = originalText || "Scan QR/Barcode";
+    }
+}
 
 
     /**
@@ -768,3 +781,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
