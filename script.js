@@ -731,8 +731,8 @@ async function setTorchIfSupported(powerOn) {
             formStatus.style.color = 'red';
             return;
         }
-        gpsLat: currentGpsLocation ? currentGpsLocation.latitude : null,
-        gpsLng: currentGpsLocation ? currentGpsLocation.longitude : null,
+        //gpsLat: currentGpsLocation ? currentGpsLocation.latitude : null,
+        //gpsLng: currentGpsLocation ? currentGpsLocation.longitude : null,
         // Validasi form
         if (!siteName.value || !picName.value || !jenisDevice.value) {
             formStatus.textContent = "Error: Harap isi Nama Site, Nama PIC, dan Jenis Device.";
@@ -1104,6 +1104,7 @@ async function setTorchIfSupported(powerOn) {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
