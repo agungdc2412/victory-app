@@ -340,7 +340,7 @@ async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
 // === Scan QR/Barcode LANGSUNG dari KAMERA ===
 // === Scan QR/Barcode LANGSUNG dari KAMERA (bisa pilih depan/belakang) ===
 let liveQrCode = null;
-let liveScanTarget = null;   // "SN" atau "PN"
+//let liveScanTarget = null;   // "SN" atau "PN"
 let frontCameraId = null;
 let backCameraId = null;
 let currentCameraId = null;
@@ -1101,6 +1101,7 @@ async function setTorchIfSupported(powerOn) {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
