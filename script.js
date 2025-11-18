@@ -149,6 +149,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnScanPN = document.getElementById("btnScanPN"); 
     const hasilPN = document.getElementById("hasilPN");
     const ocrStatusPN = document.getElementById("ocrStatusPN");
+    // Tombol kamera & modal
+    const btnCameraSN = document.getElementById("btnCameraSN");
+    const btnCameraPN = document.getElementById("btnCameraPN");
+    const btnCloseCamera = document.getElementById("btnCloseCamera");
 
     const fotoUploadGPS = document.getElementById("fotoUploadGPS");
     const imagePreviewGPS = document.getElementById("imagePreviewGPS");
@@ -217,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // ✅ Cek library
     if (!window.Html5Qrcode) {
         statusEl.textContent = "Library QR belum ter-load. Cek koneksi atau tag <script> html5-qrcode.";
         statusEl.style.color = "red";
@@ -225,9 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    statusEl.textContent = "Memulai proses Scan... (mohon tunggu)";
+    statusEl.textContent = "Memulai proses Scan... (Mohon tunggu)";
     statusEl.style.color = "blue";
-
     btnEl.disabled = true;
     const originalBtnText = btnEl.textContent;
     btnEl.textContent = "Scanning...";
@@ -235,31 +237,116 @@ document.addEventListener('DOMContentLoaded', () => {
     let html5QrCode = null;
 
     try {
-        // ✅ gunakan window.Html5Qrcode (karena script.js adalah module)
         html5QrCode = new window.Html5Qrcode("qr-reader");
-
         const decodedText = await html5QrCode.scanFile(file, false);
+
         resultEl.value = decodedText || "";
         statusEl.textContent = "Scan Berhasil!";
         statusEl.style.color = "green";
-
     } catch (error) {
         console.error("Error QR Scan:", error);
         statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
         statusEl.style.color = "red";
     } finally {
         if (html5QrCode) {
-            try {
-                await html5QrCode.clear();
-            } catch (e) {
+            try { await html5QrCode.clear(); } catch (e) {
                 console.warn("Gagal clear Html5Qrcode:", e);
             }
         }
         btnEl.disabled = false;
-        btnEl.textContent = originalBtnText || "Scan QR/Barcode";
+        btnEl.textContent = originalBtnText || "Scan QR/Barcode (File)";
+    }
+}
+// === Scan QR/Barcode LANGSUNG dari KAMERA ===
+let liveQrCode = null;
+let liveScanTarget = null; // "SN" atau "PN"
+
+async function openCameraScan(targetField) {
+    const modal = document.getElementById("camera-modal");
+    const statusEl = document.getElementById("camera-status");
+
+    if (!window.Html5Qrcode) {
+        statusEl.textContent = "Library QR belum ter-load. Cek koneksi / script html5-qrcode.";
+        statusEl.style.color = "red";
+        console.error("Html5Qrcode global not found on window");
+        modal.style.display = "flex";
+        return;
+    }
+
+    modal.style.display = "flex";
+    statusEl.textContent = "Menginisialisasi kamera...";
+    statusEl.style.color = "#007bff";
+    liveScanTarget = targetField;
+
+    const cameraDivId = "qr-reader-camera";
+
+    // kalau sebelumnya sudah ada instance, clear dulu
+    if (liveQrCode) {
+        try { await liveQrCode.clear(); } catch (e) { console.warn(e); }
+    }
+    liveQrCode = new window.Html5Qrcode(cameraDivId);
+
+    try {
+        const devices = await window.Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) {
+            statusEl.textContent = "Tidak ada kamera terdeteksi.";
+            statusEl.style.color = "red";
+            return;
+        }
+
+        const cameraId = devices[0].id; // pakai kamera pertama
+
+        await liveQrCode.start(
+            cameraId,
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            (decodedText, decodedResult) => {
+                // Callback saat berhasil scan
+                if (liveScanTarget === "SN") {
+                    const hasil = document.getElementById("hasilSN");
+                    const st = document.getElementById("ocrStatusSN");
+                    hasil.value = decodedText;
+                    st.textContent = "Scan Berhasil (kamera)";
+                    st.style.color = "green";
+                } else if (liveScanTarget === "PN") {
+                    const hasil = document.getElementById("hasilPN");
+                    const st = document.getElementById("ocrStatusPN");
+                    hasil.value = decodedText;
+                    st.textContent = "Scan Berhasil (kamera)";
+                    st.style.color = "green";
+                }
+
+                // Setelah dapat 1 hasil, langsung tutup kamera
+                stopCameraScan();
+            },
+            (errorMessage) => {
+                // callback error per frame (boleh diabaikan, ini normal saat belum nemu kode)
+                statusEl.textContent = "Mencari kode QR/Barcode...";
+                statusEl.style.color = "#007bff";
+            }
+        );
+    } catch (err) {
+        console.error("Gagal membuka kamera:", err);
+        statusEl.textContent = "Gagal membuka kamera: " + err;
+        statusEl.style.color = "red";
     }
 }
 
+async function stopCameraScan() {
+    const modal = document.getElementById("camera-modal");
+    const statusEl = document.getElementById("camera-status");
+
+    if (liveQrCode) {
+        try { await liveQrCode.stop(); } catch (e) { console.warn(e); }
+        try { await liveQrCode.clear(); } catch (e) { console.warn(e); }
+    }
+
+    modal.style.display = "none";
+    statusEl.textContent = "";
+}
+    
     /**
      * Meng-upload file ke Firebase Storage dan mengembalikan URL download.
      */
@@ -394,10 +481,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Setup tombol QR Scan ---
     btnScanSN.addEventListener("click", () => {
-        runQRScan(fotoUploadSN, ocrStatusSN, hasilSN, btnScanSN);
+    runQRScan(fotoUploadSN, ocrStatusSN, hasilSN, btnScanSN);
     });
     btnScanPN.addEventListener("click", () => {
         runQRScan(fotoUploadPN, ocrStatusPN, hasilPN, btnScanPN);
+    });
+    
+    // Tombol scan kamera
+    btnCameraSN.addEventListener("click", () => {
+        openCameraScan("SN");
+    });
+    btnCameraPN.addEventListener("click", () => {
+        openCameraScan("PN");
+    });
+    
+    // Tombol tutup kamera
+    btnCloseCamera.addEventListener("click", () => {
+        stopCameraScan();
     });
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
@@ -778,6 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
