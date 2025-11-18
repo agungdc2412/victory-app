@@ -410,3 +410,8 @@ textarea {
     width: 100%;
 }
 
+.camera-select {
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
