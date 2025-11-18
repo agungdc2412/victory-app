@@ -415,3 +415,57 @@ textarea {
     border-radius: 6px;
     border: 1px solid #ccc;
 }
+/* === MODAL KAMERA UNTUK SCAN QR/BARCODE === */
+.camera-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.camera-modal-content {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+#qr-reader-camera {
+    width: 100%;
+    min-height: 280px;
+}
+
+.camera-controls {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.camera-controls select {
+    flex: 1;
+}
+
+.camera-options {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.camera-options input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.btn-camera {
+    margin-top: 5px;
+    width: 100%;
+}
+
