@@ -1,11 +1,13 @@
 /*
- * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.5 (Scan Only + Bug Fix)
+ * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.5.2 (QR Fix)
  *
- * PERUBAHAN v3.5:
- * - Menghapus total fitur OCR (Tesseract.js)
- * - Menghapus fungsi runOCR() dan listener-nya.
- * - Tombol "Scan QR/Barcode" sekarang menjadi satu-satunya pilihan.
- * - Perbaikan bug "tombol macet" dari v3.4 sudah termasuk di sini.
+ * PERUBAHAN v3.5.2:
+ * - Memperbaiki kegagalan scan QR code.
+ * - Pustaka html5-qrcode tampaknya membutuhkan elemen DOM nyata
+ * sebagai "pegangan" (anchor), bahkan saat memindai file.
+ * - Kita mengganti 'new Html5Qrcode(null, true)' dengan
+ * 'new Html5Qrcode("qr-reader")' yang merujuk ke <div> baru
+ * yang tersembunyi di index.html (v3.5.2).
  */
 
 // === 1. IMPORT MODUL FIREBASE ===
@@ -39,7 +41,6 @@ import {
 document.addEventListener('DOMContentLoaded', () => {
 
     // === 2. KONFIGURASI FIREBASE ===
-    // Config Anda dari file sebelumnya
     const firebaseConfig = {
       apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
       authDomain: "victory-app-isp.firebaseapp.com",
@@ -99,14 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     
-    // ---
-    // === 4b. OTAK RELASI DATA (Knowledge Base) ===
-    // ---
-    // FITUR INI DINONAKTIFKAN SEMENTARA UNTUK DEBUGGING
-    // const deviceKnowledgeBase = { ... };
-    // ---
-
-
     // === 5. VARIABEL GLOBAL & REFERENSI DOM ===
     let currentUser = null;
     let currentUserId = null;
@@ -142,20 +135,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceStatus = document.getElementById("deviceStatus");
     const remark = document.getElementById("remark");
     const btnCreateCard = document.getElementById("btnCreateCard");
-    // Perbaikan: ID di HTML adalah 'form-status'
     const formStatus = document.getElementById("form-status"); 
 
     // Referensi DOM - Upload & Scan
     const fotoUploadSN = document.getElementById("fotoUploadSN");
     const imagePreviewSN = document.getElementById("imagePreviewSN");
-    // const btnGenerateSN = document.getElementById("btnGenerateSN"); // DIHAPUS
     const btnScanSN = document.getElementById("btnScanSN"); 
     const hasilSN = document.getElementById("hasilSN");
     const ocrStatusSN = document.getElementById("ocrStatusSN");
 
     const fotoUploadPN = document.getElementById("fotoUploadPN");
     const imagePreviewPN = document.getElementById("imagePreviewPN");
-    // const btnGeneratePN = document.getElementById("btnGeneratePN"); // DIHAPUS
     const btnScanPN = document.getElementById("btnScanPN"); 
     const hasilPN = document.getElementById("hasilPN");
     const ocrStatusPN = document.getElementById("ocrStatusPN");
@@ -232,15 +222,13 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEl.disabled = true;
         btnEl.textContent = "Scanning...";
 
-        // Logika nonaktifkan tombol OCR DIHAPUS
-
         try {
-            // --- PERBAIKAN v3.4 ---
-            // Konstruktor dipindahkan ke DALAM try block
-            // Ini memastikan 'finally' akan selalu berjalan
-            //
-            // Html5Qrcode di-load dari <head>
-            const html5QrCode = new Html5Qrcode(null, true);
+            // --- 
+            // PERBAIKAN v3.5.2:
+            // Ganti 'null' dengan ID elemen DOM "qr-reader" yang tersembunyi.
+            // Pustaka ini tampaknya membutuhkan 'anchor' elemen DOM.
+            // ---
+            const html5QrCode = new Html5Qrcode("qr-reader");
             
             const decodedText = await html5QrCode.scanFile(file, false);
             // 'false' di atas berarti tidak menggunakan kamera
@@ -258,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btnEl.disabled = false;
             // Teks tombol dikembalikan ke teks aslinya
             btnEl.textContent = "Scan QR/Barcode";
-            // Logika aktifkan tombol OCR DIHAPUS
         }
     }
 
@@ -395,10 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupImagePreview(fotoUploadPN, imagePreviewPN);
     setupImagePreview(fotoUploadGPS, imagePreviewGPS);
 
-    // Setup tombol OCR DIHAPUS di v3.5
-    // btnGenerateSN.addEventListener("click", ...);
-    // btnGeneratePN.addEventListener("click", ...);
-
     // --- Setup tombol QR Scan ---
     btnScanSN.addEventListener("click", () => {
         runQRScan(fotoUploadSN, ocrStatusSN, hasilSN, btnScanSN);
@@ -406,13 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnScanPN.addEventListener("click", () => {
         runQRScan(fotoUploadPN, ocrStatusPN, hasilPN, btnScanPN);
     });
-
-
-    // --- FITUR RELASI DATA (Masih dinonaktifkan) ---
-    // jenisDevice.addEventListener('input', updateDatalists);
-    // function updateDatalists() { ... }
-    // ---
-
 
     // 8b. Listener Tombol Submit Form (Simpan Data)
     dataForm.addEventListener('submit', handleFormSubmit);
