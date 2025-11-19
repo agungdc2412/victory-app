@@ -117,7 +117,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 12px 20px;
-    background: #ffffff;
+    background: #ff7ff0;
     border-bottom: 2px solid var(--fs-orange-soft);
 }
 
@@ -647,5 +647,6 @@ textarea {
     margin-top: 5px;
     width: 100%;
 }
+
 
 
