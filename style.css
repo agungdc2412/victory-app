@@ -1,4 +1,4 @@
-/* === BAGIAN LOGIN (BARU) === */
+/* === BAGIAN 1: VARIABEL & RESET (Sesuai desain Anda) === */
 :root {
     --fs-orange: #ff7a00;
     --fs-orange-soft: #ffe9cf;
@@ -8,702 +8,252 @@
     --fs-white: #ffffff;
 }
 
-/* Background global */
 body {
     background: radial-gradient(circle at top left, #fff7ed, #f9fafb);
     font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-.fs-logo-header {
-    height: 32px;          /* boleh diubah 28–40px sesuai selera */
-    object-fit: contain;
+    margin: 0;
+    padding: 0;
+    color: #333;
 }
 
+/* === BAGIAN 2: LOGIN PAGE === */
 #login-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 .login-box {
     background: #ffffff;
     border-radius: 20px;
-    padding: 28px 24px 24px;
+    padding: 40px;
     width: 100%;
-    max-width: 420px;
+    max-width: 450px;
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
-}
-
-/* Brand di login */
-.brand-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-}
-
-.brand-logo {
-    height: 40px;
-    object-fit: contain;
-}
-
-.brand-text {
-    display: flex;
-    flex-direction: column;
-}
-
-.brand-name {
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--fs-dark);
-}
-
-.brand-tagline {
-    font-size: 11px;
-    color: var(--fs-gray);
+    text-align: center;
 }
 
 .login-title {
-    font-size: 22px;
+    font-size: 2.5rem;
     font-weight: 700;
-    margin-top: 6px;
-    margin-bottom: 4px;
-    color: var(--fs-dark);
+    color: var(--fs-orange);
+    margin-bottom: 10px;
 }
 
 .login-subtitle {
-    font-size: 12px;
     color: var(--fs-gray);
-    margin-bottom: 16px;
+    margin-bottom: 30px;
 }
-#login-form .form-group label {
-    font-size: 13px;
+
+.btn {
+    display: inline-block;
     font-weight: 500;
-    color: var(--fs-dark);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 10px 20px;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
-#login-form input[type="email"],
-#login-form input[type="password"] {
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.8);
-    padding: 9px 14px;
-    font-size: 13px;
-    outline: none;
-}
-
-#login-form input:focus {
-    border-color: var(--fs-orange);
-    box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.25);
+.btn-google {
+    background-color: white;
+    color: #444;
+    border-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #ff8a1a, #ff7a00);
-    color: #ffffff;
-    border: none;
-    border-radius: 999px;
-    padding: 9px 16px;
-    font-weight: 600;
-    cursor: pointer;
+    background-color: var(--fs-orange);
+    color: white;
 }
+.btn-primary:hover { background-color: #e66e00; }
 
 .btn-secondary {
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.7);
-    padding: 9px 16px;
-    font-weight: 500;
-    background: #ffffff;
-    color: var(--fs-dark);
-    cursor: pointer;
+    background-color: #6c757d;
+    color: white;
 }
 
+/* === BAGIAN 3: APLIKASI UTAMA === */
 .app-header {
+    background-color: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    background:#ffffff;
-    border-bottom: 2px solid var(--fs-orange-soft);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-.app-header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+.app-header h1 { margin: 0; font-size: 1.5rem; color: var(--fs-dark); }
+.app-subtitle { margin: 0; font-size: 0.9rem; color: var(--fs-gray); }
 
-.brand-logo-small {
-    height: 28px;
-    object-fit: contain;
-}
-
-.app-header-text h1 {
-    margin: 0;
-    font-size: 18px;
-    color: var(--fs-dark);
-}
-
-.app-subtitle {
-    margin: 0;
-    font-size: 11px;
-    color: var(--fs-gray);
-}
-
-
-.btn-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 12px;
-    background-color: white;
-    color: #444;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-.btn-google:hover {
-    background-color: #f9f9f9;
-}
-.google-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 12px;
-}
-
-.login-separator {
-    text-align: center;
-    color: #aaa;
-    margin: 20px 0;
-}
-
-.login-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-.login-actions .btn {
-    flex: 1; /* Tombol jadi sama rata */
-}
-
-.input-form-card {
-    background: #ffffff;
-    border-radius: 18px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    padding: 16px 18px 18px;
-}
-
-/* Judul form */
-.input-form-card h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: var(--fs-dark);
-}
-
-/* Input dalam form (selain login) */
-.input-form-card input[type="text"],
-.input-form-card input[type="date"],
-.input-form-card select,
-.input-form-card textarea {
-    border-radius: 10px;
-    border: 1px solid rgba(148, 163, 184, 0.8);
-    padding: 7px 10px;
-    font-size: 13px;
-    outline: none;
-}
-
-.input-form-card input:focus,
-.input-form-card select:focus,
-.input-form-card textarea:focus {
-    border-color: var(--fs-orange);
-    box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.25);
-}
-.btn-scan,
-.btn-camera {
-    border-radius: 999px;
-    padding: 7px 12px;
-    font-size: 12px;
-    cursor: pointer;
-    margin-top: 6px;
-    width: 100%;
-}
-
-.btn-scan {
-    background: #fff7ed;
-    border: 1px solid var(--fs-orange);
-    color: var(--fs-orange);
-}
-
-.btn-camera {
-    background: var(--fs-orange);
-    border: none;
-    color: #ffffff;
-}
-
-.btn-scan:hover {
-    background: var(--fs-orange-soft);
-}
-
-.btn-camera:hover {
-    opacity: 0.95;
-}
-
-.action-buttons .btn {
-    border-radius: 999px;
-}
-
-/* === BAGIAN APLIKASI (LAMA) === */
-
-/* Reset Dasar & Font Modern */
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f4f7f6;
-    color: #333;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
-}
-
-header {
-    background-color: #005a9c;
-    color: white;
-    padding: 1.2rem;
-    display: flex; /* Diubah */
-    justify-content: space-between; /* Diubah */
-    align-items: center; /* Diubah */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-.header-user {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#user-email {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* TOMBOL LOGOUT (BARU) */
-.btn-logout {
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    background-color: #dc3545; /* Merah */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.btn-logout:hover {
-    background-color: #c82333;
-}
-
-/* Layout Utama (Flexbox) */
 .container {
-    display: flex;
-    flex-wrap: wrap; /* Memastikan responsif */
-    padding: 20px;
-    gap: 20px;
-}
-
-.input-form-card, .results-area {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    padding: 25px;
-}
-
-/* Kolom Input (Lebih Lebar untuk 2 kolom) */
-.input-form-card {
-    flex: 3; /* Lebih besar */
-    min-width: 600px;
-}
-
-/* Kolom Hasil */
-.results-area {
-    flex: 2;
-    min-width: 400px;
-}
-
-h2 {
-    color: #005a9c;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-
-/* === Layout Grid Form === */
-.form-grid {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 kolom sama besar */
+    grid-template-columns: 1fr 1fr; /* Layout 2 Kolom */
     gap: 25px;
 }
 
-/* Responsif untuk form */
-@media (max-width: 900px) {
-    .form-grid {
-        grid-template-columns: 1fr; /* Jadi 1 kolom di layar kecil */
-    }
+/* Responsif Mobile */
+@media (max-width: 768px) {
+    .container { grid-template-columns: 1fr; }
 }
 
-.form-column {
-    display: flex;
-    flex-direction: column;
+.input-form-card, .results-area {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Styling Form */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: #555;
-}
-
-input[type="text"],
-input[type="date"],
-input[type="file"],
-input[type="email"],
-input[type="password"],
-select,
-textarea {
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--fs-dark); }
+.form-group input, .form-group select, .form-group textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box; /* Penting */
-    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box; 
 }
 
-textarea {
-    resize: vertical;
-}
-
-/* Styling Tombol Aksi */
-.btn {
-    padding: 12px 18px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-}
-.btn:disabled {
-    background-color: #aaa;
-    cursor: not-allowed;
-    transform: none;
-}
-
-
-.action-buttons, .global-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.btn-primary { background-color: #007bff; color: white; }
-.btn-secondary { background-color: #6c757d; color: white; }
-.btn-success { background-color: #28a745; color: white; }
-.btn-danger { background-color: #dc3545; color: white; }
-.btn-info { background-color: #17a2b8; color: white; }
-.btn-clear { background-color: #ffc107; color: #333; padding: 5px 10px; font-size: 0.9rem; }
-
-/* === Tombol OCR (DIHAPUS di v3.5) === */
-/* .btn-ocr { ... } */
-
-/* === Tombol Scan QR (v3.5) === */
-/* Style .button-grid DIHAPUS */
-/* Tombol Scan QR sekarang full-width */
-.btn-scan {
-    background-color: #28a745; /* Warna hijau */
-    color: white;
-    padding: 10px 12px; /* Dibuat sedikit lebih besar */
-    font-size: 1rem; /* Dibuat standar */
-    margin-top: 5px;
-    width: 100%;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-.btn-scan:disabled {
-    background-color: #aaa;
-}
-
-/* === Upload & Preview === */
+/* === BAGIAN 4: FILE UPLOAD & PREVIEW === */
 .upload-section {
-    border: 1px dashed #ccc;
+    background-color: #f9fafb;
     padding: 15px;
-    border-radius: 5px;
+    border-radius: 12px;
+    border: 1px dashed #d1d5db;
+    margin-bottom: 20px;
 }
+
 .image-preview {
-    display: none; /* Sembunyi by default */
-    width: 100%;
-    max-width: 300px;
+    max-width: 100%;
+    max-height: 200px;
     margin-top: 10px;
+    border-radius: 8px;
+    display: none;
+    object-fit: contain;
     border: 1px solid #eee;
-    border-radius: 5px;
-}
-.fotoUpload {
-    padding: 5px;
 }
 
-/* Status Teks (Untuk Scan) */
-.status-text {
-    margin-top: 10px;
-    font-style: italic;
-    font-size: 0.9rem;
-    color: #007bff;
-}
-
-/* Kartu Hasil (Tampilan Kartu) */
-#hasilDataContainer {
-    display: grid;
-    grid-template-columns: 1fr; /* Hanya 1 kolom kartu, agar detail terbaca */
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.data-card {
-    background-color: #fdfdfd;
-    border: 1px solid #e0e0e0;
-    border-left: 5px solid #005a9c;
-    border-radius: 5px;
-    padding: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    position: relative; /* Untuk tombol hapus */
-}
-
-/* TOMBOL HAPUS (BARU) */
-.btn-delete-card {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    line-height: 30px;
-    text-align: center;
-}
-.btn-delete-card:hover {
-    background-color: #c82333;
-}
-
-
-.data-card h3 {
-    margin-top: 0;
-    padding-right: 35px; /* Beri ruang untuk tombol hapus */
-    color: #333;
-    font-size: 1.2rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-}
-
-/* Grid di dalam Kartu */
-.card-content-grid {
+.button-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-}
-
-/* Grid untuk 3 gambar (BARU) */
-.card-images-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
     margin-top: 10px;
 }
 
-.card-images-grid img, .card-images-grid .img-placeholder {
-    width: 100%;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    aspect-ratio: 4 / 3; /* Jaga rasio gambar */
-    object-fit: cover;
-    background-color: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #aaa;
-    font-size: 0.8rem;
+.btn-scan {
+    background-color: #10b981; /* Hijau modern */
+    color: white;
 }
-.card-images-grid p {
-    font-weight: 500;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.data-card p {
-    margin: 5px 0;
-    font-size: 0.95rem;
-}
-.data-card strong {
-    color: #000;
-}
-/* === MODAL KAMERA UNTUK SCAN QR/BARCODE === */
-.camera-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.camera-modal-content {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 480px;
-    width: 90%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-}
-
-#qr-reader-camera {
-    width: 100%;
-    min-height: 280px;
-}
-
 .btn-camera {
-    margin-top: 5px;
-    width: 100%;
+    background-color: #3b82f6; /* Biru modern */
+    color: white;
 }
 
-.camera-select {
-    font-size: 16px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-}
-/* === MODAL KAMERA UNTUK SCAN QR/BARCODE === */
-.camera-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.camera-modal-content {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 480px;
-    width: 90%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-}
-
-#qr-reader-camera {
-    width: 100%;
-    min-height: 280px;
-}
-
-.camera-controls {
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
-}
-
-.camera-controls select {
-    flex: 1;
-}
-
-.camera-options {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.85rem;
-}
-
-.camera-options input[type="checkbox"] {
-    margin-right: 5px;
-}
-
-.btn-camera {
-    margin-top: 5px;
-    width: 100%;
-}
-
-/* === TAMBAHAN: GAYA UNTUK MULTI-TAG SN === */
-
-/* Wadah untuk menampung hasil scan */
+/* === BAGIAN 5: MULTI-TAG CHIPS (FITUR BARU) === */
 .sn-tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 5px;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    min-height: 40px;
-    background-color: #fafafa;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #ffffff;
+    min-height: 50px;
 }
 
-/* Gaya untuk setiap "Chip" atau "Tag" SN */
 .sn-tag {
-    background-color: #e3f2fd; /* Warna biru muda */
-    color: #0d47a1;
+    background-color: var(--fs-orange-soft);
+    color: #c2410c;
     padding: 6px 12px;
     border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.85rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    animation: fadeIn 0.3s ease-in-out;
+    gap: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: transform 0.1s;
 }
+.sn-tag:hover { transform: scale(1.02); }
 
-/* Tombol X untuk menghapus tag */
 .sn-tag-remove {
-    margin-left: 8px;
     cursor: pointer;
-    color: #ff1744;
+    color: #ef4444;
     font-weight: bold;
     font-size: 1.1rem;
-    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
 }
+.sn-tag-remove:hover { background-color: rgba(255,255,255,0.5); }
 
-.sn-tag-remove:hover {
-    background-color: rgba(255, 0, 0, 0.1);
+/* === BAGIAN 6: MODAL KAMERA (FITUR BARU) === */
+.camera-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
 }
 
-/* Animasi muncul halus */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+.camera-modal-content {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+#qr-reader-camera {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Style tambahan untuk kartu hasil */
+.data-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+}
+.data-card h3 {
+    margin-top: 0;
+    color: var(--fs-orange);
+    font-size: 1.1rem;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
 }
