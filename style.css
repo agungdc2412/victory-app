@@ -651,3 +651,15 @@ textarea {
     margin-top: 5px;
     width: 100%;
 }
+
+#hasilSN {
+    width: 100%;
+    resize: vertical;
+    min-height: 70px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9rem;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
