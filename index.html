@@ -184,19 +184,21 @@
                             <!-- UPLOAD FOTO SN -->
                             <div class="form-group upload-section">
                             <label for="fotoUploadSN">12. Upload Foto Serial Number (SN)</label>
-                            <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
-                            <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
-                            
-                            <!-- Scan dari gambar (upload file) -->
-                            <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode (File)</button>
-                            
-                            <!-- Scan langsung dari kamera -->
-                            <button type="button" id="btnCameraSN" class="btn btn-secondary btn-camera">
-                                Scan QR/Barcode (Kamera)
-                            </button>
-                            
-                            <input type="text" id="hasilSN" placeholder="Hasil Scan Serial Number...">
-                            <div id="ocrStatusSN" class="status-text"></div>
+                                <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
+                                <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
+                                
+                                <!-- Scan dari gambar (upload file) -->
+                                <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode (File)</button>
+                                
+                                <!-- Scan langsung dari kamera -->
+                                <button type="button" id="btnCameraSN" class="btn btn-secondary btn-camera">
+                                    Scan QR/Barcode (Kamera)
+                                </button>
+                                
+                                <!-- ✅ MULTI-SN: 1 baris = 1 serial number -->
+                                <textarea id="hasilSN" rows="4" placeholder="Hasil Scan Serial Number...
+                                1 baris = 1 Serial     Number"></textarea>
+                                <div id="ocrStatusSN" class="status-text"></div>
                         </div>
 
                             <!-- UPLOAD FOTO PN -->
@@ -296,4 +298,5 @@
     </div> <!-- Akhir dari #app-container -->
 
 </body>
+
 </html>
