@@ -1110,7 +1110,4 @@ async function setTorchIfSupported(powerOn) {
         // Buka aplikasi email default
         window.location.href = mailtoLink;
     });
-
-
-
-
+}); // === AKHIR DARI DOMContentLoaded ===
