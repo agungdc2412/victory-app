@@ -699,3 +699,169 @@ textarea {
     color: #9ca3af;
     margin-top: 2px;
 }
+/* === DASHBOARD ADMIN === */
+.admin-divider {
+  margin: 20px 0;
+  border: none;
+  border-top: 2px solid #f97316; /* orange */
+}
+
+#admin-dashboard {
+  margin-top: 10px;
+  padding: 12px 14px 18px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+#admin-dashboard h2 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+/* Filter bar */
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.admin-filters .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.admin-filters label {
+  font-weight: 500;
+}
+
+.admin-filters input,
+.admin-filters select {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.filter-date-range {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Table */
+.admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.admin-table thead {
+  background: #ffedd5; /* orange soft */
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.admin-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.admin-table tbody tr:hover {
+  background: #fef3c7;
+  cursor: pointer;
+}
+
+/* Pagination */
+.admin-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-pagination button {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* Export bar & API viewer */
+.admin-export-bar {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-api-viewer {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr);
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .admin-api-viewer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.api-url {
+  padding: 6px 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+.api-json {
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* Badge SN multi-barcode */
+.sn-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sn-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 11px;
+  border: 1px solid #fecaca;
+}
+
