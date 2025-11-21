@@ -454,8 +454,9 @@ async function openCameraScan(targetField) {
     liveQrCode = new window.Html5Qrcode(cameraDivId);
 
     // Gunakan facingMode agar bisa pilih depan/belakang
+  // Tanpa 'exact' supaya tidak OverconstrainedError di beberapa device
     const facingMode = facingSelect.value || "environment";
-    const constraints = { facingMode: { exact: facingMode } };
+    const constraints = { facingMode };
 
     const config = {
         fps: 10,
@@ -500,11 +501,19 @@ async function openCameraScan(targetField) {
 
         // === AUTO-FOCUS (selama device dukung) ===
         try {
-            await liveQrCode.applyVideoConstraints({
-                focusMode: "continuous",
-                advanced: [{ focusMode: "continuous" }]
-            });
-            console.log("Auto-focus constraints applied");
+            const caps = liveQrCode.getRunningTrackCapabilities
+                ? liveQrCode.getRunningTrackCapabilities()
+                : null;
+
+        // Cek dulu apakah track-nya punya properti focusMode
+            if (caps && "focusMode" in caps) {
+                await liveQrCode.applyVideoConstraints({
+                    advanced: [{ focusMode: "continuous" }]
+                });
+                console.log("Auto-focus constraints applied");
+            } else {
+                console.log("Auto-focus tidak didukung di device ini.");
+            }
         } catch (e) {
             console.log("Auto-focus tidak didukung / gagal:", e);
         }
@@ -1114,4 +1123,5 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
