@@ -1112,4 +1112,5 @@ async function setTorchIfSupported(powerOn) {
     });
 
 
-}); // === AKHIR DARI DOMContentLoaded ===
+
+
