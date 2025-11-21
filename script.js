@@ -869,49 +869,78 @@ async function setTorchIfSupported(powerOn) {
 
     // 8d. Fungsi Membuat Kartu di HTML
     function buatKartuDOM(data) {
-        const card = document.createElement("div");
-        card.className = "data-card";
-        card.setAttribute('data-id', data.id); 
-        
-        // Helper kecil untuk render image atau placeholder
-        const renderImage = (url, alt) => {
-            if (url) {
-                // Target _blank agar gambar dibuka di tab baru
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" alt="${alt}"></a>`;
-            }
-            return `<div class="img-placeholder">(${alt})</div>`;
-        };
+    const card = document.createElement("div");
+    card.className = "data-card";
+    card.setAttribute('data-id', data.id); 
+    
+    // Helper kecil untuk render image atau placeholder
+    const renderImage = (url, alt) => {
+        if (url) {
+            // Target _blank agar gambar dibuka di tab baru
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" alt="${alt}"></a>`;
+        }
+        return `<div class="img-placeholder">(${alt})</div>`;
+    };
 
-        card.innerHTML = `
-            <button class="btn-delete-card" data-doc-id="${data.id}">X</button>
-            <h3>Data Visit Site: ${data.site} (Tgl: ${data.tanggal || 'N/A'})</h3>
-            <div class="card-content-grid">
-                <div>
-                    <p><strong>PIC:</strong> ${data.pic}</p>
-                    <p><strong>No. Rack:</strong> ${data.noRack || '-'}</p>
-                    <p><strong>Nama Rack:</strong> ${data.namaRack || '-'}</p>
-                    <p><strong>Jenis Device:</strong> ${data.jenisDevice}</p>
-                    <p><strong>Merk/Vendor:</strong> ${data.merk}</p>
-                    <p><strong>Status:</strong> ${data.status}</p>
-                </div>
-                <div>
-                    <p><strong>Modul Type:</strong> ${data.modulType || '-'}</p>
-                    <p><strong>Board Name:</strong> ${data.boardName || '-'}</p>
-                    <p><strong>Serial Number (SN):</strong> ${data.serialNumber || '-'}</p>
-                    <p><strong>Part Number (PN):</strong> ${data.partNumber || '-'}</p>
-                    <p><strong>Remark:</strong> ${data.remark || '-'}</p>
-                </div>
-            </div>
-            <hr>
-            <div class="card-images-grid">
-                <div><p>Foto SN:</p>${renderImage(data.fotoUrlSN, 'Foto SN')}</div>
-                <div><p>Foto PN:</p>${renderImage(data.fotoUrlPN, 'Foto PN')}</div>
-                <div><p>Foto GPS:</p>${renderImage(data.fotoUrlGPS, 'Foto GPS')}</div>
-            </div>
-        `;
-        hasilDataContainer.appendChild(card);
-    }
+    // Helper untuk ubah SN multi-baris menjadi badge list
+    const renderSerialBadges = (serialText) => {
+        const raw = (serialText || "").replace(/\r/g, "");
+        const items = raw
+            .split("\n")           // 1 baris = 1 SN
+            .map(s => s.trim())
+            .filter(Boolean);
 
+        if (!items.length) {
+            return '<span class="sn-badge sn-badge-empty">-</span>';
+        }
+
+        return items
+            .map(sn => `<span class="sn-badge">${sn}</span>`)
+            .join("");
+    };
+
+    const serialBadgesHtml = renderSerialBadges(data.serialNumber);
+
+    card.innerHTML = `
+        <button class="btn-delete-card" data-doc-id="${data.id}">X</button>
+        <h3>Data Visit Site: ${data.site} (Tgl: ${data.tanggal || 'N/A'})</h3>
+        <div class="card-content-grid">
+            <div>
+                <p><strong>PIC:</strong> ${data.pic}</p>
+                <p><strong>No. Rack:</strong> ${data.noRack || '-'}</p>
+                <p><strong>Nama Rack:</strong> ${data.namaRack || '-'}</p>
+                <p><strong>Jenis Device:</strong> ${data.jenisDevice}</p>
+                <p><strong>Merk/Vendor:</strong> ${data.merk}</p>
+                <p><strong>Status:</strong> ${data.status}</p>
+            </div>
+            <div>
+                <p><strong>Modul Type:</strong> ${data.modulType || '-'}</p>
+                <p><strong>Board Name:</strong> ${data.boardName || '-'}</p>
+
+                <div class="sn-block">
+                    <p><strong>Serial Number (SN):</strong></p>
+                    <div class="sn-badge-list">
+                        ${serialBadgesHtml}
+                    </div>
+                    <small class="sn-help-text">
+                        1 badge = 1 Serial Number (diambil per baris dari kolom SN)
+                    </small>
+                </div>
+
+                <p><strong>Part Number (PN):</strong> ${data.partNumber || '-'}</p>
+                <p><strong>Remark:</strong> ${data.remark || '-'}</p>
+            </div>
+        </div>
+        <hr>
+        <div class="card-images-grid">
+            <div><p>Foto SN:</p>${renderImage(data.fotoUrlSN, 'Foto SN')}</div>
+            <div><p>Foto PN:</p>${renderImage(data.fotoUrlPN, 'Foto PN')}</div>
+            <div><p>Foto GPS:</p>${renderImage(data.fotoUrlGPS, 'Foto GPS')}</div>
+        </div>
+    `;
+    hasilDataContainer.appendChild(card);
+}
+    
     // 8e. Fungsi Hapus Data (Event Delegation)
     hasilDataContainer.addEventListener('click', async (e) => {
         // Cek apakah yang diklik adalah tombol hapus
@@ -1123,5 +1152,6 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
