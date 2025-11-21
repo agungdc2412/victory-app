@@ -280,7 +280,7 @@ async function autoSaveScanResult(targetField, decodedText, source) {
      * Menggunakan library html5-qrcode
      */
     // === Scan QR/Barcode dari FILE (upload gambar) ===
-async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
+    async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
     const file = fileInput.files[0];
     if (!file) {
         statusEl.textContent = "Silakan pilih file gambar terlebih dahulu.";
@@ -304,47 +304,59 @@ async function runQRScan(fileInput, statusEl, resultEl, btnEl) {
     let html5QrCode = null;
 
     try {
-    html5QrCode = new window.Html5Qrcode("qr-reader");
-    const decodedText = await html5QrCode.scanFile(file, false);
+        html5QrCode = new window.Html5Qrcode("qr-reader");
+        const decodedText = await html5QrCode.scanFile(file, false);
 
-    let finalText = decodedText || "";
+        let finalText = decodedText || "";
 
-    // ✅ KHUSUS FIELD SN: rapikan jadi 1 baris = 1 SN
-    if (resultEl && resultEl.id === "hasilSN") {
-        // 1. Pecah berdasarkan baris
-        const lines = (decodedText || "")
-            .split(/\r?\n/)           // pecah newline
-            .map(l => l.trim())
-            .filter(l => l.length > 0);
+        // ✅ KHUSUS FIELD SN: rapikan jadi 1 baris = 1 SN
+        if (resultEl && resultEl.id === "hasilSN") {
+            // 1. Pecah berdasarkan baris
+            const lines = (decodedText || "")
+                .split(/\r?\n/)
+                .map(l => l.trim())
+                .filter(l => l.length > 0);
 
-        // 2. Kalau masih 1 baris tapi isinya panjang / banyak spasi,
-        //    coba pecah lagi berdasarkan spasi / koma / titik koma
-        let tokens = lines;
-        if (lines.length <= 1) {
-            tokens = (decodedText || "")
-                .split(/[\s,;]+/)     // spasi/koma/titik koma
-                .map(t => t.trim())
-                .filter(t => t.length > 0);
+            // 2. Kalau cuma 1 baris tapi panjang, pecah lagi per spasi/koma
+            let tokens = lines;
+            if (lines.length <= 1) {
+                tokens = (decodedText || "")
+                    .split(/[\s,;]+/)
+                    .map(t => t.trim())
+                    .filter(t => t.length > 0);
+            }
+
+            // 3. Buang duplikat & yang terlalu pendek
+            const uniqueSN = [...new Set(tokens)].filter(t => t.length >= 4);
+
+            // 4. Susun ulang: 1 baris = 1 SN
+            if (uniqueSN.length > 0) {
+                finalText = uniqueSN.join("\n");
+            }
         }
 
-        // 3. Buang duplikat & hasil terlalu pendek (misal noise)
-        const uniqueSN = [...new Set(tokens)].filter(t => t.length >= 4);
-
-        // 4. Susun ulang: 1 baris = 1 SN
-        if (uniqueSN.length > 0) {
-            finalText = uniqueSN.join("\n");
+        // PN & field lain tetap apa adanya
+        resultEl.value = finalText;
+        statusEl.textContent = "Scan Berhasil!";
+        statusEl.style.color = "green";
+    } catch (error) {
+        console.error("Error QR Scan:", error);
+        statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
+        statusEl.style.color = "red";
+    } finally {
+        // bersihkan instance & aktifkan lagi tombol
+        if (html5QrCode) {
+            try {
+                await html5QrCode.clear();
+            } catch (e) {
+                console.warn("Gagal clear Html5Qrcode:", e);
+            }
         }
+        btnEl.disabled = false;
+        btnEl.textContent = originalBtnText || "Scan QR/Barcode (File)";
     }
-
-    // PN & field lain tetap seperti biasa (1 nilai atau beberapa baris apa adanya)
-    resultEl.value = finalText;
-    statusEl.textContent = "Scan Berhasil!";
-    statusEl.style.color = "green";
-} catch (error) {
-    console.error("Error QR Scan:", error);
-    statusEl.textContent = "Gagal memindai. Pastikan gambar jelas & merupakan Barcode/QR.";
-    statusEl.style.color = "red";
 }
+
 
 // === Scan QR/Barcode LANGSUNG dari KAMERA ===
 // === Scan QR/Barcode LANGSUNG dari KAMERA (bisa pilih depan/belakang) ===
@@ -722,15 +734,6 @@ async function setTorchIfSupported(powerOn) {
     }
     });
     
-    // Tombol pilih kamera depan / belakang
-    btnUseBack.addEventListener("click", () => {
-        switchToBackCamera();
-    });
-    
-    btnUseFront.addEventListener("click", () => {
-        switchToFrontCamera();
-    });
-
     // 8b. Listener Tombol Submit Form (Simpan Data)
     dataForm.addEventListener('submit', handleFormSubmit);
 
@@ -1111,3 +1114,4 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
