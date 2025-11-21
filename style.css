@@ -663,3 +663,39 @@ textarea {
     border: 1px solid #ccc;
     box-sizing: border-box;
 }
+
+/* Badge list untuk Serial Number (SN) di kartu */
+.sn-block {
+    margin-top: 4px;
+}
+
+.sn-badge-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 0 4px;
+}
+
+.sn-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    background-color: #fff7ed;      /* orange soft */
+    border: 1px solid #ffb27a;
+    color: #c05621;
+}
+
+.sn-badge-empty {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+}
+
+.sn-help-text {
+    display: block;
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
