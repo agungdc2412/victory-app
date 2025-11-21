@@ -171,6 +171,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDownloadImages = document.getElementById("btnDownloadImages");
     const btnSendEmail = document.getElementById("btnSendEmail");
 
+        // === Dashboard Admin ===
+    const adminTableBody      = document.getElementById("adminTableBody");
+    const adminFilterSite     = document.getElementById("adminFilterSite");
+    const adminFilterVendor   = document.getElementById("adminFilterVendor");
+    const adminFilterJenis    = document.getElementById("adminFilterJenis");
+    const adminFilterDateFrom = document.getElementById("adminFilterDateFrom");
+    const adminFilterDateTo   = document.getElementById("adminFilterDateTo");
+    const adminSearchText     = document.getElementById("adminSearchText");
+    const adminRowsPerPageSel = document.getElementById("adminRowsPerPage");
+    const adminPrevPageBtn    = document.getElementById("adminPrevPage");
+    const adminNextPageBtn    = document.getElementById("adminNextPage");
+    const adminPaginationInfo = document.getElementById("adminPaginationInfo");
+    const adminExportExcelBtn = document.getElementById("adminExportExcel");
+    const adminExportPDFBtn   = document.getElementById("adminExportPDF");
+    const adminApiUrl         = document.getElementById("adminApiUrl");
+    const adminApiJson        = document.getElementById("adminApiJson");
+
+    let adminCurrentPage = 1;
+    let adminRowsPerPage = 10;
+    let adminFilteredData = [];
+
 
     // === 6. FUNGSI HELPER (Alat Bantu) ===
     // === HELPER: GPS otomatis + preview link Maps ===
@@ -835,6 +856,23 @@ async function setTorchIfSupported(powerOn) {
             }, 3000);
         }
     }
+        // Format SN multiline -> kumpulan badge
+    function formatSnBadges(snText) {
+        if (!snText) return '<span>-</span>';
+
+        const parts = snText
+            .split(/\r?\n/)
+            .map(t => t.trim())
+            .filter(Boolean);
+
+        if (parts.length === 0) return '<span>-</span>';
+
+        const html = parts
+            .map(sn => `<span class="sn-badge">${sn}</span>`)
+            .join(" ");
+
+        return `<span class="sn-badges">${html}</span>`;
+    }
 
     // 8c. Listener Database (Mengambil Data Real-time)
     function setupFirestoreListener(userId) {
@@ -860,12 +898,125 @@ async function setTorchIfSupported(powerOn) {
                 dataKunjungan.push(data);
                 buatKartuDOM(data); // Buat kartu untuk setiap data
             });
+            // Update Dashboard Admin
+            refreshAdminDashboard();
             
         }, (error) => {
             console.error("Error mengambil data:", error);
             hasilDataContainer.innerHTML = '<p style="color:red;">Gagal memuat data dari database.</p>';
         });
     }
+
+        // === DASHBOARD ADMIN: FILTER & TABEL ===
+    function getAdminFilteredData() {
+        let filtered = dataKunjungan.slice();
+
+        const site = (adminFilterSite?.value || "").trim().toLowerCase();
+        const vendor = (adminFilterVendor?.value || "").trim().toLowerCase();
+        const jenis = (adminFilterJenis?.value || "").trim().toLowerCase();
+        const from = adminFilterDateFrom?.value || "";
+        const to   = adminFilterDateTo?.value || "";
+        const search = (adminSearchText?.value || "").trim().toLowerCase();
+
+        if (site) {
+            filtered = filtered.filter(d =>
+                (d.site || "").toLowerCase().includes(site)
+            );
+        }
+        if (vendor) {
+            filtered = filtered.filter(d =>
+                (d.merk || "").toLowerCase().includes(vendor)
+            );
+        }
+        if (jenis) {
+            filtered = filtered.filter(d =>
+                (d.jenisDevice || "").toLowerCase().includes(jenis)
+            );
+        }
+        if (from) {
+            filtered = filtered.filter(d => d.tanggal && d.tanggal >= from);
+        }
+        if (to) {
+            filtered = filtered.filter(d => d.tanggal && d.tanggal <= to);
+        }
+
+        if (search) {
+            filtered = filtered.filter(d => {
+                const fields = [
+                    d.site,
+                    d.pic,
+                    d.serialNumber,
+                    d.partNumber,
+                    d.noRack,
+                    d.namaRack
+                ];
+                return fields.some(val =>
+                    val && String(val).toLowerCase().includes(search)
+                );
+            });
+        }
+
+        return filtered;
+    }
+
+    function renderAdminTable() {
+        if (!adminTableBody) return;
+
+        const filtered = getAdminFilteredData();
+        adminFilteredData = filtered;
+
+        const total = filtered.length;
+        const rows = adminRowsPerPage || 10;
+        const maxPage = total === 0 ? 1 : Math.ceil(total / rows);
+
+        if (adminCurrentPage > maxPage) adminCurrentPage = maxPage;
+        if (adminCurrentPage < 1) adminCurrentPage = 1;
+
+        const start = (adminCurrentPage - 1) * rows;
+        const end = start + rows;
+        const pageItems = filtered.slice(start, end);
+
+        adminTableBody.innerHTML = "";
+
+        pageItems.forEach((item, idx) => {
+            const globalIndex = start + idx;
+            const tr = document.createElement("tr");
+            tr.dataset.index = String(globalIndex);
+
+            const gpsCell = item.fotoUrlGPS
+                ? `<a href="${item.fotoUrlGPS}" target="_blank">Foto GPS</a>`
+                : "-";
+
+            tr.innerHTML = `
+                <td>${globalIndex + 1}</td>
+                <td>${item.tanggal || ""}</td>
+                <td>${item.site || ""}</td>
+                <td>${item.pic || ""}</td>
+                <td>${item.merk || ""}</td>
+                <td>${item.jenisDevice || ""}</td>
+                <td>${item.noRack || ""}</td>
+                <td>${formatSnBadges(item.serialNumber)}</td>
+                <td>${item.partNumber || ""}</td>
+                <td>${gpsCell}</td>
+            `;
+            adminTableBody.appendChild(tr);
+        });
+
+        if (adminPaginationInfo) {
+            adminPaginationInfo.textContent = total === 0
+                ? "0 data"
+                : `Menampilkan ${start + 1}–${Math.min(end, total)} dari ${total} data`;
+        }
+
+        if (adminPrevPageBtn)  adminPrevPageBtn.disabled  = adminCurrentPage <= 1;
+        if (adminNextPageBtn)  adminNextPageBtn.disabled  = adminCurrentPage >= maxPage;
+    }
+
+    function refreshAdminDashboard() {
+        adminCurrentPage = 1;
+        renderAdminTable();
+    }
+
 
     // 8d. Fungsi Membuat Kartu di HTML
     function buatKartuDOM(data) {
@@ -918,7 +1069,7 @@ async function setTorchIfSupported(powerOn) {
                 <p><strong>Board Name:</strong> ${data.boardName || '-'}</p>
 
                 <div class="sn-block">
-                    <p><strong>Serial Number (SN):</strong></p>
+                    <p><strong>Serial Number (SN):</strong> ${formatSnBadges(data.serialNumber)}</p>
                     <div class="sn-badge-list">
                         ${serialBadgesHtml}
                     </div>
@@ -969,6 +1120,124 @@ async function setTorchIfSupported(powerOn) {
             }
         }
     });
+        // Event filter & search
+    [
+        adminFilterSite,
+        adminFilterVendor,
+        adminFilterJenis,
+        adminFilterDateFrom,
+        adminFilterDateTo,
+        adminSearchText
+    ].forEach(el => {
+        if (!el) return;
+        el.addEventListener("input", () => {
+            adminCurrentPage = 1;
+            renderAdminTable();
+        });
+    });
+
+    // Pagination control
+    if (adminRowsPerPageSel) {
+        adminRowsPerPageSel.addEventListener("change", () => {
+            adminRowsPerPage = parseInt(adminRowsPerPageSel.value, 10) || 10;
+            adminCurrentPage = 1;
+            renderAdminTable();
+        });
+    }
+
+    if (adminPrevPageBtn) {
+        adminPrevPageBtn.addEventListener("click", () => {
+            adminCurrentPage--;
+            renderAdminTable();
+        });
+    }
+    if (adminNextPageBtn) {
+        adminNextPageBtn.addEventListener("click", () => {
+            adminCurrentPage++;
+            renderAdminTable();
+        });
+    }
+
+    // Klik baris -> REST API viewer
+    if (adminTableBody) {
+        adminTableBody.addEventListener("click", (e) => {
+            const tr = e.target.closest("tr");
+            if (!tr) return;
+
+            const idx = parseInt(tr.dataset.index, 10);
+            const item = adminFilteredData[idx];
+            if (!item) return;
+
+            const userIdForUrl = item.userId || currentUserId || "<userId>";
+            const docIdForUrl  = item.id || "<docId>";
+
+            const apiUrl = `https://firestore.googleapis.com/v1/projects/victory-app-isp/databases/(default)/documents/users/${encodeURIComponent(userIdForUrl)}/devices/${encodeURIComponent(docIdForUrl)}`;
+
+            if (adminApiUrl)  adminApiUrl.textContent  = apiUrl;
+            if (adminApiJson) adminApiJson.textContent = JSON.stringify(item, null, 2);
+        });
+    }
+
+    // Export Excel (by filter)
+    if (adminExportExcelBtn) {
+        adminExportExcelBtn.addEventListener("click", () => {
+            const data = getAdminFilteredData();
+            if (data.length === 0) {
+                alert("Tidak ada data (hasil filter) untuk diekspor.");
+                return;
+            }
+
+            const rows = data.map(item => ({
+                "Tanggal": item.tanggal || "",
+                "Site": item.site || "",
+                "PIC": item.pic || "",
+                "Merk": item.merk || "",
+                "Jenis Device": item.jenisDevice || "",
+                "Rack": item.noRack || "",
+                "SN": (item.serialNumber || "").replace(/\r?\n/g, " | "),
+                "PN": item.partNumber || "",
+                "Foto GPS": item.fotoUrlGPS || ""
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "AdminFilter");
+            XLSX.writeFile(wb, "Admin_Filter_Rekap.xlsx");
+        });
+    }
+
+    // Export PDF (by filter – simple text layout)
+    if (adminExportPDFBtn) {
+        adminExportPDFBtn.addEventListener("click", () => {
+            const data = getAdminFilteredData();
+            if (data.length === 0) {
+                alert("Tidak ada data (hasil filter) untuk diekspor.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            let y = 12;
+            pdf.setFontSize(12);
+            pdf.text("Rekap Data Aset (Dashboard Admin – Hasil Filter)", 10, y);
+            y += 6;
+            pdf.setFontSize(9);
+
+            data.forEach((item, i) => {
+                if (y > 270) {
+                    pdf.addPage();
+                    y = 12;
+                }
+                pdf.text(`${i + 1}. ${item.tanggal || ""} | ${item.site || ""} | ${item.pic || ""}`, 10, y); y += 4;
+                pdf.text(`    Merk: ${item.merk || ""} | Jenis: ${item.jenisDevice || ""} | Rack: ${item.noRack || ""}`, 10, y); y += 4;
+                pdf.text(`    SN: ${(item.serialNumber || "").replace(/\r?\n/g, " | ")}`, 10, y); y += 4;
+                pdf.text(`    PN: ${item.partNumber || ""}`, 10, y); y += 5;
+            });
+
+            pdf.save("Admin_Filter_Rekap.pdf");
+        });
+    }
 
 
     // === 9. LOGIKA AKSI GLOBAL (EXPORT, ZIP, EMAIL) ===
@@ -1152,6 +1421,7 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
