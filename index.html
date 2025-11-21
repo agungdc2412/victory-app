@@ -72,15 +72,95 @@
       BAGIAN 2: APLIKASI UTAMA
       Secara default 'display: none'. Akan ditampilkan oleh JavaScript jika sudah login.
     -->
-    <div id="app-container" style="display: none;">
-        
-        <!-- 
-          PERBAIKAN (v3.5.2): 
-          Tambahkan 'div' tersembunyi untuk library QR Scanner.
-          Pustaka ini MEMBUTUHKAN elemen DOM untuk "dipegang",
-          bahkan saat memindai file (bukan kamera).
-        -->
-        <div id="qr-reader" style="display: none;"></div>
+        <div id="app-container" style="display: none;">
+
+  <!-- anchor untuk html5-qrcode (biarkan seperti ini) -->
+  <div id="qr-reader" style="display: none;"></div>
+
+  <div class="app-layout">
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <!-- pakai nama file logo yang sudah kamu upload ke repo -->
+        <img src="fiberstar-logo.png" alt="FiberStar Logo">
+        <div class="sidebar-logo-text">
+          <div class="app-name">V.I.C.T.O.R.Y</div>
+          <div class="app-sub">FiberStar Asset Management</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="sidebar-group" id="menuData">
+          <span>Menu Data</span>
+          <span class="chevron">▾</span>
+        </button>
+        <ul class="sidebar-group-list open">
+          <li>
+            <a href="#visit" data-page-target="page-visit"
+               class="nav-link nav-link-active">
+              Form Visit Site
+            </a>
+          </li>
+          <li>
+            <a href="#dashboard" data-page-target="page-dashboard"
+               class="nav-link">
+              Dashboard Admin
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- ========== AREA KONTEN ========== -->
+    <div class="app-main">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Data Visit Site</h1>
+          <p>Monitoring & dokumentasi aset jaringan secara real-time</p>
+        </div>
+        <div class="topbar-right">
+          <span id="user-email" class="topbar-user">Memuat...</span>
+          <button id="logout-btn" class="btn-logout">Logout</button>
+        </div>
+      </header>
+
+      <!-- PAGE WRAPPER -->
+      <main class="page-wrapper">
+        <!-- ================= HALAMAN FORM VISIT ================= -->
+        <section id="page-visit" class="app-page app-page-active">
+          <div class="page-inner">
+            <!-- 🔹 Pindahkan ISI FORM LAMA kamu ke sini -->
+            <!-- asalnya: <div class="input-form-card"> ... </div> -->
+
+            <div class="input-form-card">
+              <h2>Form Visit Site</h2>
+              <form id="dataForm">
+                <!-- ====== copy persis semua form yang sekarang ====== -->
+                <!-- mulai dari <div class="form-grid"> ... sampai tombol
+                     “Simpan Data ke Database” & status text -->
+                <!-- (kode form yang kamu kirim sebelumnya, tinggal paste) -->
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= HALAMAN DASHBOARD ADMIN ================= -->
+        <section id="page-dashboard" class="app-page">
+          <div class="page-inner">
+            <!-- 🔹 Pindahkan seluruh HASIL REKAP + Dashboard Admin ke sini -->
+            <!-- asalnya: <div class="results-area"> ... </div> -->
+
+            <div class="results-area">
+              <!-- copy PERSIS blok hasil rekap, tombol Export, tabel,
+                   dashboard admin, REST API viewer, dll yang sekarang di kanan -->
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
 
         <header class="app-header">
     <div class="app-header-left">
@@ -401,5 +481,6 @@
 </body>
 
 </html>
+
 
 
