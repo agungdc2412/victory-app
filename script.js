@@ -180,6 +180,42 @@ document.addEventListener('DOMContentLoaded', () => {
     let adminRowsPerPage = 10;
     let adminFilteredData = [];
 
+        // ========== NAVIGASI SIDEBAR: FORM VISIT vs DASHBOARD ==========
+    const navLinks = document.querySelectorAll(".nav-link[data-page-target]");
+    const pages = document.querySelectorAll(".app-page");
+    const sidebarGroup = document.getElementById("menuData");
+    const sidebarList = document.querySelector(".sidebar-group-list");
+
+    function showPage(pageId) {
+        pages.forEach(p => {
+            p.classList.toggle("app-page-active", p.id === pageId);
+        });
+        navLinks.forEach(a => {
+            a.classList.toggle("nav-link-active", a.dataset.pageTarget === pageId);
+        });
+        // simpan pilihan terakhir
+        localStorage.setItem("victory_active_page", pageId);
+    }
+
+    navLinks.forEach(a => {
+        a.addEventListener("click", (e) => {
+            e.preventDefault();
+            const target = a.dataset.pageTarget;
+            showPage(target);
+        });
+    });
+
+    // Dropdown menu "Menu Data"
+    if (sidebarGroup && sidebarList) {
+        sidebarGroup.addEventListener("click", () => {
+            sidebarList.classList.toggle("open");
+        });
+    }
+
+    // restore page terakhir atau default ke Form Visit
+    const savedPage = localStorage.getItem("victory_active_page") || "page-visit";
+    showPage(savedPage);
+
 
     // === 6. FUNGSI HELPER (Alat Bantu) ===
     // === HELPER: GPS otomatis + preview link Maps ===
@@ -1409,6 +1445,7 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
