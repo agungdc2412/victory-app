@@ -137,53 +137,11 @@
               <h2>Form Visit Site</h2>
               <form id="dataForm">
                 <!-- ====== copy persis semua form yang sekarang ====== -->
-                <!-- mulai dari <div class="form-grid"> ... sampai tombol
-                     “Simpan Data ke Database” & status text -->
-                <!-- (kode form yang kamu kirim sebelumnya, tinggal paste) -->
-              </form>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================= HALAMAN DASHBOARD ADMIN ================= -->
-        <section id="page-dashboard" class="app-page">
-          <div class="page-inner">
-            <!-- 🔹 Pindahkan seluruh HASIL REKAP + Dashboard Admin ke sini -->
-            <!-- asalnya: <div class="results-area"> ... </div> -->
-
-            <div class="results-area">
-              <!-- copy PERSIS blok hasil rekap, tombol Export, tabel,
-                   dashboard admin, REST API viewer, dll yang sekarang di kanan -->
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-</div>
-
-        <header class="app-header">
-    <div class="app-header-left">
-        <!-- Logo FiberStar kecil di form -->
-        <img src="fiberstar-logo.png" alt="FiberStar" class="brand-logo-small">
-        <div class="app-header-text">
-            <h1>Data Visit Site</h1>
-            <p class="app-subtitle">FiberStar • V.I.C.T.O.R.Y Asset Management</p>
-        </div>
-    </div>
-    <div class="header-user">
-        <span id="user-email">Memuat...</span>
-        <button id="logout-btn" class="btn-logout">Logout</button>
-    </div>
-</header>
-
-
-        <main class="container">
+                <main class="container">
             <!-- Kolom Input Data -->
             <div class="input-form-card">
                 <h2>Form Visit Site</h2>
                 <form id="dataForm">
-                    
                     <div class="form-grid">
                         <!-- Kolom Kiri Grid -->
                         <div class="form-column">
@@ -258,8 +216,6 @@
                                 <textarea id="remark" rows="3"></textarea>
                             </div>
                         </div>
-
-                        <!-- Kolom Kanan Grid (Upload) -->
                         <div class="form-column">
                             <!-- UPLOAD FOTO SN -->
                             <div class="form-group upload-section">
@@ -357,7 +313,21 @@
                 </form>
             </div>
 
-            <!-- Kolom Hasil (Kartu) -->
+                  <!-- mulai dari <div class="form-grid"> ... sampai tombol
+                     “Simpan Data ke Database” & status text -->
+                <!-- (kode form yang kamu kirim sebelumnya, tinggal paste) -->
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= HALAMAN DASHBOARD ADMIN ================= -->
+        <section id="page-dashboard" class="app-page">
+          <div class="page-inner">
+            <!-- 🔹 Pindahkan seluruh HASIL REKAP + Dashboard Admin ke sini -->
+            <!-- asalnya: <div class="results-area"> ... </div> -->
+
+             <!-- Kolom Hasil (Kartu) -->
             <div class="results-area">
                 <h2>Hasil Rekap Data (dari Database)</h2>
                 <div class="global-actions">
@@ -373,8 +343,11 @@
                     <p>Memuat data dari database...</p>
                 </div>
                 <hr class="admin-divider">
-                
-                    <section id="admin-dashboard">
+              
+            <div class="results-area">
+              <!-- copy PERSIS blok hasil rekap, tombol Export, tabel,
+                   dashboard admin, REST API viewer, dll yang sekarang di kanan -->
+                <section id="admin-dashboard">
                       <h2>Dashboard Admin – Rekap Aset</h2>
                     
                       <!-- Filter bar -->
@@ -474,6 +447,33 @@
                     </section>
 
             </div>
+                
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
+
+        <header class="app-header">
+    <div class="app-header-left">
+        <!-- Logo FiberStar kecil di form -->
+        <img src="fiberstar-logo.png" alt="FiberStar" class="brand-logo-small">
+        <div class="app-header-text">
+            <h1>Data Visit Site</h1>
+            <p class="app-subtitle">FiberStar • V.I.C.T.O.R.Y Asset Management</p>
+        </div>
+    </div>
+    <div class="header-user">
+        <span id="user-email">Memuat...</span>
+        <button id="logout-btn" class="btn-logout">Logout</button>
+    </div>
+</header>
+
+                        <!-- Kolom Kanan Grid (Upload) -->
+
+                    
         </main>
         
     </div> <!-- Akhir dari #app-container -->
@@ -481,6 +481,7 @@
 </body>
 
 </html>
+
 
 
 
