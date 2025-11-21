@@ -292,6 +292,107 @@
                     <!-- Kartu-kartu data visit dari Firebase akan muncul di sini -->
                     <p>Memuat data dari database...</p>
                 </div>
+                <hr class="admin-divider">
+                
+                    <section id="admin-dashboard">
+                      <h2>Dashboard Admin – Rekap Aset</h2>
+                    
+                      <!-- Filter bar -->
+                      <div class="admin-filters">
+                        <div class="filter-group">
+                          <label for="adminFilterSite">Site</label>
+                          <input type="text" id="adminFilterSite" placeholder="Nama site / kode site">
+                        </div>
+                    
+                        <div class="filter-group">
+                          <label for="adminFilterVendor">Vendor / Merk</label>
+                          <input type="text" id="adminFilterVendor" placeholder="ZTE, Huawei, dsb.">
+                        </div>
+                    
+                        <div class="filter-group">
+                          <label for="adminFilterJenis">Jenis Device</label>
+                          <input type="text" id="adminFilterJenis" placeholder="OLT, Router, OTB, dll.">
+                        </div>
+                    
+                        <div class="filter-group">
+                          <label>Tanggal</label>
+                          <div class="filter-date-range">
+                            <input type="date" id="adminFilterDateFrom">
+                            <span>s.d.</span>
+                            <input type="date" id="adminFilterDateTo">
+                          </div>
+                        </div>
+                    
+                        <div class="filter-group filter-search">
+                          <label for="adminSearchText">Search bebas</label>
+                          <input type="text" id="adminSearchText" placeholder="Cari SN/PN/PIC/Rack...">
+                        </div>
+                      </div>
+                    
+                      <!-- Table wrapper -->
+                      <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Tanggal</th>
+                              <th>Site</th>
+                              <th>PIC</th>
+                              <th>Merk</th>
+                              <th>Jenis Device</th>
+                              <th>Rack</th>
+                              <th>Serial Number (SN)</th>
+                              <th>Part Number (PN)</th>
+                              <th>Foto GPS</th>
+                            </tr>
+                          </thead>
+                          <tbody id="adminTableBody">
+                            <!-- Diisi via JS -->
+                          </tbody>
+                        </table>
+                      </div>
+                    
+                      <!-- Pagination -->
+                      <div class="admin-pagination">
+                        <div>
+                          Tampilkan
+                          <select id="adminRowsPerPage">
+                            <option value="10">10 baris</option>
+                            <option value="25">25 baris</option>
+                            <option value="50">50 baris</option>
+                          </select>
+                          per halaman
+                        </div>
+                        <div class="admin-pagination-controls">
+                          <button type="button" id="adminPrevPage">&laquo; Sebelumnya</button>
+                          <span id="adminPaginationInfo">0 data</span>
+                          <button type="button" id="adminNextPage">Berikutnya &raquo;</button>
+                        </div>
+                      </div>
+                    
+                      <!-- Export & REST viewer -->
+                      <div class="admin-export-bar">
+                        <button type="button" id="adminExportExcel" class="btn btn-success">
+                          Export (by filter) ke Excel
+                        </button>
+                        <button type="button" id="adminExportPDF" class="btn btn-danger">
+                          Export (by filter) ke PDF
+                        </button>
+                      </div>
+                    
+                      <div class="admin-api-viewer">
+                        <div>
+                          <h3>REST API Viewer</h3>
+                          <p>Klik salah satu baris di tabel untuk melihat payload & URL API.</p>
+                          <div class="api-url">
+                            <strong>REST URL:</strong>
+                            <span id="adminApiUrl">—</span>
+                          </div>
+                        </div>
+                        <pre id="adminApiJson" class="api-json">/* JSON dokumen akan tampil di sini */</pre>
+                      </div>
+                    </section>
+
             </div>
         </main>
         
@@ -300,4 +401,5 @@
 </body>
 
 </html>
+
 
