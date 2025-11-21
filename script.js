@@ -1,14 +1,3 @@
-/*
- * SCRIPT APLIKASI V.I.C.T.O.R.Y v3.5.2 (QR Fix)
- *
- * PERUBAHAN v3.5.2:
- * - Memperbaiki kegagalan scan QR code.
- * - Pustaka html5-qrcode tampaknya membutuhkan elemen DOM nyata
- * sebagai "pegangan" (anchor), bahkan saat memindai file.
- * - Kita mengganti 'new Html5Qrcode(null, true)' dengan
- * 'new Html5Qrcode("qr-reader")' yang merujuk ke <div> baru
- * yang tersembunyi di index.html (v3.5.2).
- */
 
 // === 1. IMPORT MODUL FIREBASE ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -61,11 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // === 4. DATA UNTUK AUTACOMPLETE (DATALIST) ===
     
     // Ini adalah 'Master List' yang berisi SEMUA kemungkinan
-    const dataNamaRack = ["Modul", "DWDM", "Rectifier", "Battery", "OTB", "AC", "Lainnya"];
+    const dataNamaRack = ["DWDM", "OLT", "Rectifier", "Battery", "OTB", "AC", "Lainnya"];
     const dataJenisDevice = [
-        "DWDM Huawei Module", "DWDM Nokia Module", "OLT C320v2 Module", "OLT C620 Module", "OLT Huawei Module",
-        "Router Cisco Module", "Router", "Switch", "OLT", "SWITCH", "Server", "RECTIFIER", "Sys. Controller Rectifier",
-        "Module Rectifier", "Battery", "AC", "OTB"
+        "DWDM","OLT", "SWITCH", "ROUTER", "RECTIFIER", "INVERTER", "UPS", "Sys. Controller Rectifier",
+        "Module Rectifier","Module DWDM", "Battery", "AC", "OTB","MC"
     ];
     // MASTER LISTS (Nama diubah menjadi 'all...')
     const allModulTypes = [
@@ -1421,6 +1409,7 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
