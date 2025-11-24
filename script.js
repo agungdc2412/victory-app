@@ -1341,75 +1341,90 @@ async function setTorchIfSupported(powerOn) {
     });
 
     // 9c. Download Semua Gambar (ZIP)
-    btnDownloadImages.addEventListener("click", async () => {
-        if (dataKunjungan.length === 0) {
-            alert("Tidak ada data (kartu) untuk diunduh gambarnya.");
-            return;
-        }
-
-        globalActionStatus.textContent = "Mempersiapkan file ZIP... (Ini bisa lambat jika banyak foto)";
         
-        try {
-            // JSZip dan FileSaver di-load dari <head>
-            const zip = new JSZip();
-
-            // Fungsi untuk mengambil blob gambar dari URL
-            // Perlu penanganan CORS jika storage tidak di domain yg sama
-            const fetchImage = async (url) => {
-                // Menggunakan 'cors-anywhere' proxy untuk bypass CORS
-                // Ganti dengan proxy Anda sendiri jika diperlukan
-                // PERINGATAN: 'cors-anywhere' adalah layanan publik demo.
-                // Untuk produksi, Anda harus mengaturnya sendiri atau mengkonfigurasi
-                // Aturan CORS di Firebase Storage Anda.
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const response = await fetch(proxyUrl + encodeURIComponent(url));
-                if (!response.ok) throw new Error(`Gagal fetch ${url} via proxy`);
-                return response.blob();
-            };
-            
-            const promises = [];
-            
-            // Loop semua data kunjungan
-            for (const data of dataKunjungan) {
-                const baseName = `${data.site || 'NA'}-${data.noRack || 'NA'}-${data.jenisDevice || 'NA'}`;
-                
-                // Tambahkan file ke promise
-                if (data.fotoUrlSN) {
-                    promises.push(fetchImage(data.fotoUrlSN).then(blob => zip.file(`${baseName}_SN.jpg`, blob)));
-                }
-                if (data.fotoUrlPN) {
-                    promises.push(fetchImage(data.fotoUrlPN).then(blob => zip.file(`${baseName}_PN.jpg`, blob)));
-                }
-                if (data.fotoUrlGPS) {
-                    promises.push(fetchImage(data.fotoUrlGPS).then(blob => zip.file(`${baseName}_GPS.jpg`, blob)));
-                }
+        btnDownloadImages.addEventListener("click", async () => {
+            if (dataKunjungan.length === 0) {
+                alert("Tidak ada data (kartu) untuk diunduh gambarnya.");
+                return;
             }
-            
-            // Tunggu semua gambar di-fetch
-            await Promise.all(promises);
-
-            // Generate ZIP
-            globalActionStatus.textContent = "Mengompres file... mohon tunggu...";
-            const content = await zip.generateAsync({ type: "blob" });
-            
-            // Trigger download
-            saveAs(content, "Arsip_Foto_Perangkat.zip");
-            globalActionStatus.textContent = "ZIP berhasil dibuat!";
-
-        } catch (error) {
-            console.error("Error creating ZIP:", error);
-            // Error CORS sering terjadi di sini
-            if (error.message.includes('fetch') || error.message.includes('CORS') || error.message.includes('proxy')) {
-                globalActionStatus.textContent = "Gagal mengunduh foto (Error CORS). Cek setup Firebase Storage.";
-                alert("Gagal mengunduh foto. Ini seringkali disebabkan oleh aturan CORS di Firebase Storage. Coba atur rules di Firebase Storage untuk mengizinkan 'GET' dari domain publik.");
-            } else {
-                globalActionStatus.textContent = "Gagal membuat file ZIP.";
+        
+            globalActionStatus.textContent = "Mempersiapkan file ZIP... (Ini bisa lambat jika banyak foto)";
+            globalActionStatus.style.color = "blue";
+        
+            try {
+                const zip = new JSZip();
+        
+                // Fungsi untuk mengambil blob gambar dari URL download publik Firebase
+                const fetchImage = async (url) => {
+                    // `url` di sini sudah berupa downloadURL publik dari getDownloadURL()
+                    const response = await fetch(url);
+        
+                    if (!response.ok) {
+                        throw new Error(`Gagal fetch ${url} (status ${response.status})`);
+                    }
+        
+                    return response.blob();
+                };
+        
+                const promises = [];
+        
+                // Loop semua data kunjungan
+                for (const data of dataKunjungan) {
+                    const baseName = `${data.site || "NA"}-${data.noRack || "NA"}-${data.jenisDevice || "NA"}`;
+        
+                    if (data.fotoUrlSN) {
+                        promises.push(
+                            fetchImage(data.fotoUrlSN).then((blob) =>
+                                zip.file(`${baseName}_SN.jpg`, blob)
+                            )
+                        );
+                    }
+                    if (data.fotoUrlPN) {
+                        promises.push(
+                            fetchImage(data.fotoUrlPN).then((blob) =>
+                                zip.file(`${baseName}_PN.jpg`, blob)
+                            )
+                        );
+                    }
+                    if (data.fotoUrlGPS) {
+                        promises.push(
+                            fetchImage(data.fotoUrlGPS).then((blob) =>
+                                zip.file(`${baseName}_GPS.jpg`, blob)
+                            )
+                        );
+                    }
+                }
+        
+                // Tunggu semua gambar di-fetch
+                await Promise.all(promises);
+        
+                // Generate ZIP
+                globalActionStatus.textContent = "Mengompres file... mohon tunggu...";
+                const content = await zip.generateAsync({ type: "blob" });
+        
+                // Trigger download
+                saveAs(content, "Arsip_Foto_Perangkat.zip");
+                globalActionStatus.textContent = "ZIP berhasil dibuat!";
+                globalActionStatus.style.color = "green";
+            } catch (error) {
+                console.error("Error creating ZIP:", error);
+                globalActionStatus.textContent =
+                    "Gagal mengunduh foto. Pastikan aturan Firebase Storage mengizinkan GET publik.";
+                globalActionStatus.style.color = "red";
+                alert(
+                    "Gagal membuat ZIP.\n\n" +
+                    "Pastikan:\n" +
+                    "1) Rules Storage sudah `allow read;` (publik) atau minimal untuk user yang login\n" +
+                    "2) URL yang disimpan di fotoUrlSN/PN/GPS adalah downloadURL dari getDownloadURL()."
+                );
+            } finally {
+                setTimeout(() => {
+                    globalActionStatus.textContent = "";
+                    globalActionStatus.style.color = "blue";
+                }, 5000);
             }
-            globalActionStatus.style.color = 'red';
-        } finally {
-            setTimeout(() => { globalActionStatus.textContent = ''; globalActionStatus.style.color = 'blue'; }, 5000);
-        }
-    });
+        });
+
 
 
     // 9d. Send Email (Draft)
@@ -1445,6 +1460,7 @@ async function setTorchIfSupported(powerOn) {
         window.location.href = mailtoLink;
     });
 }); // === AKHIR DARI DOMContentLoaded ===
+
 
 
 
