@@ -248,80 +248,140 @@ function clearAutoFill() {
     document.getElementById("autoProdType").value = "";
 }
 
-// === 5. CSV IMPORT (SMART PARSER) ===
+// === 5. CSV IMPORT (SMART PARSER – SUPPORT ; , dan TAB) ===
 document.getElementById("importCsvRef").addEventListener("change", (e) => {
     const file = e.target.files[0];
-    if(!file) return;
-    
+    if (!file) return;
+
     const reader = new FileReader();
     const statusEl = document.getElementById("importStatus");
+    statusEl.style.color = "#333";
     statusEl.textContent = "Menganalisa file CSV...";
-    
+
     reader.onload = async (event) => {
         try {
             const text = event.target.result;
-            const lines = text.split(/\r\n|\n|\r/);
-            if(lines.length < 2) throw new Error("File CSV kosong.");
 
-            // Auto-detect delimiter
+            // Pecah jadi baris
+            let lines = text.split(/\r\n|\n|\r/).filter(l => l && l.trim() !== "");
+            if (lines.length < 2) throw new Error("File CSV kosong / hanya berisi header.");
+
             const header = lines[0];
-            let delimiter = ';';
-            if ((header.match(/;/g) || []).length < (header.match(/,/g) || []).length) delimiter = ',';
 
-            const batchSize = 400; 
-            let batch = writeBatch(db);
-            let count = 0;
-            let totalImported = 0;
-            
-            statusEl.textContent = `Memproses (Delimiter: ${delimiter === ';' ? 'Titik Koma' : 'Koma'})...`;
-            
+            // Hitung kandidat delimiter
+            const semiCount = (header.match(/;/g) || []).length;
+            const commaCount = (header.match(/,/g) || []).length;
+            const tabCount = (header.match(/\t/g) || []).length;
+
+            let delimiter = ";";
+            let delimLabel = "Titik Koma (;)";
+
+            const maxCount = Math.max(semiCount, commaCount, tabCount);
+            if (maxCount === tabCount) {
+                delimiter = "\t";
+                delimLabel = "TAB";
+            } else if (maxCount === commaCount) {
+                delimiter = ",";
+                delimLabel = "Koma (,)";
+            } else {
+                delimiter = ";";
+                delimLabel = "Titik Koma (;)";
+            }
+
+            statusEl.textContent = `Memproses... (Delimiter terdeteksi: ${delimLabel})`;
+
+            // Fungsi bersih-bersih string
             const clean = (str) => {
-                if(!str) return "";
-                return str.trim().replace(/^"|"$/g, '').replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+                if (!str && str !== 0) return "";
+                return String(str)
+                    .trim()
+                    .replace(/^"|"$/g, "")
+                    .replace(/[\x00-\x1F\x7F-\x9F]/g, "");
             };
 
-            for(let i=1; i<lines.length; i++) {
+            const batchSize = 400;
+            let batch = writeBatch(db);
+            let countInBatch = 0;
+            let totalImported = 0;
+
+            // Lewati baris header (mulai dari index 1)
+            for (let i = 1; i < lines.length; i++) {
                 const line = lines[i];
-                if(!line || line.trim() === "") continue;
+                if (!line || line.trim() === "") continue;
+
                 const cols = line.split(delimiter);
-                if(cols.length < 2) continue; 
-                
+
+                // Minimal harus ada 2 kolom supaya masuk akal
+                if (cols.length < 2) continue;
+
+                // Mapping kolom sesuai file contoh:
+                // 0: Module
+                // 1: Device Module
+                // 2: Modul Type
+                // 3: Board Name
+                // 4: Description Object (SAP)
+                // 5: Type Object (SAP)
+                // 6: Manufacturer (SAP)
+                // 7: Product Type-MM (SAP)
                 const refData = {
-                    module: clean(cols[0]),
+                    module:       clean(cols[0]),
                     deviceModule: clean(cols[1]),
-                    modulType: clean(cols[2]),
-                    boardName: clean(cols[3]) || "-",
-                    description: clean(cols[4]),  
-                    typeObject: clean(cols[5]),
-                    manufacturer: clean(cols[6]),
-                    productType: clean(cols[7])
+                    modulType:    clean(cols[2]),
+                    boardName:    clean(cols[3] || "-"),
+                    description:  clean(cols[4] || ""),   // Description Object (SAP)
+                    typeObject:   clean(cols[5] || ""),   // Type Object (SAP)
+                    manufacturer: clean(cols[6] || ""),   // Manufacturer (SAP)
+                    productType:  clean(cols[7] || "")    // Product Type-MM (SAP)
                 };
-                
+
+                // Jika module & device kosong, skip baris
+                if (!refData.module && !refData.deviceModule) continue;
+
                 const newRef = doc(collection(db, "references"));
                 batch.set(newRef, refData);
-                count++;
+                countInBatch++;
                 totalImported++;
-                
-                if(count >= batchSize) {
+
+                // Commit per batch untuk aman (limit 500 doc per batch Firestore)
+                if (countInBatch >= batchSize) {
                     await batch.commit();
                     batch = writeBatch(db);
-                    count = 0;
-                    statusEl.textContent = `Terupload ${totalImported} data...`;
+                    countInBatch = 0;
+                    statusEl.textContent = `Terupload ${totalImported} baris... (delimiter: ${delimLabel})`;
                 }
             }
-            if(count > 0) await batch.commit();
-            statusEl.textContent = `SUKSES! ${totalImported} data diimpor.`;
-            statusEl.style.color = "green";
-            loadReferences(); 
+
+            if (countInBatch > 0) {
+                await batch.commit();
+            }
+
+            if (totalImported === 0) {
+                statusEl.style.color = "red";
+                statusEl.textContent = "Tidak ada baris valid yang berhasil diimport. Cek kembali format CSV.";
+            } else {
+                statusEl.style.color = "green";
+                statusEl.textContent = `SUKSES! ${totalImported} data referensi berhasil diimpor.`;
+            }
+
+            // Refresh tampilan tabel & dropdown Module/Device/Type/Board
+            await loadReferences();
+
         } catch (err) {
-            console.error(err);
-            statusEl.textContent = `ERROR: ${err.message}`;
+            console.error("CSV Import Error:", err);
             statusEl.style.color = "red";
-            if(err.message.includes("permission")) alert("Gagal Import: Cek Rules Firestore Anda!");
+            let msg = err.message || String(err);
+            if (msg.includes("Missing or insufficient permissions")) {
+                msg = "IZIN FIRESTORE DITOLAK: Cek rules Firestore (allow read, write: if true; untuk testing).";
+            }
+            statusEl.textContent = `ERROR: ${msg}`;
+            alert(`Gagal import CSV:\n${msg}`);
         } finally {
+            // Reset input supaya bisa pilih file yang sama lagi kalau mau re-import
             e.target.value = "";
         }
     };
+
+    // Baca sebagai teks (browser akan handle encoding umum: UTF-8, ANSI, dll)
     reader.readAsText(file);
 });
 
@@ -558,3 +618,4 @@ window.exportExcel = () => {
     XLSX.writeFile(wb, "Report_Victory.xlsx");
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
+
