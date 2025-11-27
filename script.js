@@ -5,11 +5,12 @@
 
 // === DETEKSI ERROR GLOBAL (PENTING UNTUK DEBUGGING) ===
 window.onerror = function(msg, url, line) {
-    // Abaikan error resize observer yang tidak berbahaya
     if (msg.includes("ResizeObserver")) return;
     
     let tips = "";
-    if (msg.toLowerCase().includes("module") || msg.toLowerCase().includes("cors")) {
+    if (msg.toLowerCase().includes("unexpected token '<'")) {
+        tips = "TIPS: Isi file script.js Anda salah! Sepertinya Anda memasukkan kode HTML ke dalamnya. Hapus isinya dan copy ulang kode JavaScript.";
+    } else if (msg.toLowerCase().includes("module") || msg.toLowerCase().includes("cors")) {
         tips = "TIPS: Jangan buka file dengan klik dua kali (file://). Gunakan 'Live Server' di VS Code (http://localhost...).";
     } else if (msg.toLowerCase().includes("permission")) {
         tips = "TIPS: Cek 'Rules' di Firebase Firestore/Storage. Pastikan sudah 'allow read, write: if true;'.";
@@ -27,7 +28,7 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, writeBatch, 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // === 1. KONFIGURASI FIREBASE ===
-// PENTING: Pastikan ini data PROYEK ANDA SENDIRI!
+// PENTING: GANTI DATA INI DENGAN MILIK ANDA SENDIRI!
 const firebaseConfig = {
     apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8", 
     authDomain: "victory-app-isp.firebaseapp.com",
@@ -163,7 +164,6 @@ async function loadReferences() {
 
     } catch (err) {
         console.error("Firebase Error:", err);
-        // Error handling khusus untuk permission
         let errorMsg = err.message;
         if(errorMsg.includes("Missing or insufficient permissions")) {
             errorMsg = "IZIN DITOLAK: Pastikan 'Firestore Rules' di Firebase Console sudah diset ke 'allow read, write: if true;'";
