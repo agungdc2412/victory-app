@@ -27,6 +27,11 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopu
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, writeBatch, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
+function loadDashboardStats() {
+    // nanti kalau mau bikin dashboard analitik beneran, isi di sini.
+    console.log('loadDashboardStats() dipanggil – belum diimplementasi.');
+}
+
 // === 1. KONFIGURASI FIREBASE ===
 // PENTING: GANTI DATA INI DENGAN MILIK ANDA SENDIRI!
 const firebaseConfig = {
@@ -618,4 +623,5 @@ window.exportExcel = () => {
     XLSX.writeFile(wb, "Report_Victory.xlsx");
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
+
 
