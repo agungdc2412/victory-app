@@ -1,7 +1,25 @@
 /*
- * SCRIPT V.I.C.T.O.R.Y v4.3 (Final Debug Edition)
- * Perbaikan: Deteksi Error Config, Pembersih CSV Agresif, & Error Reporting
+ * SCRIPT V.I.C.T.O.R.Y v4.4 (Self-Diagnose Edition)
+ * Fitur Baru: Deteksi Error Otomatis (CORS, Permission, Config)
  */
+
+// === DETEKSI ERROR GLOBAL (PENTING UNTUK DEBUGGING) ===
+window.onerror = function(msg, url, line) {
+    // Abaikan error resize observer yang tidak berbahaya
+    if (msg.includes("ResizeObserver")) return;
+    
+    let tips = "";
+    if (msg.toLowerCase().includes("module") || msg.toLowerCase().includes("cors")) {
+        tips = "TIPS: Jangan buka file dengan klik dua kali (file://). Gunakan 'Live Server' di VS Code (http://localhost...).";
+    } else if (msg.toLowerCase().includes("permission")) {
+        tips = "TIPS: Cek 'Rules' di Firebase Firestore/Storage. Pastikan sudah 'allow read, write: if true;'.";
+    } else if (msg.toLowerCase().includes("api key")) {
+        tips = "TIPS: API Key Firebase Anda salah atau belum diganti.";
+    }
+
+    alert(`ERROR SISTEM:\n${msg}\n\n${tips}`);
+    return false;
+};
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9,7 +27,7 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, writeBatch, 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // === 1. KONFIGURASI FIREBASE ===
-// PENTING: Ganti dengan data dari Firebase Console Anda!
+// PENTING: Pastikan ini data PROYEK ANDA SENDIRI!
 const firebaseConfig = {
     apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8", 
     authDomain: "victory-app-isp.firebaseapp.com",
@@ -20,16 +38,22 @@ const firebaseConfig = {
     measurementId: "G-Q1DJ3BG41V"
 };
 
-// Cek apakah user lupa mengganti Config
+// Cek Config Dummy
 if (firebaseConfig.apiKey === "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8") {
-    alert("PERINGATAN KRITIKAL: Anda belum mengganti 'firebaseConfig' di script.js dengan data proyek Firebase Anda sendiri. Aplikasi tidak akan bisa menyimpan data!");
+    alert("PERINGATAN: Anda belum mengganti konfigurasi Firebase di script.js! Silakan ganti dengan data dari Firebase Console Anda agar aplikasi berfungsi.");
 }
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const provider = new GoogleAuthProvider();
+// Inisialisasi dengan Error Handling
+let app, auth, db, storage, provider;
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    provider = new GoogleAuthProvider();
+} catch (e) {
+    alert("Gagal Menghubungkan Firebase:\n" + e.message);
+}
 
 // === STATE MANAGEMENT ===
 let currentUser = null;
@@ -65,11 +89,18 @@ document.getElementById("login-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const em = document.getElementById("login-email").value;
     const pw = document.getElementById("login-password").value;
-    signInWithEmailAndPassword(auth, em, pw).catch(err => alert("Login Gagal: " + err.message));
+    signInWithEmailAndPassword(auth, em, pw).catch(err => {
+        let msg = err.message;
+        if(msg.includes("auth/invalid-credential")) msg = "Email atau Password Salah.";
+        if(msg.includes("auth/user-not-found")) msg = "User tidak ditemukan. Silakan daftar dulu di Firebase Console.";
+        alert("Login Gagal: " + msg);
+    });
 });
 
 document.getElementById("google-login-btn").addEventListener("click", () => {
-    signInWithPopup(auth, provider).catch(err => alert("Google Login Error: " + err.message));
+    signInWithPopup(auth, provider).catch(err => {
+        alert("Login Google Gagal: " + err.message + "\n\nPastikan 'Google Sign-in' sudah di-enable di Firebase Console.");
+    });
 });
 
 // === 3. NAVIGATION ===
@@ -78,7 +109,6 @@ window.switchTab = (tabId) => {
     document.getElementById(`view-${tabId}`).classList.add('active');
     document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
     
-    // Highlight sidebar (Quick Fix)
     const navs = document.querySelectorAll('.nav-links li');
     if(tabId==='dashboard') navs[0].classList.add('active');
     if(tabId==='input') navs[1].classList.add('active');
@@ -88,11 +118,10 @@ window.switchTab = (tabId) => {
     if(tabId === 'dashboard') refreshDashboard();
 }
 
-// === 4. REFERENCE DATA (LOAD & CASCADING) ===
-
+// === 4. REFERENCE DATA ===
 async function loadReferences() {
     const tbody = document.getElementById("refTableBody");
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Sedang memuat data dari database...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Sedang memuat data...</td></tr>';
 
     try {
         const q = query(collection(db, 'references'));
@@ -100,9 +129,8 @@ async function loadReferences() {
         
         referenceData = [];
         tbody.innerHTML = "";
-        
         let count = 0;
-        const maxDisplay = 100; // Tampilkan lebih banyak
+        const maxDisplay = 100; 
 
         snapshot.forEach(docSnap => {
             const d = docSnap.data();
@@ -110,9 +138,7 @@ async function loadReferences() {
             referenceData.push(d);
             
             if(count < maxDisplay) {
-                // Handle field description yang mungkin beda nama
                 const desc = d.description || d.descObject || "-";
-                
                 tbody.innerHTML += `
                     <tr>
                         <td>${d.module}</td>
@@ -128,20 +154,25 @@ async function loadReferences() {
         });
         
         if(count === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Data Kosong. Silakan gunakan fitur "Import CSV".</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Data Kosong. Silakan Import CSV.</td></tr>';
         } else if(count > maxDisplay) {
-            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center; color:#888;">... dan ${count - maxDisplay} data lainnya ...</td></tr>`;
+            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center; color:#888;">... ${count - maxDisplay} data lainnya ...</td></tr>`;
         }
         
         populateModuleDropdown();
 
     } catch (err) {
         console.error("Firebase Error:", err);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat: ${err.message}.<br>Cek Console browser untuk detail.</td></tr>`;
+        // Error handling khusus untuk permission
+        let errorMsg = err.message;
+        if(errorMsg.includes("Missing or insufficient permissions")) {
+            errorMsg = "IZIN DITOLAK: Pastikan 'Firestore Rules' di Firebase Console sudah diset ke 'allow read, write: if true;'";
+        }
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">${errorMsg}</td></tr>`;
+        alert(errorMsg);
     }
 }
 
-// Populate Dropdown 1
 function populateModuleDropdown() {
     const uniqueModules = [...new Set(referenceData.map(item => item.module).filter(x => x))].sort();
     const sel = document.getElementById("inpModule");
@@ -150,19 +181,15 @@ function populateModuleDropdown() {
     sel.disabled = false;
 }
 
-// Cascading Logic (Module -> Device -> Type -> Board)
+// Cascading Dropdown Listeners
 document.getElementById("inpModule").addEventListener("change", (e) => {
     const val = e.target.value;
     const nextSel = document.getElementById("inpDeviceModule");
     nextSel.innerHTML = '<option value="">-- Pilih Device --</option>';
-    
-    // Filter data
     const filtered = referenceData.filter(r => r.module === val);
     const uniqueDev = [...new Set(filtered.map(r => r.deviceModule).filter(x => x))].sort();
-    
     uniqueDev.forEach(d => nextSel.innerHTML += `<option value="${d}">${d}</option>`);
     nextSel.disabled = false;
-    
     resetDropdowns(['inpModulType', 'inpBoardName']);
     clearAutoFill();
 });
@@ -172,13 +199,10 @@ document.getElementById("inpDeviceModule").addEventListener("change", (e) => {
     const dev = e.target.value;
     const nextSel = document.getElementById("inpModulType");
     nextSel.innerHTML = '<option value="">-- Pilih Type --</option>';
-    
     const filtered = referenceData.filter(r => r.module === mod && r.deviceModule === dev);
     const uniqueType = [...new Set(filtered.map(r => r.modulType).filter(x => x))].sort();
-    
     uniqueType.forEach(t => nextSel.innerHTML += `<option value="${t}">${t}</option>`);
     nextSel.disabled = false;
-    
     resetDropdowns(['inpBoardName']);
     clearAutoFill();
 });
@@ -189,10 +213,8 @@ document.getElementById("inpModulType").addEventListener("change", (e) => {
     const type = e.target.value;
     const nextSel = document.getElementById("inpBoardName");
     nextSel.innerHTML = '<option value="">-- Pilih Board --</option>';
-    
     const filtered = referenceData.filter(r => r.module === mod && r.deviceModule === dev && r.modulType === type);
     const uniqueBoard = [...new Set(filtered.map(r => r.boardName).filter(x => x))].sort();
-    
     uniqueBoard.forEach(b => nextSel.innerHTML += `<option value="${b}">${b}</option>`);
     nextSel.disabled = false;
     clearAutoFill();
@@ -203,11 +225,7 @@ document.getElementById("inpBoardName").addEventListener("change", (e) => {
     const dev = document.getElementById("inpDeviceModule").value;
     const type = document.getElementById("inpModulType").value;
     const board = e.target.value;
-    
-    const found = referenceData.find(r => 
-        r.module === mod && r.deviceModule === dev && r.modulType === type && r.boardName === board
-    );
-    
+    const found = referenceData.find(r => r.module === mod && r.deviceModule === dev && r.modulType === type && r.boardName === board);
     if(found) {
         document.getElementById("autoDesc").value = found.description || found.descObject || "-";
         document.getElementById("autoTypeObj").value = found.typeObject || "-";
@@ -230,7 +248,7 @@ function clearAutoFill() {
     document.getElementById("autoProdType").value = "";
 }
 
-// === 5. SMART CSV IMPORT (ROBUST PARSER) ===
+// === 5. CSV IMPORT (SMART PARSER) ===
 document.getElementById("importCsvRef").addEventListener("change", (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -238,52 +256,34 @@ document.getElementById("importCsvRef").addEventListener("change", (e) => {
     const reader = new FileReader();
     const statusEl = document.getElementById("importStatus");
     statusEl.textContent = "Menganalisa file CSV...";
-    statusEl.style.color = "blue";
     
     reader.onload = async (event) => {
         try {
             const text = event.target.result;
-            // Handle baris baru Windows/Unix/Mac
             const lines = text.split(/\r\n|\n|\r/);
-            
-            if(lines.length < 2) throw new Error("File CSV kosong atau format salah.");
+            if(lines.length < 2) throw new Error("File CSV kosong.");
 
             // Auto-detect delimiter
             const header = lines[0];
             let delimiter = ';';
-            if ((header.match(/;/g) || []).length < (header.match(/,/g) || []).length) {
-                delimiter = ',';
-                console.log("Detect: KOMA");
-            } else {
-                console.log("Detect: TITIK KOMA");
-            }
+            if ((header.match(/;/g) || []).length < (header.match(/,/g) || []).length) delimiter = ',';
 
             const batchSize = 400; 
             let batch = writeBatch(db);
             let count = 0;
             let totalImported = 0;
             
-            statusEl.textContent = `Memproses ${lines.length} baris dengan delimiter '${delimiter}'...`;
+            statusEl.textContent = `Memproses (Delimiter: ${delimiter === ';' ? 'Titik Koma' : 'Koma'})...`;
             
-            // Fungsi pembersih karakter aneh dari Excel
             const clean = (str) => {
                 if(!str) return "";
-                let s = str.trim();
-                // Hapus tanda kutip di awal/akhir
-                s = s.replace(/^"|"$/g, '');
-                // Hapus karakter non-printable jika ada
-                s = s.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
-                return s;
+                return str.trim().replace(/^"|"$/g, '').replace(/[\x00-\x1F\x7F-\x9F]/g, "");
             };
 
-            // Mulai loop (Skip Header = index 0)
             for(let i=1; i<lines.length; i++) {
                 const line = lines[i];
                 if(!line || line.trim() === "") continue;
-                
                 const cols = line.split(delimiter);
-                
-                // Pastikan minimal ada kolom Module & Device
                 if(cols.length < 2) continue; 
                 
                 const refData = {
@@ -309,49 +309,38 @@ document.getElementById("importCsvRef").addEventListener("change", (e) => {
                     statusEl.textContent = `Terupload ${totalImported} data...`;
                 }
             }
-            
             if(count > 0) await batch.commit();
-            
-            statusEl.textContent = `SUKSES! Total ${totalImported} data berhasil diimpor.`;
+            statusEl.textContent = `SUKSES! ${totalImported} data diimpor.`;
             statusEl.style.color = "green";
             loadReferences(); 
-            
         } catch (err) {
-            console.error("Import Error:", err);
+            console.error(err);
             statusEl.textContent = `ERROR: ${err.message}`;
             statusEl.style.color = "red";
-            alert("Gagal Import: " + err.message);
+            if(err.message.includes("permission")) alert("Gagal Import: Cek Rules Firestore Anda!");
         } finally {
-            e.target.value = ""; // Reset input
+            e.target.value = "";
         }
     };
     reader.readAsText(file);
 });
 
-// Reset All References
 window.deleteAllRefs = async () => {
-    if(!confirm("PERINGATAN: Yakin HAPUS SEMUA DATA REFERENSI?")) return;
+    if(!confirm("Yakin HAPUS SEMUA DATA REFERENSI?")) return;
     const statusEl = document.getElementById("importStatus");
     statusEl.textContent = "Menghapus data...";
-    statusEl.style.color = "red";
     
     try {
         const q = query(collection(db, 'references'));
         const snapshot = await getDocs(q);
-        
         let batch = writeBatch(db);
         let count = 0;
         
         snapshot.forEach(doc => {
             batch.delete(doc.ref);
             count++;
-            if(count >= 400) {
-                batch.commit();
-                batch = writeBatch(db);
-                count = 0;
-            }
+            if(count >= 400) { batch.commit(); batch = writeBatch(db); count = 0; }
         });
-        
         if(count > 0) await batch.commit();
         statusEl.textContent = "Data referensi kosong.";
         loadReferences();
@@ -370,20 +359,24 @@ window.deleteRef = async (id) => {
 }
 document.getElementById("refForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const newData = {
-        module: document.getElementById("refModule").value,
-        deviceModule: document.getElementById("refDevMod").value,
-        modulType: document.getElementById("refModType").value,
-        boardName: document.getElementById("refBoard").value,
-        description: document.getElementById("refDesc").value,
-        typeObject: document.getElementById("refTypeObj").value,
-        manufacturer: document.getElementById("refManuf").value,
-        productType: document.getElementById("refProd").value
-    };
-    await addDoc(collection(db, 'references'), newData);
-    alert("Berhasil!");
-    closeRefModal();
-    loadReferences();
+    try {
+        const newData = {
+            module: document.getElementById("refModule").value,
+            deviceModule: document.getElementById("refDevMod").value,
+            modulType: document.getElementById("refModType").value,
+            boardName: document.getElementById("refBoard").value,
+            description: document.getElementById("refDesc").value,
+            typeObject: document.getElementById("refTypeObj").value,
+            manufacturer: document.getElementById("refManuf").value,
+            productType: document.getElementById("refProd").value
+        };
+        await addDoc(collection(db, 'references'), newData);
+        alert("Berhasil!");
+        closeRefModal();
+        loadReferences();
+    } catch(err) {
+        alert("Gagal Simpan: " + err.message);
+    }
 });
 
 // === 6. SCANNER & CHIPS ===
@@ -411,7 +404,7 @@ window.triggerFileScan = (target) => {
         if(target === 'SN') addSnChip(decodedText);
         else document.getElementById("valPN").value = decodedText;
         alert(`Scan: ${decodedText}`);
-    }).catch(err => alert("Tidak ada QR/Barcode."));
+    }).catch(err => alert("Tidak ada QR/Barcode pada gambar ini."));
 }
 function addSnChip(text) {
     if(!text) return;
@@ -439,15 +432,20 @@ async function uploadFile(fileInputId, folder) {
     if(!file) return null;
     const uniqueName = `${Date.now()}_${file.name}`;
     const storageRef = ref(storage, `uploads/${currentUserId}/${folder}/${uniqueName}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    return await getDownloadURL(snapshot.ref);
+    try {
+        const snapshot = await uploadBytes(storageRef, file);
+        return await getDownloadURL(snapshot.ref);
+    } catch(err) {
+        console.error("Upload Error:", err);
+        throw new Error(`Gagal Upload Foto (${folder}). Cek Storage Rules!`);
+    }
 }
 
 document.getElementById("dataForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector("button[type=submit]");
     const status = document.getElementById("submitStatus");
-    if(snList.length === 0 && !document.getElementById("valSN").value) return alert("Wajib isi SN!");
+    if(snList.length === 0 && !document.getElementById("valSN").value) return alert("Wajib isi SN (Scan atau Manual)!");
     
     btn.disabled = true;
     status.textContent = "Mengupload...";
@@ -493,6 +491,7 @@ document.getElementById("dataForm").addEventListener("submit", async (e) => {
     } catch (err) {
         status.textContent = "Error: " + err.message;
         status.style.color = "red";
+        alert(err.message);
     } finally {
         btn.disabled = false;
     }
@@ -500,6 +499,7 @@ document.getElementById("dataForm").addEventListener("submit", async (e) => {
 
 // === 8. REPORT & DASHBOARD ===
 function loadReportData() {
+    // onSnapshot listener untuk realtime update
     const q = query(collection(db, `users/${currentUserId}/devices`), orderBy("createdAt", "desc"));
     onSnapshot(q, (snap) => {
         const tbody = document.getElementById("reportTableBody");
@@ -532,6 +532,9 @@ function loadReportData() {
         document.getElementById("stat-unique-site").textContent = sites.size;
         document.getElementById("stat-active-device").textContent = active;
         updateCharts(statusCounts, deviceTypeCounts);
+    }, (error) => {
+        console.error("Report Error:", error);
+        // Jangan alert di sini agar tidak spamming jika koneksi putus nyambung
     });
 }
 window.deleteReport = async (id) => {
@@ -545,7 +548,10 @@ function updateCharts(sData, dData) {
     chartInstances.s = new Chart(ctx1, { type: 'doughnut', data: { labels: Object.keys(sData), datasets: [{ data: Object.values(sData), backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }] } });
     chartInstances.d = new Chart(ctx2, { type: 'bar', data: { labels: Object.keys(dData), datasets: [{ label: 'Jumlah', data: Object.values(dData), backgroundColor: '#005a9c' }] } });
 }
-window.refreshDashboard = () => console.log("Refreshed");
+window.refreshDashboard = () => {
+    // Force reload references juga
+    loadReferences();
+}
 window.exportExcel = () => {
     const table = document.getElementById("reportTable");
     const wb = XLSX.utils.table_to_book(table);
