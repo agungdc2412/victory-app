@@ -3,477 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.C.T.O.R.Y</title> 
+    <title>V.I.C.T.O.R.Y - Asset Management v4.1</title> 
     
-    <!-- Memuat Stylesheet -->
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico"
-    <!-- Memuat Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- 
-      PENTING: Memuat skrip utama sebagai 'module' 
-      Ini diperlukan agar kita bisa menggunakan 'import' Firebase di dalam script.js
-    -->
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" defer></script>
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Main Script -->
     <script src="script.js" type="module" defer></script>
 </head>
 <body>
 
-    <!-- 
-      BAGIAN 1: HALAMAN LOGIN
-      Secara default 'display: flex'. Akan disembunyikan oleh JavaScript jika sudah login.
-    -->
+    <!-- === LOGIN SCREEN === -->
     <div id="login-container">
         <div class="login-box">
-    <!-- BRAND FIBERSTAR -->
-    <div class="brand-wrapper">
-        <img src="fiberstar-logo.png" alt="FiberStar Logo" class="fs-logo-header">
+            <h1 class="login-title">V.I.C.T.O.R.Y</h1>
+            <p class="login-subtitle">Enterprise Asset Management</p>
+            
+            <button id="google-login-btn" class="btn btn-google">
+                <i class="fab fa-google"></i> Masuk dengan Google
+            </button>
+            <div class="login-divider">atau email</div>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="login-email" placeholder="Email Fiberstar" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" placeholder="Password" required>
+                </div>
+                <button type="submit" id="login-btn" class="btn btn-primary w-100">LOGIN</button>
+            </form>
         </div>
-
-    <h1 class="login-title">V.I.C.T.O.R.Y</h1>
-
-    <!-- Tombol Login Google -->
-    <button id="google-login-btn" class="btn btn-google">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="google-icon">
-        Masuk dengan Google
-    </button>
-
-    <form id="login-form">
-        <div class="form-group">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" placeholder="email@fiberstar.co.id" required>
-        </div>
-        <div class="form-group">
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" placeholder="Password Anda" required>
-        </div>
-
-        <!-- Tombol Aksi Login/Register -->
-        <div class="login-actions">
-            <button type="button" id="login-btn" class="btn btn-primary">Login</button>
-            <button type="button" id="register-btn" class="btn btn-secondary">Daftar Akun Baru</button>
-        </div>
-        <div id="login-error" class="status-text" style="color: red; text-align: center;"></div>
-    </form>
-</div>
-
     </div>
 
-    <!-- 
-      BAGIAN 2: APLIKASI UTAMA
-      Secara default 'display: none'. Akan ditampilkan oleh JavaScript jika sudah login.
-    -->
-        <div id="app-container" style="display: none;">
+    <!-- === MAIN APP === -->
+    <div id="app-container" style="display: none;">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>VICTORY</h2>
+                <span id="user-display">User</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" onclick="switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</li>
+                <li onclick="switchTab('input')"><i class="fas fa-edit"></i> Visit Site (Form)</li>
+                <li onclick="switchTab('report')"><i class="fas fa-table"></i> Report Visit</li>
+                <li onclick="switchTab('reference')"><i class="fas fa-database"></i> Tabel Referensi</li>
+                <li onclick="logoutApp()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</li>
+            </ul>
+        </nav>
 
-  <!-- anchor untuk html5-qrcode (biarkan seperti ini) -->
-  <div id="qr-reader" style="display: none;"></div>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- SCANNER HIDDEN ELEMENT -->
+            <div id="qr-reader" style="display: none;"></div>
 
-  <div class="app-layout">
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <!-- pakai nama file logo yang sudah kamu upload ke repo -->
-        <img src="fiberstar-logo.png" alt="FiberStar Logo">
-        <div class="sidebar-logo-text">
-          <div class="app-name">V.I.C.T.O.R.Y</div>
-          <div class="app-sub">FiberStar Asset Management</div>
-        </div>
-      </div>
+            <!-- VIEW 1: DASHBOARD ANALYTICAL -->
+            <section id="view-dashboard" class="view-section active">
+                <div class="header-title">
+                    <h1>Dashboard Analytical</h1>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                
+                <div class="dashboard-cards">
+                    <div class="card-stat">
+                        <h3>Total Visit</h3>
+                        <p id="stat-total-visit">0</p>
+                    </div>
+                    <div class="card-stat">
+                        <h3>Site Unik</h3>
+                        <p id="stat-unique-site">0</p>
+                    </div>
+                    <div class="card-stat">
+                        <h3>Device Active</h3>
+                        <p id="stat-active-device" style="color:green;">0</p>
+                    </div>
+                </div>
 
-      <nav class="sidebar-nav">
-        <button type="button" class="sidebar-group" id="menuData">
-          <span>Menu Data</span>
-          <span class="chevron">▾</span>
-        </button>
-        <ul class="sidebar-group-list open">
-          <li>
-            <a href="#visit" data-page-target="page-visit"class="nav-link nav-link-active">Visit Site</a>
-          </li>
-          <li>
-            <a href="#dashboard" data-page-target="page-dashboard" class="nav-link">Report Visit</a>
-          </li>
-          <li>
-            <a href="#reference" class="nav-link">Tabel Referensi</a>
-          </li>            
-        </ul>
-      </nav>
-    </aside>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartDeviceType"></canvas>
+                    </div>
+                </div>
+            </section>
 
-    <!-- ========== AREA KONTEN ========== -->
-    <div class="app-main">
-      <!-- TOP BAR -->
-      <header class="topbar">
-        <div class="app-header-text">
-          <h2>Data Visit Site</h2>
-        </div>
-        <div class="topbar-right">
-          <span id="user-email" class="topbar-user">Memuat...</span>
-          <button id="logout-btn" class="btn-logout">Logout</button>
-        </div>
-      </header>
+            <!-- VIEW 2: FORM INPUT (DYNAMIC CASCADING) -->
+            <section id="view-input" class="view-section">
+                <div class="header-title">
+                    <h1>Form Input Data Asset</h1>
+                </div>
 
-      <!-- PAGE WRAPPER -->
-      <main class="page-wrapper">
-        <!-- ================= HALAMAN FORM VISIT ================= -->
-        <section id="page-visit" class="app-page app-page-active">
-          <div class="page-inner">
-            <!-- 🔹 Pindahkan ISI FORM LAMA kamu ke sini -->
-            <!-- asalnya: <div class="input-form-card"> ... </div> -->
-                <!-- ====== copy persis semua form yang sekarang ====== -->
-               <div class="input-form-card">
-              <h2>Form Visit Site</h2>
-              <form id="dataForm">
-                <!-- ====== copy persis semua form yang sekarang ====== -->
-            <!-- Kolom Input Data -->
-                <main class="container">
-            <!-- Kolom Input Data -->
-            <div class="input-form-card">
-               
-                <form id="dataForm">
-                    <div class="form-grid">
-                        <!-- Kolom Kiri Grid -->
-                        <div class="form-column">
+                <form id="dataForm" class="form-layout">
+                    <!-- Kelompok 1: Info Site -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-map-marker-alt"></i> Informasi Site</h3>
+                        <div class="grid-2">
                             <div class="form-group">
-                                <label for="inputTanggal">1. Tanggal</label>
-                                <input type="date" id="inputTanggal" required>
+                                <label>1. Tanggal *</label>
+                                <input type="date" id="inpDate" required>
                             </div>
                             <div class="form-group">
-                                <label for="siteName">2. Nama Site</label>
-                                <input type="text" id="siteName" required>
+                                <label>2. Kode Site *</label>
+                                <input type="text" id="inpSiteCode" placeholder="Contoh: SUB001" required>
                             </div>
                             <div class="form-group">
-                                <label for="picName">3. Nama PIC</label>
-                                <input type="text" id="picName" required>
+                                <label>3. Nama Site *</label>
+                                <input type="text" id="inpSiteName" placeholder="Nama Site Lengkap" required>
                             </div>
                             <div class="form-group">
-                                <label for="noRack">4. No Rack</label>
-                                <input type="text" id="noRack" list="listNoRack">
-                                <datalist id="listNoRack">
-                                    <option value="R1"></option>
-                                    <option value="R2"></option>
-                                    <option value="R3"></option>
-                                    <option value="R4"></option>
-                                    <option value="R5"></option>
-                                    <option value="lainnya"></option>
-                                </datalist>
+                                <label>4. Nama PIC *</label>
+                                <input type="text" id="inpPic" required>
                             </div>
                             <div class="form-group">
-                                <label for="namaRack">5. Nama Rack</label>
-                                <input type="text" id="namaRack" list="listNamaRack">
-                                <datalist id="listNamaRack">
-                                    <!-- Opsi akan diisi oleh JavaScript -->
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="jenisDevice">6. Jenis Device</label>
-                                <input type="text" id="jenisDevice" list="listJenisDevice" required>
-                                <datalist id="listJenisDevice">
-                                    <!-- Opsi akan diisi oleh JavaScript -->
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="modulType">7. Modul Type</label>
-                                <input type="text" id="modulType" list="listModulType">
-                                <datalist id="listModulType">
-                                    <!-- Opsi akan diisi oleh JavaScript -->
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="boardName">8. Board Name Device</label>
-                                <input type="text" id="boardName" list="listBoardName">
-                                <datalist id="listBoardName">
-                                    <!-- Opsi akan diisi oleh JavaScript -->
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="deviceMerk">9. Merk/Vendor Device</label>
-                                <input type="text" id="deviceMerk" list="listDeviceMerk" required>
-                                <datalist id="listDeviceMerk">
-                                    <!-- Opsi akan diisi oleh JavaScript -->
-                                </datalist>
-                            </div>
-                            <div class="form-group">
-                                <label for="deviceStatus">10. Status Device</label>
-                                <select id="deviceStatus" required>
-                                    <option value="Active">Active</option>
-                                    <option value="Not Active">Not Active</option>
+                                <label>5. No Rack *</label>
+                                <select id="inpRackNo" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="R1">R1</option>
+                                    <option value="R2">R2</option>
+                                    <option value="R3">R3</option>
+                                    <option value="R4">R4</option>
+                                    <option value="R5">R5</option>
+                                    <option value="R6">R6</option>
+                                    <option value="R7">R7</option>
+                                    <option value="R8">R8</option>
+                                    <option value="R9">R9</option>
+                                    <option value="R10">R10</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="remark">11. Remark</label>
-                                <textarea id="remark" rows="3"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-column">
-                            <!-- UPLOAD FOTO SN -->
-                            <div class="form-group upload-section">
-                            <label for="fotoUploadSN">12. Upload Foto Serial Number (SN)</label>
-                                <input type="file" id="fotoUploadSN" class="fotoUpload" accept="image/*">
-                                <img id="imagePreviewSN" src="" alt="Preview SN" class="image-preview"/>
-                                
-                                <!-- Scan dari gambar (upload file) -->
-                                <button type="button" id="btnScanSN" class="btn btn-scan">Scan QR/Barcode (File)</button>
-                                
-                                <!-- Scan langsung dari kamera -->
-                                <button type="button" id="btnCameraSN" class="btn btn-secondary btn-camera">
-                                    Scan QR/Barcode (Kamera)
-                                </button>
-                                
-                                <!-- ✅ MULTI-SN: 1 baris = 1 serial number -->
-                                <textarea id="hasilSN" rows="4" placeholder="Hasil Scan Serial Number...
-                                1 baris = 1 Serial     Number"></textarea>
-                                <div id="ocrStatusSN" class="status-text"></div>
-                        </div>
-
-                            <!-- UPLOAD FOTO PN -->
-                            <div class="form-group upload-section">
-                            <label for="fotoUploadPN">13. Upload Foto Part Number (PN)</label>
-                            <input type="file" id="fotoUploadPN" class="fotoUpload" accept="image/*">
-                            <img id="imagePreviewPN" src="" alt="Preview PN" class="image-preview"/>
-                                
-                                <!-- Scan dari gambar (upload file) -->
-                                <button type="button" id="btnScanPN" class="btn btn-scan">Scan QR/Barcode (File)</button>
-                                
-                                <!-- Scan langsung dari kamera -->
-                                <button type="button" id="btnCameraPN" class="btn btn-secondary btn-camera">
-                                    Scan QR/Barcode (Kamera)
-                                </button>
-                                
-                                <input type="text" id="hasilPN" placeholder="Hasil Scan Part Number...">
-                                <div id="ocrStatusPN" class="status-text"></div>
-                        </div>
-                        <!-- === MODAL KAMERA UNTUK SCAN QR/BARCODE === -->
-                        <div id="camera-modal" class="camera-modal" style="display: none;">
-                          <div class="camera-modal-content">
-                            <h3>Scan QR/Barcode via Kamera</h3>
-                        
-                            <!-- Pilih kamera depan/belakang -->
-                            <div class="camera-controls">
-                              <label for="cameraFacingSelect">Pilih kamera:</label>
-                              <select id="cameraFacingSelect">
-                                <option value="environment">Kamera Belakang</option>
-                                <option value="user">Kamera Depan</option>
-                              </select>
-                            </div>
-                        
-                            <div id="qr-reader-camera"></div>
-                        
-                            <!-- Opsi extra -->
-                            <div class="camera-options">
-                              <label>
-                                <input type="checkbox" id="chkContinuousScan" checked>
-                                Continuous scan (jangan tutup setelah scan)
-                              </label>
-                              <label>
-                                <input type="checkbox" id="chkBrightnessBoost">
-                                Brightness boost (nyalakan flash jika tersedia)
-                              </label>
-                            </div>
-                        
-                            <div id="camera-status" class="status-text"></div>
-                        
-                            <button type="button" id="btnCloseCamera"
-                                    class="btn btn-danger"
-                                    style="width: 100%; margin-top: 10px;">
-                              Tutup Kamera
-                            </button>
-                          </div>
-                        </div>
-
-                            <!-- UPLOAD FOTO GPS -->
-                            <div class="form-group upload-section">
-                                <label for="fotoUploadGPS">14. Upload Foto Keseluruhan (GPS Map)</label>
-                                <input type="file" id="fotoUploadGPS" class="fotoUpload" accept="image/*">
-                                <img id="imagePreviewGPS" src="" alt="Preview GPS" class="image-preview"/>
-                                <!-- Tambahan: info GPS otomatis -->
-                                <div id="gpsInfo" class="status-text" style="margin-top: 4px;"></div>
+                                <label>15. Floor Number</label>
+                                <input type="text" id="inpFloor" value="LT.1">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tombol Aksi Utama -->
-                    <div class="action-buttons">
-                        <button type="submit" id="btnCreateCard" class="btn btn-secondary">
-                            Simpan Data ke Database
-                        </button>
+                    <!-- Kelompok 2: Detail Device (Dynamic) -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-server"></i> Detail Perangkat (Dynamic)</h3>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>6. Module *</label>
+                                <select id="inpModule" required disabled>
+                                    <option value="">Loading Referensi...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>7. Device Module *</label>
+                                <select id="inpDeviceModule" required disabled>
+                                    <option value="">Pilih Module Dulu</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>8. Modul Type *</label>
+                                <select id="inpModulType" required disabled>
+                                    <option value="">Pilih Device Module Dulu</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>9. Board Name</label>
+                                <select id="inpBoardName" disabled>
+                                    <option value="">Pilih Modul Type Dulu</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Auto Fill Section (SESUAI HEADER CSV) -->
+                        <div class="autofill-box">
+                            <h4>Auto-Fill Data (SAP)</h4>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>10. Description Object (SAP)</label>
+                                    <input type="text" id="autoDesc" readonly class="readonly-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>11. Type Object (SAP)</label>
+                                    <input type="text" id="autoTypeObj" readonly class="readonly-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>12. Manufacturer (SAP)</label>
+                                    <input type="text" id="autoManuf" readonly class="readonly-input">
+                                </div>
+                                <div class="form-group">
+                                    <label>13. Product Type-MM (SAP)</label>
+                                    <input type="text" id="autoProdType" readonly class="readonly-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>14. Status Device *</label>
+                            <select id="inpStatus" required>
+                                <option value="Active">Active</option>
+                                <option value="Not Active">Not Active</option>
+                                <option value="Dismantle">Dismantle</option>
+                            </select>
+                        </div>
                     </div>
-                    <div id="form-status" class="status-text" style="font-weight: bold; font-size: 1rem;"></div>
+
+                    <!-- Kelompok 3: Upload & Scan -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-camera"></i> Identifikasi & Foto</h3>
+                        
+                        <!-- SN -->
+                        <div class="upload-row">
+                            <label>16. Serial Number (SN) *</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="fileSN" accept="image/*" class="file-input">
+                                <div class="btn-group-scan">
+                                    <button type="button" class="btn-icon" onclick="triggerFileScan('SN')"><i class="fas fa-file-image"></i> Scan File</button>
+                                    <button type="button" class="btn-icon" onclick="openCamera('SN')"><i class="fas fa-camera"></i> Kamera</button>
+                                </div>
+                            </div>
+                            <div id="snTagsContainer" class="chips-container"></div>
+                            <input type="hidden" id="valSN">
+                        </div>
+
+                        <!-- PN -->
+                        <div class="upload-row">
+                            <label>17. Part Number (PN)</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="filePN" accept="image/*" class="file-input">
+                                <div class="btn-group-scan">
+                                    <button type="button" class="btn-icon" onclick="triggerFileScan('PN')"><i class="fas fa-file-image"></i> Scan File</button>
+                                    <button type="button" class="btn-icon" onclick="openCamera('PN')"><i class="fas fa-camera"></i> Kamera</button>
+                                </div>
+                            </div>
+                            <input type="text" id="valPN" placeholder="Hasil Scan PN" class="std-input">
+                        </div>
+
+                        <!-- Foto Device (3 Kolom) -->
+                        <div class="upload-row">
+                            <label>18. Upload Foto Device</label>
+                            <div class="photo-grid-3">
+                                <div>
+                                    <small>Foto Label Device</small>
+                                    <input type="file" id="fotoLabel" accept="image/*">
+                                </div>
+                                <div>
+                                    <small>Foto Label Tipe</small>
+                                    <input type="file" id="fotoType" accept="image/*">
+                                </div>
+                                <div>
+                                    <small>Foto Device Jauh</small>
+                                    <input type="file" id="fotoFar" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">SIMPAN DATA KE DATABASE</button>
+                    <div id="submitStatus" class="status-msg"></div>
                 </form>
-            </div>
+            </section>
 
-                  <!-- mulai dari <div class="form-grid"> ... sampai tombol
-                     “Simpan Data ke Database” & status text -->
-                <!-- (kode form yang kamu kirim sebelumnya, tinggal paste) -->
-              </form>
-            </div>
-          </div>
-            <div class="results-area">
-                <h2>Hasil Rekap Data (dari Database)</h2>
-                <div class="global-actions">
-                    <button id="btnExportExcel" class="btn btn-success">Export to Excel</button>
-                    <button id="btnExportPDF" class="btn btn-danger">Export to PDF</button>
-                    <button id="btnDownloadImages" class="btn btn-primary">Download Semua Gambar (.zip)</button>
-                    <button id="btnSendEmail" class="btn btn-info">Send Email (Draft)</button>
+            <!-- VIEW 3: REPORT VISIT (TABLE) -->
+            <section id="view-report" class="view-section">
+                <div class="header-title">
+                    <h1>Laporan Kunjungan</h1>
+                    <div class="action-bar">
+                        <button class="btn btn-success" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Excel</button>
+                        <button class="btn btn-primary" onclick="downloadAllImages()"><i class="fas fa-download"></i> ZIP Foto</button>
+                    </div>
                 </div>
-                <div id="globalActionStatus" class="status-text" style="font-weight: bold;"></div>
-                <hr>
-                <div id="hasilDataContainer">
-                    <!-- Kartu-kartu data visit dari Firebase akan muncul di sini -->
-                    <p>Memuat data dari database...</p>
-                </div>
-                <hr class="admin-divider">
-        </section>
-
-        <!-- ================= HALAMAN DASHBOARD ADMIN page-inner================= -->
-        <section id="page-dashboard" class="app-page">
-          <div class="results-area"> 
-                <section id="admin-dashboard">
-                      <h2>Rekap Visit Site</h2>
-                    
-                      <!-- Filter bar -->
-                      <div class="admin-filters">
-                        <div class="filter-group">
-                          <label for="adminFilterSite">Site</label>
-                          <input type="text" id="adminFilterSite" placeholder="Nama site / kode site">
-                        </div>
-                    
-                        <div class="filter-group">
-                          <label for="adminFilterVendor">Vendor / Merk</label>
-                          <input type="text" id="adminFilterVendor" placeholder="ZTE, Huawei, dsb.">
-                        </div>
-                    
-                        <div class="filter-group">
-                          <label for="adminFilterJenis">Jenis Device</label>
-                          <input type="text" id="adminFilterJenis" placeholder="OLT, Router, OTB, dll.">
-                        </div>
-                    
-                        <div class="filter-group">
-                          <label>Tanggal</label>
-                          <div class="filter-date-range">
-                            <input type="date" id="adminFilterDateFrom">
-                            <span>s.d.</span>
-                            <input type="date" id="adminFilterDateTo">
-                          </div>
-                        </div>
-                    
-                        <div class="filter-group filter-search">
-                          <label for="adminSearchText">Search bebas</label>
-                          <input type="text" id="adminSearchText" placeholder="Cari SN/PN/PIC/Rack...">
-                        </div>
-                      </div>
-                    
-                      <!-- Table wrapper -->
-                      <div class="admin-table-wrapper">
-                        <table class="admin-table">
-                          <thead>
+                <div class="table-responsive">
+                    <table class="data-table" id="reportTable">
+                        <thead>
                             <tr>
-                              <th>#</th>
-                              <th>Tanggal</th>
-                              <th>Site</th>
-                              <th>PIC</th>
-                              <th>Merk</th>
-                              <th>Jenis Device</th>
-                              <th>Rack</th>
-                              <th>Serial Number (SN)</th>
-                              <th>Part Number (PN)</th>
-                              <th>Foto GPS</th>
+                                <th>Tgl</th>
+                                <th>Site</th>
+                                <th>Rack</th>
+                                <th>Device</th>
+                                <th>SN / PN</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
                             </tr>
-                          </thead>
-                          <tbody id="adminTableBody">
-                            <!-- Diisi via JS -->
-                          </tbody>
-                        </table>
-                      </div>
-                    
-                      <!-- Pagination -->
-                      <div class="admin-pagination">
-                        <div>
-                          Tampilkan
-                          <select id="adminRowsPerPage">
-                            <option value="10">10 baris</option>
-                            <option value="25">25 baris</option>
-                            <option value="50">50 baris</option>
-                          </select>
-                          per halaman
-                        </div>
-                        <div class="admin-pagination-controls">
-                          <button type="button" id="adminPrevPage">&laquo; Sebelumnya</button>
-                          <span id="adminPaginationInfo">0 data</span>
-                          <button type="button" id="adminNextPage">Berikutnya &raquo;</button>
-                        </div>
-                      </div>
-                    
-                      <!-- Export & REST viewer -->
-                      <div class="admin-export-bar">
-                        <button type="button" id="adminExportExcel" class="btn btn-success">
-                          Export (by filter) ke Excel
-                        </button>
-                        <button type="button" id="adminExportPDF" class="btn btn-danger">
-                          Export (by filter) ke PDF
-                        </button>
-                      </div>
-                    
-                      <div class="admin-api-viewer">
-                        <div>
-                          <h3>REST API Viewer</h3>
-                          <p>Klik salah satu baris di tabel untuk melihat payload & URL API.</p>
-                          <div class="api-url">
-                            <strong>REST URL:</strong>
-                            <span id="adminApiUrl">—</span>
-                          </div>
-                        </div>
-                        <pre id="adminApiJson" class="api-json">/* JSON dokumen akan tampil di sini */</pre>
-                      </div>
-                    </section>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <!-- Data -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-            </div>
+            <!-- VIEW 4: REFERENCE TABLE (CRUD & IMPORT) -->
+            <section id="view-reference" class="view-section">
+                <div class="header-title">
+                    <h1>Master Data Referensi</h1>
+                    <div class="action-bar">
+                        <!-- Fitur Import CSV Baru -->
+                        <label for="importCsvRef" class="btn btn-success" style="cursor:pointer;">
+                            <i class="fas fa-file-upload"></i> Import CSV (Data Master)
+                        </label>
+                        <input type="file" id="importCsvRef" accept=".csv" style="display:none;">
+                        
+                        <button class="btn btn-primary" onclick="openRefModal()"><i class="fas fa-plus"></i> Tambah Manual</button>
+                        
+                        <button class="btn btn-danger" onclick="deleteAllRefs()"><i class="fas fa-trash"></i> Reset All</button>
+                    </div>
+                </div>
+                <p class="hint-text">Import file 'Tabel Referensi.csv' di sini untuk mengisi data otomatis.</p>
                 
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
-</div>
+                <!-- Status Import -->
+                <div id="importStatus" style="margin-bottom:10px; font-weight:bold;"></div>
 
-        <header class="app-header">
-        </header>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Device</th>
+                                <th>Type</th>
+                                <th>Board</th>
+                                <th>Desc (SAP)</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="refTableBody">
+                            <!-- Ref Data -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-                        <!-- Kolom Kanan Grid (Upload) -->
-
-                    
         </main>
-        
-    </div> <!-- Akhir dari #app-container -->
+    </div>
+
+    <!-- MODAL KAMERA -->
+    <div id="camera-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCamera()">&times;</span>
+            <h3>Scan QR Code</h3>
+            <div id="qr-camera-view"></div>
+            <button class="btn btn-danger w-100 mt-2" onclick="closeCamera()">Tutup</button>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH REFERENSI (MANUAL) -->
+    <div id="ref-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRefModal()">&times;</span>
+            <h3>Tambah Referensi Manual</h3>
+            <form id="refForm">
+                <input type="hidden" id="refId">
+                <div class="grid-2">
+                    <div class="form-group"><label>Module</label><input type="text" id="refModule" required></div>
+                    <div class="form-group"><label>Device Module</label><input type="text" id="refDevMod" required></div>
+                    <div class="form-group"><label>Modul Type</label><input type="text" id="refModType" required></div>
+                    <div class="form-group"><label>Board Name</label><input type="text" id="refBoard" required></div>
+                    <div class="form-group"><label>Desc (SAP)</label><input type="text" id="refDesc"></div>
+                    <div class="form-group"><label>Type Object (SAP)</label><input type="text" id="refTypeObj"></div>
+                    <div class="form-group"><label>Manufacturer (SAP)</label><input type="text" id="refManuf"></div>
+                    <div class="form-group"><label>Product Type-MM (SAP)</label><input type="text" id="refProd"></div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-2">SIMPAN</button>
+            </form>
+        </div>
+    </div>
 
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
