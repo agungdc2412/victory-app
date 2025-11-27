@@ -1,6 +1,6 @@
 /*
- * SCRIPT V.I.C.T.O.R.Y v4.2 (Fixed CSV Import)
- * Fitur: Smart CSV Parser (Auto-detect delimiter), Cascading Dropdown, Multi-SN
+ * SCRIPT V.I.C.T.O.R.Y v4.3 (Final Debug Edition)
+ * Perbaikan: Deteksi Error Config, Pembersih CSV Agresif, & Error Reporting
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -9,8 +9,9 @@ import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, writeBatch, 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 // === 1. KONFIGURASI FIREBASE ===
+// PENTING: Ganti dengan data dari Firebase Console Anda!
 const firebaseConfig = {
-    apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8",
+    apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8", 
     authDomain: "victory-app-isp.firebaseapp.com",
     projectId: "victory-app-isp",
     storageBucket: "victory-app-isp.firebasestorage.app",
@@ -18,6 +19,11 @@ const firebaseConfig = {
     appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
     measurementId: "G-Q1DJ3BG41V"
 };
+
+// Cek apakah user lupa mengganti Config
+if (firebaseConfig.apiKey === "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8") {
+    alert("PERINGATAN KRITIKAL: Anda belum mengganti 'firebaseConfig' di script.js dengan data proyek Firebase Anda sendiri. Aplikasi tidak akan bisa menyimpan data!");
+}
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -43,6 +49,7 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById("app-container").style.display = "flex";
         document.getElementById("user-display").textContent = user.email.split('@')[0];
         
+        // Load Data Awal
         loadReferences(); 
         loadReportData();
         loadDashboardStats();
@@ -62,7 +69,7 @@ document.getElementById("login-form").addEventListener("submit", (e) => {
 });
 
 document.getElementById("google-login-btn").addEventListener("click", () => {
-    signInWithPopup(auth, provider);
+    signInWithPopup(auth, provider).catch(err => alert("Google Login Error: " + err.message));
 });
 
 // === 3. NAVIGATION ===
@@ -71,7 +78,7 @@ window.switchTab = (tabId) => {
     document.getElementById(`view-${tabId}`).classList.add('active');
     document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
     
-    // Highlight sidebar
+    // Highlight sidebar (Quick Fix)
     const navs = document.querySelectorAll('.nav-links li');
     if(tabId==='dashboard') navs[0].classList.add('active');
     if(tabId==='input') navs[1].classList.add('active');
@@ -83,10 +90,9 @@ window.switchTab = (tabId) => {
 
 // === 4. REFERENCE DATA (LOAD & CASCADING) ===
 
-// Load Data Referensi
 async function loadReferences() {
     const tbody = document.getElementById("refTableBody");
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Sedang memuat data dari database...</td></tr>';
 
     try {
         const q = query(collection(db, 'references'));
@@ -96,7 +102,7 @@ async function loadReferences() {
         tbody.innerHTML = "";
         
         let count = 0;
-        const maxDisplay = 50; 
+        const maxDisplay = 100; // Tampilkan lebih banyak
 
         snapshot.forEach(docSnap => {
             const d = docSnap.data();
@@ -104,7 +110,7 @@ async function loadReferences() {
             referenceData.push(d);
             
             if(count < maxDisplay) {
-                // Gunakan fallback (||) jika field description berbeda nama
+                // Handle field description yang mungkin beda nama
                 const desc = d.description || d.descObject || "-";
                 
                 tbody.innerHTML += `
@@ -122,22 +128,21 @@ async function loadReferences() {
         });
         
         if(count === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Data Kosong. Silakan Import CSV.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Data Kosong. Silakan gunakan fitur "Import CSV".</td></tr>';
         } else if(count > maxDisplay) {
-            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center; color:#888;">... ${count - maxDisplay} data lainnya disembunyikan ...</td></tr>`;
+            tbody.innerHTML += `<tr><td colspan="6" style="text-align:center; color:#888;">... dan ${count - maxDisplay} data lainnya ...</td></tr>`;
         }
         
         populateModuleDropdown();
 
     } catch (err) {
-        console.error("Gagal load referensi:", err);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat: ${err.message}</td></tr>`;
+        console.error("Firebase Error:", err);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat: ${err.message}.<br>Cek Console browser untuk detail.</td></tr>`;
     }
 }
 
 // Populate Dropdown 1
 function populateModuleDropdown() {
-    // Filter nilai unik dan tidak kosong
     const uniqueModules = [...new Set(referenceData.map(item => item.module).filter(x => x))].sort();
     const sel = document.getElementById("inpModule");
     sel.innerHTML = '<option value="">-- Pilih Module --</option>';
@@ -145,12 +150,13 @@ function populateModuleDropdown() {
     sel.disabled = false;
 }
 
-// Cascading Logic
+// Cascading Logic (Module -> Device -> Type -> Board)
 document.getElementById("inpModule").addEventListener("change", (e) => {
     const val = e.target.value;
     const nextSel = document.getElementById("inpDeviceModule");
     nextSel.innerHTML = '<option value="">-- Pilih Device --</option>';
     
+    // Filter data
     const filtered = referenceData.filter(r => r.module === val);
     const uniqueDev = [...new Set(filtered.map(r => r.deviceModule).filter(x => x))].sort();
     
@@ -203,7 +209,6 @@ document.getElementById("inpBoardName").addEventListener("change", (e) => {
     );
     
     if(found) {
-        // Support kedua nama field (jaga-jaga versi lama/baru)
         document.getElementById("autoDesc").value = found.description || found.descObject || "-";
         document.getElementById("autoTypeObj").value = found.typeObject || "-";
         document.getElementById("autoManuf").value = found.manufacturer || "-";
@@ -225,7 +230,7 @@ function clearAutoFill() {
     document.getElementById("autoProdType").value = "";
 }
 
-// === 5. SMART CSV IMPORT (PARSER FIX) ===
+// === 5. SMART CSV IMPORT (ROBUST PARSER) ===
 document.getElementById("importCsvRef").addEventListener("change", (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -236,71 +241,89 @@ document.getElementById("importCsvRef").addEventListener("change", (e) => {
     statusEl.style.color = "blue";
     
     reader.onload = async (event) => {
-        const text = event.target.result;
-        const lines = text.split(/\r?\n/); // Handle Windows/Unix line breaks
-        
-        // Auto-detect delimiter (Cek baris pertama)
-        const header = lines[0];
-        let delimiter = ';';
-        if ((header.match(/;/g) || []).length < (header.match(/,/g) || []).length) {
-            delimiter = ','; // Jika lebih banyak koma, asumsikan koma
-            console.log("Delimiter terdeteksi: KOMA (,)");
-        } else {
-            console.log("Delimiter terdeteksi: TITIK KOMA (;)");
-        }
+        try {
+            const text = event.target.result;
+            // Handle baris baru Windows/Unix/Mac
+            const lines = text.split(/\r\n|\n|\r/);
+            
+            if(lines.length < 2) throw new Error("File CSV kosong atau format salah.");
 
-        const batchSize = 400; 
-        let batch = writeBatch(db);
-        let count = 0;
-        let totalImported = 0;
-        
-        statusEl.textContent = `Memproses ${lines.length} baris dengan delimiter '${delimiter}'...`;
-        
-        // Helper function: Bersihkan tanda kutip jika ada (misal: "Data")
-        const clean = (str) => str ? str.trim().replace(/^"|"$/g, '') : "";
-
-        // Mulai loop dari index 1 (Skip Header)
-        for(let i=1; i<lines.length; i++) {
-            const line = lines[i].trim();
-            if(!line) continue;
-            
-            const cols = line.split(delimiter);
-            
-            // Minimal 2 kolom untuk dianggap data valid
-            if(cols.length < 2) continue; 
-            
-            // Mapping Data (Gunakan nama field standar)
-            const refData = {
-                module: clean(cols[0]),
-                deviceModule: clean(cols[1]),
-                modulType: clean(cols[2]),
-                boardName: clean(cols[3]) || "-",
-                description: clean(cols[4]),  // Disamakan 'description'
-                typeObject: clean(cols[5]),
-                manufacturer: clean(cols[6]),
-                productType: clean(cols[7])
-            };
-            
-            const newRef = doc(collection(db, "references"));
-            batch.set(newRef, refData);
-            count++;
-            totalImported++;
-            
-            if(count >= batchSize) {
-                await batch.commit();
-                batch = writeBatch(db);
-                count = 0;
-                statusEl.textContent = `Terupload ${totalImported} data...`;
+            // Auto-detect delimiter
+            const header = lines[0];
+            let delimiter = ';';
+            if ((header.match(/;/g) || []).length < (header.match(/,/g) || []).length) {
+                delimiter = ',';
+                console.log("Detect: KOMA");
+            } else {
+                console.log("Detect: TITIK KOMA");
             }
+
+            const batchSize = 400; 
+            let batch = writeBatch(db);
+            let count = 0;
+            let totalImported = 0;
+            
+            statusEl.textContent = `Memproses ${lines.length} baris dengan delimiter '${delimiter}'...`;
+            
+            // Fungsi pembersih karakter aneh dari Excel
+            const clean = (str) => {
+                if(!str) return "";
+                let s = str.trim();
+                // Hapus tanda kutip di awal/akhir
+                s = s.replace(/^"|"$/g, '');
+                // Hapus karakter non-printable jika ada
+                s = s.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+                return s;
+            };
+
+            // Mulai loop (Skip Header = index 0)
+            for(let i=1; i<lines.length; i++) {
+                const line = lines[i];
+                if(!line || line.trim() === "") continue;
+                
+                const cols = line.split(delimiter);
+                
+                // Pastikan minimal ada kolom Module & Device
+                if(cols.length < 2) continue; 
+                
+                const refData = {
+                    module: clean(cols[0]),
+                    deviceModule: clean(cols[1]),
+                    modulType: clean(cols[2]),
+                    boardName: clean(cols[3]) || "-",
+                    description: clean(cols[4]),  
+                    typeObject: clean(cols[5]),
+                    manufacturer: clean(cols[6]),
+                    productType: clean(cols[7])
+                };
+                
+                const newRef = doc(collection(db, "references"));
+                batch.set(newRef, refData);
+                count++;
+                totalImported++;
+                
+                if(count >= batchSize) {
+                    await batch.commit();
+                    batch = writeBatch(db);
+                    count = 0;
+                    statusEl.textContent = `Terupload ${totalImported} data...`;
+                }
+            }
+            
+            if(count > 0) await batch.commit();
+            
+            statusEl.textContent = `SUKSES! Total ${totalImported} data berhasil diimpor.`;
+            statusEl.style.color = "green";
+            loadReferences(); 
+            
+        } catch (err) {
+            console.error("Import Error:", err);
+            statusEl.textContent = `ERROR: ${err.message}`;
+            statusEl.style.color = "red";
+            alert("Gagal Import: " + err.message);
+        } finally {
+            e.target.value = ""; // Reset input
         }
-        
-        if(count > 0) await batch.commit();
-        
-        statusEl.textContent = `SUKSES! Total ${totalImported} data diimpor.`;
-        statusEl.style.color = "green";
-        loadReferences(); 
-        
-        e.target.value = ""; // Reset input
     };
     reader.readAsText(file);
 });
@@ -309,28 +332,32 @@ document.getElementById("importCsvRef").addEventListener("change", (e) => {
 window.deleteAllRefs = async () => {
     if(!confirm("PERINGATAN: Yakin HAPUS SEMUA DATA REFERENSI?")) return;
     const statusEl = document.getElementById("importStatus");
-    statusEl.textContent = "Menghapus data... (Jangan tutup halaman)";
+    statusEl.textContent = "Menghapus data...";
     statusEl.style.color = "red";
     
-    const q = query(collection(db, 'references'));
-    const snapshot = await getDocs(q);
-    
-    let batch = writeBatch(db);
-    let count = 0;
-    
-    snapshot.forEach(doc => {
-        batch.delete(doc.ref);
-        count++;
-        if(count >= 400) {
-            batch.commit();
-            batch = writeBatch(db);
-            count = 0;
-        }
-    });
-    
-    if(count > 0) await batch.commit();
-    statusEl.textContent = "Data referensi kosong.";
-    loadReferences();
+    try {
+        const q = query(collection(db, 'references'));
+        const snapshot = await getDocs(q);
+        
+        let batch = writeBatch(db);
+        let count = 0;
+        
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+            count++;
+            if(count >= 400) {
+                batch.commit();
+                batch = writeBatch(db);
+                count = 0;
+            }
+        });
+        
+        if(count > 0) await batch.commit();
+        statusEl.textContent = "Data referensi kosong.";
+        loadReferences();
+    } catch (e) {
+        alert("Gagal hapus: " + e.message);
+    }
 }
 
 window.openRefModal = () => document.getElementById("ref-modal").style.display = "flex";
