@@ -636,13 +636,11 @@ window.exportExcel = () => {
 };
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
 
+// cache data visit untuk keperluan edit & search
 let visitCacheById = {};
 // ============================
 // 8b. REPORT VISIT (TABEL BARU)
 // ============================
-
-// cache data visit untuk keperluan edit & search
-let visitCacheById = {};
 
 // muat semua data visit dari koleksi "visit_data"async function loadReportVisit() {
     const tbody = document.getElementById("reportVisitTableBody");
@@ -814,6 +812,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
         alert("Gagal update data visit: " + err.message);
     }
 });
+
 
 
 
