@@ -623,6 +623,132 @@ window.exportExcel = () => {
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
 
+// Utility kecil untuk amanin nilai text
+function safeText(v) {
+  if (!v) return "";
+  return String(v).replace(/[<>&"]/g, s => ({
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    '"': "&quot;"
+  })[s] || s);
+}
+
+// Load semua data visit dari Firestore dan tampilkan ke tabel
+async function loadReportVisitTable() {
+  const tbody = document.getElementById("reportVisitTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr><td colspan="15" style="text-align:center;">Memuat data dari database...</td></tr>
+  `;
+
+  try {
+    // --- SESUAIKAN nama koleksi di sini ---
+    const q = query(
+      collection(db, "visit_data"),
+      orderBy("tanggal", "desc")
+    );
+    const snap = await getDocs(q);
+
+    cachedVisitData = [];
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      cachedVisitData.push({
+        id: docSnap.id,
+        ...data
+      });
+    });
+
+    renderReportVisitTable(cachedVisitData);
+  } catch (err) {
+    console.error("Gagal load report visit:", err);
+    tbody.innerHTML = `
+      <tr><td colspan="15" style="color:red; text-align:center;">
+        ERROR: ${safeText(err.message || err)}
+      </td></tr>
+    `;
+  }
+}
+
+// Render array data ke tbody tabel
+function renderReportVisitTable(rows) {
+  const tbody = document.getElementById("reportVisitTableBody");
+  if (!tbody) return;
+
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="15" style="text-align:center;">Belum ada data visit.</td></tr>
+    `;
+    return;
+  }
+
+  const html = rows.map(row => {
+    const tgl = row.tanggal
+      ? new Date(row.tanggal).toLocaleDateString("id-ID")
+      : "-";
+
+    const fotoSN = row.fotoSnUrl || row.fotoSN || "";
+    const fotoPN = row.fotoPnUrl || row.fotoPN || "";
+    const fotoGPS = row.fotoGpsUrl || row.fotoGPS || row.fotoDeviceUrl || "";
+
+    // SN / PN bisa berupa string atau array; kita normalize ke string
+    const snText = Array.isArray(row.serialNumbers)
+      ? row.serialNumbers.join(", ")
+      : (row.serialNumbers || row.sn || "");
+
+    const pnText = Array.isArray(row.partNumbers)
+      ? row.partNumbers.join(", ")
+      : (row.partNumbers || row.pn || "");
+
+    return `
+      <tr data-id="${row.id}">
+        <td>${safeText(tgl)}</td>
+        <td>${safeText(row.siteCode || row.kodeSite || "")}</td>
+        <td>${safeText(row.siteName || row.namaSite || "")}</td>
+        <td>${safeText(row.picName || row.namaPIC || "")}</td>
+        <td>${safeText(row.module || "")}</td>
+        <td>${safeText(row.deviceModule || row.jenisDevice || "")}</td>
+        <td>${safeText(row.moduleType || row.modulType || "")}</td>
+        <td>${safeText(row.boardName || row.board || "")}</td>
+        <td>${safeText(row.deviceStatus || row.statusDevice || "")}</td>
+        <td>${safeText(snText)}</td>
+        <td>${safeText(pnText)}</td>
+        <td>
+          ${fotoSN
+            ? `<a href="${fotoSN}" target="_blank">
+                 <img class="report-thumb" src="${fotoSN}" alt="SN">
+               </a>`
+            : "-"}
+        </td>
+        <td>
+          ${fotoPN
+            ? `<a href="${fotoPN}" target="_blank">
+                 <img class="report-thumb" src="${fotoPN}" alt="PN">
+               </a>`
+            : "-"}
+        </td>
+        <td>
+          ${fotoGPS
+            ? `<a href="${fotoGPS}" target="_blank">
+                 <img class="report-thumb" src="${fotoGPS}" alt="Device/GPS">
+               </a>`
+            : "-"}
+        </td>
+        <td>
+          <button class="btn-table btn-table-edit"
+                  type="button"
+                  onclick="onEditVisitRow('${row.id}')">
+            Edit
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html.join("");
+}
+
 
 
 
