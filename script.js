@@ -138,7 +138,8 @@ window.switchTab = (tabId) => {
 
     // behaviour per tab
     if (tabId === 'dashboard') refreshDashboard();
-    if (tabId === 'report')    loadReportVisit();
+    if (tab === 'report') loadReportVisit();
+
 };
 
 // === 4. REFERENCE DATA ===
@@ -813,6 +814,37 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
         alert("Gagal update data visit: " + err.message);
     }
 });
+
+import { getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.openEditVisit = async function(id) {
+    document.getElementById("editVisitModal").style.display = "flex";
+    document.getElementById("editVisitId").value = id;
+
+    const snap = await getDoc(doc(db, `users/${currentUserId}/devices`, id));
+    const d = snap.data();
+
+    document.getElementById("editPicName").value = d.pic || "";
+    document.getElementById("editStatus").value = d.status || "Active";
+    document.getElementById("editPN").value = d.partNumber || "";
+}
+
+window.closeEditVisit = function() {
+    document.getElementById("editVisitModal").style.display = "none";
+}
+
+window.saveVisitEdit = async function() {
+    const id = document.getElementById("editVisitId").value;
+
+    await updateDoc(doc(db, `users/${currentUserId}/devices`, id), {
+        pic: document.getElementById("editPicName").value,
+        status: document.getElementById("editStatus").value,
+        partNumber: document.getElementById("editPN").value
+    });
+
+    alert("Perubahan berhasil disimpan.");
+    closeEditVisit();
+}
 
 
 
