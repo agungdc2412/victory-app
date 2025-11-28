@@ -124,22 +124,21 @@ document.getElementById("google-login-btn").addEventListener("click", () => {
 
 // === 3. NAVIGATION ===
 window.switchTab = (tabId) => {
-    // ganti tampilan section
+    // show / hide view
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     document.getElementById(`view-${tabId}`).classList.add('active');
 
-    // aktifkan menu sidebar
+    // highlight menu
     document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
     const navs = document.querySelectorAll('.nav-links li');
     if (tabId === 'dashboard') navs[0].classList.add('active');
-    if (tabId === 'input')      navs[1].classList.add('active');
-    if (tabId === 'report')     navs[2].classList.add('active');
-    if (tabId === 'reference')  navs[3].classList.add('active');
+    if (tabId === 'input')     navs[1].classList.add('active');
+    if (tabId === 'report')    navs[2].classList.add('active');
+    if (tabId === 'reference') navs[3].classList.add('active');
 
-    // behaviour per tab
+    // aksi tambahan per tab
     if (tabId === 'dashboard') refreshDashboard();
-    if (tab === 'report') loadReportVisit();
-
+    if (tabId === 'report')    loadReportVisit();  
 };
 
 // === 4. REFERENCE DATA ===
@@ -843,6 +842,7 @@ window.saveVisitEdit = async function() {
     alert("Perubahan berhasil disimpan.");
     closeEditVisit();
 }
+
 
 
 
