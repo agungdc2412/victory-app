@@ -642,7 +642,8 @@ let visitCacheById = {};
 // 8b. REPORT VISIT (TABEL BARU)
 // ============================
 
-// muat semua data visit dari koleksi "visit_data"async function loadReportVisit() {
+// muat semua data visit dari koleksi "visit_data"
+async function loadReportVisit() {
     const tbody = document.getElementById("reportVisitTableBody");
     if (!tbody) return;
 
@@ -812,6 +813,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
         alert("Gagal update data visit: " + err.message);
     }
 });
+
 
 
 
