@@ -701,6 +701,38 @@ function filterReportVisit() {
         row.style.display = textData.includes(q) ? "" : "none";
     });
 }
+function openEditVisit(id) {
+    document.getElementById("editVisitModal").style.display = "block";
+    document.getElementById("editVisitId").value = id;
+
+    getDoc(doc(db, "visit_data", id)).then(snap => {
+        const d = snap.data();
+        document.getElementById("editPicName").value = d.picName || "";
+        document.getElementById("editStatus").value = d.status || "Active";
+        document.getElementById("editPN").value = d.partNumber || "";
+    });
+}
+
+function closeEditVisit() {
+    document.getElementById("editVisitModal").style.display = "none";
+}
+
+document.getElementById("editVisitForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById("editVisitId").value;
+
+    await updateDoc(doc(db, "visit_data", id), {
+        picName: document.getElementById("editPicName").value,
+        status: document.getElementById("editStatus").value,
+        partNumber: document.getElementById("editPN").value
+    });
+
+    alert("Data berhasil diperbarui!");
+    closeEditVisit();
+    loadReportVisit();
+});
+
 
 
 
