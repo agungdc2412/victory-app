@@ -815,8 +815,6 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     }
 });
 
-import { getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 window.openEditVisit = async function(id) {
     document.getElementById("editVisitModal").style.display = "flex";
     document.getElementById("editVisitId").value = id;
@@ -845,6 +843,7 @@ window.saveVisitEdit = async function() {
     alert("Perubahan berhasil disimpan.");
     closeEditVisit();
 }
+
 
 
 
