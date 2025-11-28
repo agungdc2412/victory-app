@@ -609,7 +609,7 @@ window.refreshDashboard = () => {
     loadReferences();
 }
 window.exportExcel = () => {
-    const table = document.getElementById("reportTable");
+    const table = document.getElementById("reportVisitTable");
     const wb = XLSX.utils.table_to_book(table);
     XLSX.writeFile(wb, "Report_Victory.xlsx");
 }
@@ -724,6 +724,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+
 
 
 
