@@ -65,6 +65,10 @@ let liveQrCode = null;
 let currentCameraTarget = null;
 let chartInstances = {};
 
+// ====== REPORT VISIT STATE ======
+let cachedVisitData = [];         // cache semua dokumen visit dari Firestore
+let currentEditVisitId = null;    // id dokumen yang sedang diedit
+
 // === 2. AUTHENTICATION ===
 onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -618,6 +622,7 @@ window.exportExcel = () => {
     XLSX.writeFile(wb, "Report_Victory.xlsx");
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
+
 
 
 
