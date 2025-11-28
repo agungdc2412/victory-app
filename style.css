@@ -20,7 +20,7 @@
     box-sizing: border-box;
 }
 .fs-logo-header {
-    height: 32px;          /* boleh diubah 28–40px sesuai selera */
+    height: 48px;          /* boleh diubah 28–40px sesuai selera */
     object-fit: contain;
 }
 
@@ -691,5 +691,6 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
 
 
