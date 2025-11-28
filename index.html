@@ -283,12 +283,22 @@
             <!-- VIEW 3: REPORT VISIT (TABLE) -->
             <section id="view-report" class="view-section">
                 <div class="header-title">
-                    <h1>Laporan Kunjungan</h1>
+                    <h1>Report Visit</h1>
                     <div class="action-bar">
                         <button class="btn btn-success" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Excel</button>
                         <button class="btn btn-primary" onclick="downloadAllImages()"><i class="fas fa-download"></i> ZIP Foto</button>
                     </div>
                 </div>
+                <!-- Filter & Search -->
+                  <div class="report-toolbar">
+                    <div class="report-search-group">
+                      <label for="reportSearchInput">Search</label>
+                      <input
+                        type="text"
+                        id="reportSearchInput"
+                        placeholder="Cari Site / PIC / Module / SN / PN ..."
+                      />
+                    </div>
                 <div class="table-responsive">
                     <table class="data-table" id="reportTable">
                         <thead>
@@ -386,6 +396,7 @@
 
 </body>
 </html>
+
 
 
 
