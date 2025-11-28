@@ -5,7 +5,7 @@
     --secondary: #005a9c;   /* Professional Blue */
     --secondary-dark: #004a80;
     --bg-body: #f4f6f9;
-    --bg-sidebar: #005a9c;
+    --bg-sidebar: #000000;
     --text-main: #333333;
     --text-muted: #6c757d;
     --white: #ffffff;
@@ -691,6 +691,7 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
 
 
 
