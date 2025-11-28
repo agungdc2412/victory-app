@@ -51,7 +51,7 @@ body {
 }
 
 .fiberstar-logo {
-    width: 42px;
+    width: 60px;
     height: auto;
 }
 
@@ -720,6 +720,7 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
 
 
 
