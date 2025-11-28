@@ -719,6 +719,10 @@ window.openEditVisit = function (id) {
     });
 };
 
+window.closeEditVisit = function () {
+    document.getElementById("editVisitModal").style.display = "none";
+};
+
 document.getElementById("editVisitForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -734,6 +738,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+
 
 
 
