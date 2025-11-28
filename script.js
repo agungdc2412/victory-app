@@ -44,11 +44,6 @@ const firebaseConfig = {
     measurementId: "G-Q1DJ3BG41V"
 };
 
-// Cek Config Dummy
-if (firebaseConfig.apiKey === "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8") {
-    alert("PERINGATAN: Anda belum mengganti konfigurasi Firebase di script.js! Silakan ganti dengan data dari Firebase Console Anda agar aplikasi berfungsi.");
-}
-
 // Inisialisasi dengan Error Handling
 let app, auth, db, storage, provider;
 try {
@@ -623,5 +618,6 @@ window.exportExcel = () => {
     XLSX.writeFile(wb, "Report_Victory.xlsx");
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
+
 
 
