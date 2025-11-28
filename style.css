@@ -79,6 +79,35 @@ body {
 .login-divider::before { left: 0; }
 .login-divider::after { right: 0; }
 
+/* Brand di login */
+.brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.brand-logo {
+    height: 40px;
+    object-fit: contain;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--fs-dark);
+}
+
+.brand-tagline {
+    font-size: 11px;
+    color: var(--fs-gray);
+}
+
 /* === 3. LAYOUT UTAMA (SIDEBAR + CONTENT) === */
 #app-container {
     display: flex;
@@ -658,3 +687,4 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
