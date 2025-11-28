@@ -124,18 +124,21 @@ document.getElementById("google-login-btn").addEventListener("click", () => {
 
 // === 3. NAVIGATION ===
 window.switchTab = (tabId) => {
+    // ganti tampilan section
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     document.getElementById(`view-${tabId}`).classList.add('active');
+
+    // aktifkan menu sidebar
     document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
-    
     const navs = document.querySelectorAll('.nav-links li');
     if (tabId === 'dashboard') navs[0].classList.add('active');
     if (tabId === 'input')      navs[1].classList.add('active');
     if (tabId === 'report')     navs[2].classList.add('active');
     if (tabId === 'reference')  navs[3].classList.add('active');
 
+    // behaviour per tab
     if (tabId === 'dashboard') refreshDashboard();
-    if (tabId === 'report')    loadReportVisit();   // <-- penting, muat data Report Visit
+    if (tabId === 'report')    loadReportVisit();
 };
 
 // === 4. REFERENCE DATA ===
@@ -624,123 +627,192 @@ window.refreshDashboard = () => {
 }
 window.exportExcel = () => {
     const table = document.getElementById("reportVisitTable");
+    if (!table) {
+        alert("Tabel report belum tersedia.");
+        return;
+    }
     const wb = XLSX.utils.table_to_book(table);
     XLSX.writeFile(wb, "Report_Victory.xlsx");
-}
+};
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
 
-// === LOAD REPORT VISIT DATA === 
-async function loadReportVisit() {
+let visitCacheById = {};
+// ============================
+// 8b. REPORT VISIT (TABEL BARU)
+// ============================
+
+// cache data visit untuk keperluan edit & search
+let visitCacheById = {};
+
+// muat semua data visit dari koleksi "visit_data"async function loadReportVisit() {
     const tbody = document.getElementById("reportVisitTableBody");
+    if (!tbody) return;
+
     tbody.innerHTML = `<tr><td colspan="15" style="text-align:center">Memuat data...</td></tr>`;
+    visitCacheById = {};
 
-    const qSnap = await getDocs(collection(db, `users/${currentUserId}/devices`));
+    try {
+        const snap = await getDocs(collection(db, "visit_data"));
+        let html = "";
 
-    let html = "";
+        if (snap.empty) {
+            tbody.innerHTML = `<tr><td colspan="15" style="text-align:center">Belum ada data visit.</td></tr>`;
+            return;
+        }
 
-    qSnap.forEach(docSnap => {
-        const d = docSnap.data();
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const id = docSnap.id;
 
-        html += `
-        <tr>
-            <td>${d.date || "-"}</td>
-            <td>${d.siteCode || "-"}</td>
-            <td>${d.siteName || "-"}</td>
-            <td>${d.picName || "-"}</td>
-            <td>${d.module || "-"}</td>
-            <td>${d.deviceModule || "-"}</td>
-            <td>${d.modulType || "-"}</td>
-            <td>${d.boardName || "-"}</td>
-            <td>${d.status || "-"}</td>
+            // simpan ke cache
+            visitCacheById[id] = d;
 
-            <td>${(d.serialNumbers || []).join("<br>")}</td>
-            <td>${d.partNumber || "-"}</td>
+            html += `
+                <tr data-id="${id}">
+                    <td>${d.date || "-"}</td>
+                    <td>${d.siteCode || "-"}</td>
+                    <td>${d.siteName || "-"}</td>
+                    <td>${d.picName || "-"}</td>
+                    <td>${d.module || "-"}</td>
+                    <td>${d.deviceModule || "-"}</td>
+                    <td>${d.modulType || "-"}</td>
+                    <td>${d.boardName || "-"}</td>
+                    <td>${d.status || "-"}</td>
 
-            <td>${d.fotoSN ? `<img src="${d.fotoSN}" class="tbl-img">` : "-"}</td>
-            <td>${d.fotoPN ? `<img src="${d.fotoPN}" class="tbl-img">` : "-"}</td>
+                    <td>${Array.isArray(d.serialNumbers) ? d.serialNumbers.join("<br>") : (d.serialNumber || "-")}</td>
+                    <td>${d.partNumber || "-"}</td>
 
-            <td>
-                ${d.fotoLabel ? `<img src="${d.fotoLabel}" class="tbl-img">` : ""}
-                ${d.fotoType ? `<img src="${d.fotoType}" class="tbl-img">` : ""}
-                ${d.fotoFar ? `<img src="${d.fotoFar}" class="tbl-img">` : ""}
-            </td>
+                    <td>${d.fotoSN  ? `<img src="${d.fotoSN}"  class="tbl-img">` : "-"}</td>
+                    <td>${d.fotoPN  ? `<img src="${d.fotoPN}"  class="tbl-img">` : "-"}</td>
+                    <td>
+                        ${d.fotoLabel ? `<img src="${d.fotoLabel}" class="tbl-img">` : ""}
+                        ${d.fotoType  ? `<img src="${d.fotoType}"  class="tbl-img">` : ""}
+                        ${d.fotoFar   ? `<img src="${d.fotoFar}"   class="tbl-img">` : ""}
+                    </td>
 
-            <td>
-                <button class="btn-mini btn-warning" onclick="openEditVisit('${docSnap.id}')">
-                    <i class="fas fa-edit"></i>
-                </button>
-            </td>
-        </tr>`;
-    });
+                    <td>
+                        <button class="btn-mini btn-warning" onclick="openEditVisit('${id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
 
-    tbody.innerHTML = html;
+        tbody.innerHTML = html;
+        // setelah data terisi, apply filter kalau ada input
+        filterReportVisit();
+
+    } catch (err) {
+        console.error("loadReportVisit error:", err);
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+    }
 }
 
+// search / filter data pada tabel
 document.getElementById("reportSearchInput").addEventListener("input", filterReportVisit);
 document.getElementById("reportSearchField").addEventListener("change", filterReportVisit);
 
 function filterReportVisit() {
     const q = document.getElementById("reportSearchInput").value.toLowerCase();
     const field = document.getElementById("reportSearchField").value;
-
     const rows = document.querySelectorAll("#reportVisitTableBody tr");
+
+    const mapIndex = {
+        siteCode:      1,
+        siteName:      2,
+        picName:       3,
+        module:        4,
+        deviceModule:  5,
+        serialNumbers: 9,
+        partNumbers:   10
+    };
 
     rows.forEach(row => {
         const cells = row.querySelectorAll("td");
+        // row kosong (misal: "Memuat data..."), biarkan saja
+        if (!cells.length || cells.length < 15) return;
+
         let textData = "";
 
         if (field === "all") {
             textData = row.innerText.toLowerCase();
         } else {
-            const map = {
-                siteCode: 1,
-                siteName: 2,
-                picName: 3,
-                module: 4,
-                deviceModule: 5,
-                serialNumbers: 9,
-                partNumbers: 10
-            };
-            const idx  = map[field];
-            const cell = cells[idx];
-
-            textData = cell ? cell.innerText.toLowerCase() : "";
+            const idx = mapIndex[field];
+            if (idx == null || !cells[idx]) {
+                textData = row.innerText.toLowerCase();
+            } else {
+                textData = cells[idx].innerText.toLowerCase();
+            }
         }
 
         row.style.display = textData.includes(q) ? "" : "none";
     });
 }
 
-window.openEditVisit = function (id) {
-    document.getElementById("editVisitModal").style.display = "block";
+// =====================
+// 8c. EDIT DATA VISIT
+// =====================
+
+// buka modal edit
+window.openEditVisit = async function (id) {
+    const modal = document.getElementById("editVisitModal");
+    if (!modal) return;
+
     document.getElementById("editVisitId").value = id;
 
-    getDoc(doc(db, "visit_data", id)).then(snap => {
-        const d = snap.data() || {};
-        document.getElementById("editPicName").value = d.picName || "";
-        document.getElementById("editStatus").value = d.status || "Active";
-        document.getElementById("editPN").value = d.partNumber || "";
-    });
+    // ambil dari cache dulu
+    let d = visitCacheById[id];
+
+    // kalau cache kosong, fallback ke getDoc
+    if (!d) {
+        const snap = await getDoc(doc(db, "visit_data", id));
+        if (!snap.exists()) {
+            alert("Dokumen visit tidak ditemukan (mungkin sudah terhapus).");
+            return;
+        }
+        d = snap.data();
+    }
+
+    document.getElementById("editPicName").value = d.picName || "";
+    document.getElementById("editStatus").value = d.status || "Active";
+    document.getElementById("editPN").value = d.partNumber || "";
+
+    modal.style.display = "flex";
 };
 
 window.closeEditVisit = function () {
-    document.getElementById("editVisitModal").style.display = "none";
+    const modal = document.getElementById("editVisitModal");
+    if (modal) modal.style.display = "none";
 };
 
+// submit perubahan edit
 document.getElementById("editVisitForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const id = document.getElementById("editVisitId").value;
+    if (!id) {
+        alert("ID dokumen kosong. Refresh halaman dan coba lagi.");
+        return;
+    }
 
-    await updateDoc(doc(db, "visit_data", id), {
-        picName: document.getElementById("editPicName").value,
-        status: document.getElementById("editStatus").value,
-        partNumber: document.getElementById("editPN").value
-    });
+    const payload = {
+        picName:   document.getElementById("editPicName").value || null,
+        status:    document.getElementById("editStatus").value || null,
+        partNumber:document.getElementById("editPN").value || null
+    };
 
-    alert("Data berhasil diperbarui!");
-    closeEditVisit();
-    loadReportVisit();
+    try {
+        // pakai setDoc merge, supaya tidak error "No document to update"
+        await setDoc(doc(db, "visit_data", id), payload, { merge: true });
+
+        alert("Data visit berhasil diperbarui.");
+        closeEditVisit();
+        await loadReportVisit();
+    } catch (err) {
+        console.error("Update visit error:", err);
+        alert("Gagal update data visit: " + err.message);
+    }
 });
 
 
