@@ -116,12 +116,13 @@ window.switchTab = (tabId) => {
     
     const navs = document.querySelectorAll('.nav-links li');
     if(tabId==='dashboard') navs[0].classList.add('active');
-    if(tabId==='input') navs[1].classList.add('active');
-    if(tabId==='report') navs[2].classList.add('active');
-    if(tabId==='reference') navs[3].classList.add('active');
+    if(tabId==='input')     navs[1].classList.add('active');
+    if(tabId==='report')    navs[2].classList.add('active');
+    if(tabId==='reference') navs[3].add('active');
 
-    if(tabId === 'dashboard') refreshDashboard();
-}
+    if (tabId === 'dashboard') refreshDashboard();
+    if (tabId === 'report')    loadReportVisit();   // <<< TAMBAHAN
+};
 
 // === 4. REFERENCE DATA ===
 async function loadReferences() {
@@ -619,7 +620,7 @@ async function loadReportVisit() {
     const tbody = document.getElementById("reportVisitTableBody");
     tbody.innerHTML = `<tr><td colspan="15" style="text-align:center">Memuat data...</td></tr>`;
 
-    const qSnap = await getDocs(collection(db, "visit_data"));
+    const qSnap = await getDocs(collection(db, `users/${currentUserId}/devices`));
 
     let html = "";
 
@@ -723,12 +724,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
-function switchTab(tab) {
-    document.querySelectorAll(".view-section").forEach(v => v.classList.remove("active"));
-    document.getElementById("view-" + tab).classList.add("active");
 
-    if (tab === "report") loadReportVisit();
-}
 
 
 
