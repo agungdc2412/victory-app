@@ -444,9 +444,37 @@
             </form>
         </div>
     </div>
+    <!-- MODAL EDIT VISIT -->
+            <div id="editVisitModal" class="modal">
+              <div class="modal-content">
+                <span class="close" onclick="closeEditVisit()">&times;</span>
+                <h3>Edit Data Visit</h3>
+                <form id="editVisitForm">
+                  <input type="hidden" id="editVisitId">
+                  <div class="form-group">
+                    <label>PIC</label>
+                    <input type="text" id="editPicName">
+                  </div>
+                  <div class="form-group">
+                    <label>Status</label>
+                    <select id="editStatus">
+                      <option value="Active">Active</option>
+                      <option value="Not Active">Not Active</option>
+                      <option value="Dismantle">Dismantle</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Part Number (PN)</label>
+                    <input type="text" id="editPN">
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100 mt-2">SIMPAN PERUBAHAN</button>
+                </form>
+              </div>
+            </div>
 
 </body>
 </html>
+
 
 
 
