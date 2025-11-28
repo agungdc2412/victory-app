@@ -732,6 +732,12 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+function switchTab(tab) {
+    document.querySelectorAll(".view-section").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + tab).classList.add("active");
+
+    if (tab === "report") loadReportVisit();
+}
 
 
 
