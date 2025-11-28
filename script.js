@@ -701,12 +701,16 @@ function filterReportVisit() {
                 serialNumbers: 9,
                 partNumbers: 10
             };
-            textData = cells[map[field]].innerText.toLowerCase();
+            const idx  = map[field];
+            const cell = cells[idx];
+
+            textData = cell ? cell.innerText.toLowerCase() : "";
         }
 
         row.style.display = textData.includes(q) ? "" : "none";
     });
 }
+
 window.openEditVisit = function (id) {
     document.getElementById("editVisitModal").style.display = "block";
     document.getElementById("editVisitId").value = id;
@@ -738,6 +742,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+
 
 
 
