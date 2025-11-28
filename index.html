@@ -299,24 +299,50 @@
                         placeholder="Cari Site / PIC / Module / SN / PN ..."
                       />
                     </div>
-                <div class="table-responsive">
-                    <table class="data-table" id="reportTable">
-                        <thead>
+                      <div class="report-filter-group">
+                          <label for="reportSearchField">Field</label>
+                          <select id="reportSearchField">
+                            <option value="all">Semua kolom</option>
+                            <option value="siteCode">Kode Site</option>
+                            <option value="siteName">Nama Site</option>
+                            <option value="picName">PIC</option>
+                            <option value="module">Module</option>
+                            <option value="deviceModule">Device Module</option>
+                            <option value="serialNumbers">Serial Number (SN)</option>
+                            <option value="partNumbers">Part Number (PN)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                <!-- Tabel hasil visit -->
+                      <div class="table-wrapper">
+                        <table id="reportVisitTable" class="report-table">
+                          <thead>
                             <tr>
-                                <th>Tgl</th>
-                                <th>Site</th>
-                                <th>Rack</th>
-                                <th>Device</th>
-                                <th>SN / PN</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
+                              <th>Tanggal</th>
+                              <th>Kode Site</th>
+                              <th>Nama Site</th>
+                              <th>PIC</th>
+                              <th>Module</th>
+                              <th>Device</th>
+                              <th>Modul Type</th>
+                              <th>Board</th>
+                              <th>Status</th>
+                              <th>SN</th>
+                              <th>PN</th>
+                              <th>Foto SN</th>
+                              <th>Foto PN</th>
+                              <th>Foto Device / GPS</th>
+                              <th style="width:90px;">Aksi</th>
                             </tr>
-                        </thead>
-                        <tbody id="reportTableBody">
-                            <!-- Data -->
-                        </tbody>
-                    </table>
-                </div>
+                          </thead>
+                          <tbody id="reportVisitTableBody">
+                            <tr>
+                              <td colspan="15" style="text-align:center;">Memuat data...</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
             </section>
 
             <!-- VIEW 4: REFERENCE TABLE (CRUD & IMPORT) -->
@@ -396,6 +422,7 @@
 
 </body>
 </html>
+
 
 
 
