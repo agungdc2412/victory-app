@@ -563,44 +563,35 @@ document.getElementById("dataForm").addEventListener("submit", async (e) => {
 
 // === 8. REPORT & DASHBOARD ===
 function loadReportData() {
-    // onSnapshot listener untuk realtime update
+    // Fungsi ini sekarang hanya dipakai untuk hitung statistik & chart
     const q = query(collection(db, `users/${currentUserId}/devices`), orderBy("createdAt", "desc"));
     onSnapshot(q, (snap) => {
-        const tbody = document.getElementById("reportTableBody");
-        tbody.innerHTML = "";
-        let total=0, active=0, sites=new Set();
+        let total = 0, active = 0, sites = new Set();
         const statusCounts = { Active: 0, 'Not Active': 0, Dismantle: 0 };
         const deviceTypeCounts = {};
 
         snap.forEach(docSnap => {
             const d = docSnap.data();
             total++; sites.add(d.siteName);
-            if(d.status === 'Active') active++;
-            if(statusCounts[d.status] !== undefined) statusCounts[d.status]++;
+            if (d.status === 'Active') active++;
+            if (statusCounts[d.status] !== undefined) statusCounts[d.status]++;
+
             const mod = d.module || "Lainnya";
             deviceTypeCounts[mod] = (deviceTypeCounts[mod] || 0) + 1;
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${d.date}</td>
-                    <td>${d.siteName}<br><small>${d.siteCode}</small></td>
-                    <td>${d.rackNo}</td>
-                    <td>${d.deviceModule}<br><small>${d.boardName}</small></td>
-                    <td>SN: ${d.serialNumber}</td>
-                    <td>${d.status}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteReport('${docSnap.id}')"><i class="fas fa-trash"></i></button></td>
-                </tr>
-            `;
         });
+
+        // Update kartu statistik
         document.getElementById("stat-total-visit").textContent = total;
         document.getElementById("stat-unique-site").textContent = sites.size;
         document.getElementById("stat-active-device").textContent = active;
+
+        // Update chart
         updateCharts(statusCounts, deviceTypeCounts);
     }, (error) => {
         console.error("Report Error:", error);
-        // Jangan alert di sini agar tidak spamming jika koneksi putus nyambung
     });
 }
+
 window.deleteReport = async (id) => {
     if(confirm("Hapus laporan?")) await deleteDoc(doc(db, `users/${currentUserId}/devices`, id));
 }
@@ -738,6 +729,7 @@ function switchTab(tab) {
 
     if (tab === "report") loadReportVisit();
 }
+
 
 
 
