@@ -707,21 +707,17 @@ function filterReportVisit() {
         row.style.display = textData.includes(q) ? "" : "none";
     });
 }
-function openEditVisit(id) {
+window.openEditVisit = function (id) {
     document.getElementById("editVisitModal").style.display = "block";
     document.getElementById("editVisitId").value = id;
 
     getDoc(doc(db, "visit_data", id)).then(snap => {
-        const d = snap.data();
+        const d = snap.data() || {};
         document.getElementById("editPicName").value = d.picName || "";
         document.getElementById("editStatus").value = d.status || "Active";
         document.getElementById("editPN").value = d.partNumber || "";
     });
-}
-
-function closeEditVisit() {
-    document.getElementById("editVisitModal").style.display = "none";
-}
+};
 
 document.getElementById("editVisitForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -738,6 +734,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+
 
 
 
