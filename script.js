@@ -129,13 +129,13 @@ window.switchTab = (tabId) => {
     document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
     
     const navs = document.querySelectorAll('.nav-links li');
-    if(tabId==='dashboard') navs[0].classList.add('active');
-    if(tabId==='input')     navs[1].classList.add('active');
-    if(tabId==='report')    navs[2].classList.add('active');
-    if(tabId==='reference') navs[3].add('active');
+    if (tabId === 'dashboard') navs[0].classList.add('active');
+    if (tabId === 'input')      navs[1].classList.add('active');
+    if (tabId === 'report')     navs[2].classList.add('active');
+    if (tabId === 'reference')  navs[3].classList.add('active');
 
     if (tabId === 'dashboard') refreshDashboard();
-    if (tabId === 'report')    loadReportVisit();   // <<< TAMBAHAN
+    if (tabId === 'report')    loadReportVisit();   // <-- penting, muat data Report Visit
 };
 
 // === 4. REFERENCE DATA ===
@@ -738,6 +738,7 @@ document.getElementById("editVisitForm").addEventListener("submit", async (e) =>
     closeEditVisit();
     loadReportVisit();
 });
+
 
 
 
