@@ -623,131 +623,85 @@ window.exportExcel = () => {
 }
 window.downloadAllImages = () => alert("Fitur ZIP sedang dikembangkan.");
 
-// Utility kecil untuk amanin nilai text
-function safeText(v) {
-  if (!v) return "";
-  return String(v).replace(/[<>&"]/g, s => ({
-    "<": "&lt;",
-    ">": "&gt;",
-    "&": "&amp;",
-    '"': "&quot;"
-  })[s] || s);
-}
+// === LOAD REPORT VISIT DATA === 
+async function loadReportVisit() {
+    const tbody = document.getElementById("reportVisitTableBody");
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center">Memuat data...</td></tr>`;
 
-// Load semua data visit dari Firestore dan tampilkan ke tabel
-async function loadReportVisitTable() {
-  const tbody = document.getElementById("reportVisitTableBody");
-  if (!tbody) return;
+    const qSnap = await getDocs(collection(db, "visit_data"));
 
-  tbody.innerHTML = `
-    <tr><td colspan="15" style="text-align:center;">Memuat data dari database...</td></tr>
-  `;
+    let html = "";
 
-  try {
-    // --- SESUAIKAN nama koleksi di sini ---
-    const q = query(
-      collection(db, "visit_data"),
-      orderBy("tanggal", "desc")
-    );
-    const snap = await getDocs(q);
+    qSnap.forEach(docSnap => {
+        const d = docSnap.data();
 
-    cachedVisitData = [];
-    snap.forEach(docSnap => {
-      const data = docSnap.data();
-      cachedVisitData.push({
-        id: docSnap.id,
-        ...data
-      });
+        html += `
+        <tr>
+            <td>${d.date || "-"}</td>
+            <td>${d.siteCode || "-"}</td>
+            <td>${d.siteName || "-"}</td>
+            <td>${d.picName || "-"}</td>
+            <td>${d.module || "-"}</td>
+            <td>${d.deviceModule || "-"}</td>
+            <td>${d.modulType || "-"}</td>
+            <td>${d.boardName || "-"}</td>
+            <td>${d.status || "-"}</td>
+
+            <td>${(d.serialNumbers || []).join("<br>")}</td>
+            <td>${d.partNumber || "-"}</td>
+
+            <td>${d.fotoSN ? `<img src="${d.fotoSN}" class="tbl-img">` : "-"}</td>
+            <td>${d.fotoPN ? `<img src="${d.fotoPN}" class="tbl-img">` : "-"}</td>
+
+            <td>
+                ${d.fotoLabel ? `<img src="${d.fotoLabel}" class="tbl-img">` : ""}
+                ${d.fotoType ? `<img src="${d.fotoType}" class="tbl-img">` : ""}
+                ${d.fotoFar ? `<img src="${d.fotoFar}" class="tbl-img">` : ""}
+            </td>
+
+            <td>
+                <button class="btn-mini btn-warning" onclick="openEditVisit('${docSnap.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>`;
     });
 
-    renderReportVisitTable(cachedVisitData);
-  } catch (err) {
-    console.error("Gagal load report visit:", err);
-    tbody.innerHTML = `
-      <tr><td colspan="15" style="color:red; text-align:center;">
-        ERROR: ${safeText(err.message || err)}
-      </td></tr>
-    `;
-  }
+    tbody.innerHTML = html;
 }
 
-// Render array data ke tbody tabel
-function renderReportVisitTable(rows) {
-  const tbody = document.getElementById("reportVisitTableBody");
-  if (!tbody) return;
+document.getElementById("reportSearchInput").addEventListener("input", filterReportVisit);
+document.getElementById("reportSearchField").addEventListener("change", filterReportVisit);
 
-  if (!rows || rows.length === 0) {
-    tbody.innerHTML = `
-      <tr><td colspan="15" style="text-align:center;">Belum ada data visit.</td></tr>
-    `;
-    return;
-  }
+function filterReportVisit() {
+    const q = document.getElementById("reportSearchInput").value.toLowerCase();
+    const field = document.getElementById("reportSearchField").value;
 
-  const html = rows.map(row => {
-    const tgl = row.tanggal
-      ? new Date(row.tanggal).toLocaleDateString("id-ID")
-      : "-";
+    const rows = document.querySelectorAll("#reportVisitTableBody tr");
 
-    const fotoSN = row.fotoSnUrl || row.fotoSN || "";
-    const fotoPN = row.fotoPnUrl || row.fotoPN || "";
-    const fotoGPS = row.fotoGpsUrl || row.fotoGPS || row.fotoDeviceUrl || "";
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        let textData = "";
 
-    // SN / PN bisa berupa string atau array; kita normalize ke string
-    const snText = Array.isArray(row.serialNumbers)
-      ? row.serialNumbers.join(", ")
-      : (row.serialNumbers || row.sn || "");
+        if (field === "all") {
+            textData = row.innerText.toLowerCase();
+        } else {
+            const map = {
+                siteCode: 1,
+                siteName: 2,
+                picName: 3,
+                module: 4,
+                deviceModule: 5,
+                serialNumbers: 9,
+                partNumbers: 10
+            };
+            textData = cells[map[field]].innerText.toLowerCase();
+        }
 
-    const pnText = Array.isArray(row.partNumbers)
-      ? row.partNumbers.join(", ")
-      : (row.partNumbers || row.pn || "");
-
-    return `
-      <tr data-id="${row.id}">
-        <td>${safeText(tgl)}</td>
-        <td>${safeText(row.siteCode || row.kodeSite || "")}</td>
-        <td>${safeText(row.siteName || row.namaSite || "")}</td>
-        <td>${safeText(row.picName || row.namaPIC || "")}</td>
-        <td>${safeText(row.module || "")}</td>
-        <td>${safeText(row.deviceModule || row.jenisDevice || "")}</td>
-        <td>${safeText(row.moduleType || row.modulType || "")}</td>
-        <td>${safeText(row.boardName || row.board || "")}</td>
-        <td>${safeText(row.deviceStatus || row.statusDevice || "")}</td>
-        <td>${safeText(snText)}</td>
-        <td>${safeText(pnText)}</td>
-        <td>
-          ${fotoSN
-            ? `<a href="${fotoSN}" target="_blank">
-                 <img class="report-thumb" src="${fotoSN}" alt="SN">
-               </a>`
-            : "-"}
-        </td>
-        <td>
-          ${fotoPN
-            ? `<a href="${fotoPN}" target="_blank">
-                 <img class="report-thumb" src="${fotoPN}" alt="PN">
-               </a>`
-            : "-"}
-        </td>
-        <td>
-          ${fotoGPS
-            ? `<a href="${fotoGPS}" target="_blank">
-                 <img class="report-thumb" src="${fotoGPS}" alt="Device/GPS">
-               </a>`
-            : "-"}
-        </td>
-        <td>
-          <button class="btn-table btn-table-edit"
-                  type="button"
-                  onclick="onEditVisitRow('${row.id}')">
-            Edit
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-
-  tbody.innerHTML = html.join("");
+        row.style.display = textData.includes(q) ? "" : "none";
+    });
 }
+
 
 
 
