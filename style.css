@@ -41,7 +41,36 @@ body {
     align-items: center;
     background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
 }
+/* --- LOGO FIBERSTAR PADA SIDEBAR --- */
 
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 25px 20px;
+}
+
+.fiberstar-logo {
+    width: 42px;
+    height: auto;
+}
+
+.sidebar-title {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.victory-text {
+    font-size: 28px;
+    font-weight: 700;
+    color: #FF8C00;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #ffffffcc;
+}
 .login-box {
     background: var(--white);
     padding: 40px;
@@ -691,6 +720,7 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
+
 
 
 
