@@ -425,9 +425,32 @@
                 </form>
               </div>
             </div>
-
+            <div id="editVisitModal" class="modal">
+              <div class="modal-box">
+                <h3>Edit Data Visit</h3>
+            
+                <input type="hidden" id="editVisitId">
+            
+                <label>Nama PIC</label>
+                <input type="text" id="editPicName">
+            
+                <label>Status Device</label>
+                <select id="editStatus">
+                  <option>Active</option>
+                  <option>Not Active</option>
+                  <option>Dismantle</option>
+                </select>
+            
+                <label>Update PN</label>
+                <input type="text" id="editPN">
+            
+                <button onclick="saveVisitEdit()" class="btn btn-primary">Simpan Perubahan</button>
+                <button onclick="closeEditVisit()" class="btn btn-danger mt-1">Tutup</button>
+              </div>
+            </div>
 </body>
 </html>
+
 
 
 
