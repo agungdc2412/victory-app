@@ -1,567 +1,1594 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel - Referensi</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V.I.C.T.O.R.Y - Asset Management v5.7 (Dashboard Update)</title> 
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- CSS -->
+    <style>
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #cc5500;
+            --secondary: #1a1a2e;
+            --bg-light: #f4f6f9;
+            --text-dark: #333;
+            --text-light: #fff;
+            --sidebar-width: 260px;
+        }
 
-  <!-- html2canvas & jsPDF (untuk export image/PDF) -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+        
+        body { background-color: var(--bg-light); color: var(--text-dark); overflow-x: hidden; }
 
-  <style>
-    body {
-      background-color: #f5f6fa;
-      font-size: 0.95rem;
-    }
+        /* Login Screen */
+        #login-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--secondary), #16213e);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 10px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .fs-logo-login { width: 180px; height: auto; margin-bottom: 15px; display: block; margin-left: auto; margin-right: auto; }
+        .login-title { color: var(--primary); font-weight: 700; font-size: 2rem; margin-bottom: 5px; }
+        .login-subtitle { font-size: 0.8rem; color: #666; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #555; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none;
+        }
+        .std-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        .btn {
+            border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 500;
+            transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-google { background: #db4437; color: white; width: 100%; margin-bottom: 15px; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .w-100 { width: 100%; }
 
-    /* Layout */
-    .app-wrapper {
-      display: flex;
-      min-height: 100vh;
-    }
+        /* App Container */
+        #app-container { display: flex; min-height: 100vh; }
 
-    /* Sidebar */
-    .sidebar {
-      width: 240px;
-      min-height: 100vh;
-      background: #111827;
-      color: #f9fafb;
-    }
-    .sidebar-header {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .sidebar-link {
-      color: rgba(249, 250, 251, 0.8);
-      border-radius: 8px;
-      padding: 0.6rem 0.75rem;
-      margin: 0.15rem 0.25rem;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-    }
-    .sidebar-link i {
-      font-size: 1.1rem;
-    }
-    .sidebar-link:hover {
-      background: rgba(55, 65, 81, 0.8);
-      color: #ffffff;
-      text-decoration: none;
-    }
-    .sidebar-link.active {
-      background: #2563eb;
-      color: #ffffff;
-      font-weight: 600;
-    }
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width); background: var(--secondary); color: white;
+            position: fixed; height: 100%; left: 0; top: 0; display: flex; flex-direction: column;
+        }
+        .sidebar-logo { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .fs-logo-sidebar {
+            width: 140px; height: auto; background: rgba(255,255,255,0.95); padding: 10px; border-radius: 6px; margin-bottom: 10px; display: inline-block;
+        }
+        .sidebar-logo h2 { color: var(--primary); font-weight: 800; letter-spacing: 2px; font-size: 1.5rem; margin-top: 5px;}
+        .nav-links { list-style: none; padding: 20px 0; flex: 1; }
+        .nav-links li {
+            padding: 15px 25px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent;
+        }
+        .nav-links li:hover, .nav-links li.active { background: rgba(255,255,255,0.05); border-left-color: var(--primary); }
+        .nav-links li i { width: 25px; }
+        .logout-link { color: #ff6b6b; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); }
 
-    /* Topbar (mobile) */
-    .topbar {
-      display: none;
-    }
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width); flex: 1; padding: 30px; width: calc(100% - var(--sidebar-width));
+        }
 
-    /* Main content */
-    .main-content {
-      flex: 1;
-      padding: 1.5rem;
-    }
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Card header style */
-    .card-header-simple {
-      border-bottom: 1px solid #e5e7eb;
-      padding: 0.85rem 1.25rem;
-    }
+        .header-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header-title h1 { font-size: 1.8rem; color: #2c3e50; }
 
-    /* Responsive sidebar */
-    @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        z-index: 1040;
-        transform: translateX(-100%);
-        transition: transform 0.25s ease;
-      }
-      .sidebar.open {
-        transform: translateX(0);
-      }
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #111827;
-        color: #f9fafb;
-        padding: 0.5rem 0.75rem;
-      }
-      .main-content {
-        padding: 1rem;
-      }
-    }
-  </style>
+        /* Dashboard & Form */
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card-stat { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+        .card-stat h3 { font-size: 0.9rem; color: #777; margin-bottom: 10px; }
+        .card-stat p { font-size: 2rem; font-weight: bold; color: #333; }
+        
+        /* Modifikasi Card Khusus untuk Not Visited agar terlihat urgency */
+        .card-alert p { color: #dc3545; } 
+
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); height: 350px; }
+
+        .form-layout { max-width: 1200px; margin: 0 auto; }
+        .form-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .form-card h3 { border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); font-size: 1.1rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .autofill-box { background: #fff8e1; padding: 15px; border-radius: 5px; border: 1px dashed #ffc107; margin-top: 15px; }
+        .readonly-input { background-color: #eee; cursor: not-allowed; }
+        
+        .scan-wrapper { display: flex; gap: 10px; align-items: center; }
+        .btn-icon { background: #e0e0e0; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .btn-icon:hover { background: #d0d0d0; }
+        .chips-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+        .chip { background: var(--secondary); color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+        .chip i { cursor: pointer; }
+
+        /* Table & Modal */
+        .table-wrapper { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1800px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85rem; vertical-align: middle; }
+        th { background: #f8f9fa; font-weight: 600; color: #555; white-space: nowrap; }
+        .tbl-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; transition: 0.2s; cursor: pointer; }
+        .tbl-img:hover { transform: scale(2); z-index: 10; position:relative; }
+        
+        /* Pagination Controls */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .pagination-btn-group { display: flex; gap: 5px; }
+        .page-btn { padding: 6px 12px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: flex-start; padding-top: 30px; }
+        .modal-content { background-color: #fefefe; padding: 25px; border-radius: 8px; width: 90%; max-width: 800px; position: relative; animation: slideDown 0.3s; margin-bottom: 50px; }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .close { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .close:hover { color: black; }
+
+        /* === PDF GENERATOR HIDDEN STYLE === */
+        #pdf-hidden-container { position: fixed; top: 0; left: 0; z-index: -9999; opacity: 0; pointer-events: none; }
+        .pdf-template { width: 1200px; padding: 40px; background: white; font-family: 'Roboto', sans-serif; border: 1px solid #000; }
+        .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); padding-bottom: 20px; margin-bottom: 20px; }
+        .pdf-header img { height: 60px; }
+        .pdf-header h1 { color: var(--secondary); margin: 0; font-size: 2rem; }
+        .pdf-site-info { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .pdf-site-info p { margin: 5px 0; font-size: 1.1rem; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .pdf-table th { background: var(--secondary); color: white; padding: 12px; text-align: center; }
+        .pdf-table td { border: 1px solid #ddd; padding: 10px; text-align: center; vertical-align: top; }
+        .pdf-img-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .pdf-img { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ccc; background: #eee; }
+        .pdf-footer { margin-top: 30px; text-align: right; font-size: 0.9rem; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { width: 0; overflow: hidden; }
+            .main-content { margin-left: 0; width: 100%; padding: 15px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            #app-container.mobile-nav-active .sidebar { width: 260px; z-index: 1000; }
+        }
+    </style>
 </head>
 <body>
-  <!-- TOPBAR (Mobile) -->
-  <div class="topbar d-md-none">
-    <button class="btn btn-sm btn-outline-light" id="toggleSidebarBtn">
-      <i class="bi bi-list"></i>
-    </button>
-    <span class="fw-semibold">Admin Panel</span>
-    <span></span>
-  </div>
 
-  <div class="app-wrapper">
-    <!-- SIDEBAR -->
-    <nav id="sidebar" class="sidebar d-flex flex-column">
-      <div class="sidebar-header px-3 py-3">
-        <span class="fs-5 fw-bold">My Web App</span>
-        <small class="d-block text-muted">admin panel</small>
-      </div>
-      <ul class="nav flex-column px-2 mt-2">
-        <li class="nav-item">
-          <a href="#" class="nav-link sidebar-link active" data-page="dashboard">
-            <i class="bi bi-speedometer2 me-2"></i> Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link sidebar-link" data-page="visit">
-            <i class="bi bi-graph-up-arrow me-2"></i> Page Visit
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link sidebar-link" data-page="referensi">
-            <i class="bi bi-collection me-2"></i> Referensi
-          </a>
-        </li>
-
-        <li class="nav-item mt-3">
-          <span class="text-uppercase small text-muted px-3">Settings</span>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link sidebar-link" data-page="users">
-            <i class="bi bi-people me-2"></i> Users
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link sidebar-link">
-            <i class="bi bi-box-arrow-right me-2"></i> Logout
-          </a>
-        </li>
-      </ul>
-    </nav>
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-      <!-- DASHBOARD (contoh, dipertahankan) -->
-      <section id="page-dashboard">
-        <h3 class="mb-3">Dashboard</h3>
-        <div class="row g-3">
-          <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-              <div class="card-body">
-                <h6 class="text-muted">Total Visit</h6>
-                <h3 class="fw-bold">12.340</h3>
-                <small class="text-success"><i class="bi bi-arrow-up-right"></i> +8% vs minggu lalu</small>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card shadow-sm border-0">
-              <div class="card-body">
-                <h6 class="text-muted">Total User</h6>
-                <h3 class="fw-bold">1.230</h3>
-                <small class="text-muted">Aktif 30 hari terakhir</small>
-              </div>
-            </div>
-          </div>
+    <!-- === LOGIN SCREEN === -->
+    <div id="login-container">
+        <div class="login-box">
+            <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo" class="fs-logo-login">
+            <h1 class="login-title">V.I.C.T.O.R.Y</h1>
+            <p class="login-subtitle">Asset Management System v5.7</p>
+            <button id="google-login-btn" class="btn btn-google"><i class="fab fa-google"></i> Masuk dengan Google</button>
+            <div style="margin: 15px 0; color: #aaa; font-size: 0.8rem;">atau login manual</div>
+            <form id="login-form">
+                <div class="form-group"><input type="email" id="login-email" placeholder="Email Fiberstar" required></div>
+                <div class="form-group"><input type="password" id="login-password" placeholder="Password" required></div>
+                <button type="submit" id="login-btn" class="btn btn-primary w-100">LOGIN</button>
+            </form>
         </div>
-      </section>
-
-      <!-- PAGE VISIT (placeholder, dipertahankan) -->
-      <section id="page-visit" class="d-none">
-        <h3 class="mb-3">Page Visit</h3>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <p class="text-muted mb-0">Di sini nanti menampilkan grafik & statistik kunjungan halaman (dipertahankan dari versi sebelumnya).</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- USERS (placeholder) -->
-      <section id="page-users" class="d-none">
-        <h3 class="mb-3">Users</h3>
-        <div class="card shadow-sm border-0">
-          <div class="card-body">
-            <p class="text-muted mb-0">Halaman manajemen user (placeholder).</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- REFERENSI (fokus upgrade) -->
-      <section id="page-referensi" class="d-none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div>
-            <h3 class="mb-0">Referensi Data</h3>
-            <small class="text-muted">Kelola master data (search + CRUD + import/export).</small>
-          </div>
-        </div>
-
-        <!-- ACTION BAR -->
-        <div class="card mb-3 shadow-sm border-0">
-          <div class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
-
-            <!-- Search -->
-            <div class="input-group w-auto">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input type="text" id="searchInput" class="form-control" placeholder="Cari referensi...">
-            </div>
-
-            <!-- Buttons -->
-            <div class="d-flex flex-wrap gap-2">
-              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreate">
-                <i class="bi bi-plus-lg"></i> Tambah Data
-              </button>
-
-              <!-- Import CSV -->
-              <form id="importForm" enctype="multipart/form-data">
-                <label class="btn btn-outline-secondary mb-0">
-                  <i class="bi bi-file-earmark-arrow-up"></i> Import CSV
-                  <input type="file" id="csvFileInput" name="file" accept=".csv" hidden>
-                </label>
-              </form>
-
-              <!-- Export -->
-              <div class="btn-group">
-                <button class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
-                  <i class="bi bi-download"></i> Export
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#" id="exportCsvBtn">Export CSV</a></li>
-                  <li><a class="dropdown-item" href="#" id="exportImgBtn">Export Image (PNG)</a></li>
-                  <li><a class="dropdown-item" href="#" id="exportPdfBtn">Export PDF</a></li>
-                </ul>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="card shadow-sm border-0" id="tableContainer">
-          <div class="card-header card-header-simple bg-white">
-            <strong>Daftar Referensi</strong>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0" id="referensiTable">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width: 60px;">#</th>
-                    <th>Kode</th>
-                    <th>Nama Referensi</th>
-                    <th>Keterangan</th>
-                    <th style="width: 120px;" class="text-end">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="referensiTbody">
-                  <!-- Diisi via JavaScript -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-  <!-- MODAL CREATE / EDIT -->
-  <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <form class="modal-content" id="referensiForm">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalTitle">Tambah Referensi</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="refId">
-          <div class="mb-3">
-            <label class="form-label">Kode</label>
-            <input type="text" class="form-control" id="refKode" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Nama Referensi</label>
-            <input type="text" class="form-control" id="refNama" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Keterangan</label>
-            <textarea class="form-control" id="refKet" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- === MAIN APP === -->
+    <div id="app-container" style="display: none;">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo" class="fs-logo-sidebar">
+                <h2>VICTORY</h2>
+                <div id="user-display" style="font-size: 0.8rem; color: #bbb; margin-top: 5px;">User</div>    
+            </div>
+            <ul class="nav-links">
+                <li class="active" onclick="switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</li>
+                <li onclick="switchTab('input')"><i class="fas fa-edit"></i> Visit Site (Form)</li>
+                <li onclick="switchTab('report')"><i class="fas fa-table"></i> Report Visit</li>
+                <li onclick="switchTab('reference')"><i class="fas fa-database"></i> Ref. Asset (Modul)</li>
+                <li onclick="switchTab('ref-site')"><i class="fas fa-map-marked-alt"></i> Ref. Site</li>
+                <li onclick="logoutApp()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</li>
+            </ul>
+        </nav>
 
-  <script>
-    // Dummy data sementara (bisa diganti nanti dari backend)
-    let dataReferensi = [
-      { id: 1, kode: 'REF-001', nama: 'Jenis Perangkat', keterangan: 'Kategori perangkat jaringan' },
-      { id: 2, kode: 'REF-002', nama: 'Status Perangkat', keterangan: 'Active / Not Active' },
-      { id: 3, kode: 'REF-003', nama: 'Vendor', keterangan: 'ZTE, Huawei, Nokia, lainnya' }
-    ];
-    let editingId = null;
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div id="qr-reader" style="display: none;"></div>
 
-    // Render tabel
-    function renderTable(filterText = '') {
-      const tbody = document.getElementById('referensiTbody');
-      tbody.innerHTML = '';
-      const lowerFilter = filterText.toLowerCase();
+            <!-- VIEW 1: DASHBOARD -->
+            <section id="view-dashboard" class="view-section active">
+                <div class="header-title">
+                    <h1>Dashboard Analytical</h1>
+                    <button class="btn btn-primary" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Refresh</button>
+                </div>
+                <!-- UPDATE: KARTU DASHBOARD SESUAI REQUEST -->
+                <div class="dashboard-cards">
+                    <!-- 1. Total site yang sudah divisit (Unique) -->
+                    <div class="card-stat">
+                        <h3>Total Site Visit</h3>
+                        <p id="stat-site-visit">0</p>
+                    </div>
+                    <!-- 2. Total device yang sudah di input (Total Rows) -->
+                    <div class="card-stat">
+                        <h3>Total Device Input</h3>
+                        <p id="stat-device-input" style="color:blue;">0</p>
+                    </div>
+                    <!-- 3. Total site yang belum dikunjungi (Ref - Visited) -->
+                    <div class="card-stat card-alert">
+                        <h3>Total Site Belum Visit</h3>
+                        <p id="stat-site-not-visit">0</p>
+                    </div>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+                    <div class="chart-container"><canvas id="chartDeviceType"></canvas></div>
+                </div>
+            </section>
 
-      dataReferensi
-        .filter(item => {
-          const combined = (item.kode + ' ' + item.nama + ' ' + item.keterangan).toLowerCase();
-          return combined.includes(lowerFilter);
-        })
-        .forEach((item, index) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.kode}</td>
-            <td>${item.nama}</td>
-            <td>${item.keterangan || ''}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-primary me-1" onclick="editRef(${item.id})">
-                <i class="bi bi-pencil-square"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteRef(${item.id})">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
+            <!-- VIEW 2: FORM INPUT -->
+            <section id="view-input" class="view-section">
+                <div class="header-title"><h1>Form Input Data Asset</h1></div>
+                <form id="dataForm" class="form-layout">
+                    <!-- Site Info -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-map-marker-alt"></i> Informasi Site</h3>
+                        <div class="grid-2">
+                            <div class="form-group"><label>1. Tanggal *</label><input type="date" id="inpDate" required></div>
+                            <div class="form-group"><label>2. Kode Site *</label><input type="text" id="inpSiteCode" placeholder="Contoh: JKT-01" required></div>
+                            <div class="form-group"><label>3. Nama Site *</label><input type="text" id="inpSiteName" placeholder="Nama Site Lengkap" required></div>
+                            <div class="form-group"><label>4. Nama PIC *</label><input type="text" id="inpPic" required></div>
+                            <div class="form-group">
+                                <label>5. No Rack *</label>
+                                <select id="inpRackNo" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="R1">R1</option><option value="R2">R2</option><option value="R3">R3</option><option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Floor Number</label><input type="text" id="inpFloor" value="LT.1"></div>
+                        </div>
+                    </div>
+                    <!-- Device Info -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-server"></i> Detail Perangkat</h3>
+                        <div class="grid-2">
+                            <div class="form-group"><label>6. Module *</label><select id="inpModule" required disabled><option value="">Loading...</option></select></div>
+                            <div class="form-group"><label>7. Device Module *</label><select id="inpDeviceModule" required disabled><option value="">Pilih Module</option></select></div>
+                            <div class="form-group"><label>8. Modul Type *</label><select id="inpModulType" required disabled><option value="">Pilih Device</option></select></div>
+                            <div class="form-group"><label>9. Board Name</label><select id="inpBoardName" disabled><option value="">Pilih Type</option></select></div>
+                        </div>
+                        <div class="autofill-box">
+                            <h4>Auto-Fill Data (SAP)</h4>
+                            <div class="grid-2">
+                                <div class="form-group"><label>Description</label><input type="text" id="autoDesc" readonly class="readonly-input"></div>
+                                <div class="form-group"><label>Type Object</label><input type="text" id="autoTypeObj" readonly class="readonly-input"></div>
+                                <div class="form-group"><label>Manufacturer</label><input type="text" id="autoManuf" readonly class="readonly-input"></div>
+                                <div class="form-group"><label>Product Type</label><input type="text" id="autoProdType" readonly class="readonly-input"></div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>14. Status Device *</label>
+                            <select id="inpStatus" required>
+                                <option value="Active">Active</option><option value="Not Active">Not Active</option><option value="Dismantle">Dismantle</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Upload -->
+                    <div class="form-card">
+                        <h3><i class="fas fa-camera"></i> Identifikasi & Foto</h3>
+                        <div class="form-group">
+                            <label>16. SN *</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="fileSN" accept="image/*" class="file-input">
+                                <button type="button" class="btn-icon" onclick="triggerFileScan('SN')"><i class="fas fa-file-image"></i> Scan</button>
+                                <button type="button" class="btn-icon" onclick="openCamera('SN')"><i class="fas fa-camera"></i> Cam</button>
+                            </div>
+                            <input type="text" id="manualSN" placeholder="Ketik SN manual jika scan gagal..." class="std-input" style="margin-top:5px; border-color: #ffc107;">
+                            <div id="snTagsContainer" class="chips-container"></div>
+                            <input type="hidden" id="valSN">
+                        </div>
+                        <div class="form-group">
+                            <label>17. PN</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="filePN" accept="image/*" class="file-input">
+                                <button type="button" class="btn-icon" onclick="triggerFileScan('PN')"><i class="fas fa-file-image"></i> Scan</button>
+                                <button type="button" class="btn-icon" onclick="openCamera('PN')"><i class="fas fa-camera"></i> Cam</button>
+                            </div>
+                            <input type="text" id="valPN" placeholder="Hasil Scan PN" class="std-input" style="margin-top:5px; width:100%; padding:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label>18. Upload Foto</label>
+                            <div class="grid-3">
+                                <div><small>Label Device</small><input type="file" id="fotoLabel" accept="image/*"></div>
+                                <div><small>Label Tipe</small><input type="file" id="fotoType" accept="image/*"></div>
+                                <div><small>Device Jauh</small><input type="file" id="fotoFar" accept="image/*"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="padding: 15px; font-size: 1.1rem;">SIMPAN DATA</button>
+                    <div id="submitStatus" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
+                </form>
+            </section>
+
+            <!-- VIEW 3: REPORT VISIT -->
+            <section id="view-report" class="view-section">
+                <div class="header-title">
+                    <h1>Report Visit</h1>
+                    <!-- Export Controls -->
+                    <div class="action-bar" style="display: flex; gap: 10px; align-items: center;">
+                        <select id="exportSiteSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="">-- Pilih Site untuk PDF --</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportSitePdf()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                        <button class="btn btn-primary" onclick="exportExcel()"><i class="fas fa-file-excel"></i> Excel (Links)</button>
+                    </div>
+                </div>
+                
+                <div id="pdfLoading" style="display:none; background:#d1ecf1; color:#0c5460; padding:10px; border-radius:4px; margin-bottom:15px; text-align:center;">
+                    <i class="fas fa-spinner fa-spin"></i> <span id="pdfLoadingText">Sedang memproses PDF...</span>
+                </div>
+                
+                <div id="downloadStatus" style="display:none; background:#fff3cd; color:#856404; padding:10px; border-radius:4px; margin-bottom:15px; text-align:center; border:1px solid #ffeeba;">
+                    <i class="fas fa-info-circle"></i> <span id="downloadStatusText"></span>
+                </div>
+
+                <!-- SEARCH & FILTER TOOLBAR -->
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span style="font-size:0.85rem;">Tampil:</span>
+                        <select id="reportRowsPerPage" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; cursor:pointer;">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;"><input type="text" id="reportSearchInput" placeholder="Cari Site / PIC / Module / SN ..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="reportVisitTable">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kode Site</th>
+                                <th>Nama Site</th>
+                                <th>PIC</th>
+                                <th>Rack</th>
+                                <th>Floor</th>
+                                <th>Module</th>
+                                <th>Device</th>
+                                <th>Type</th>
+                                <th>Board</th>
+                                <th>Desc</th>
+                                <th>Status</th>
+                                <th>SN</th>
+                                <th>PN</th>
+                                <th>Foto Label</th>
+                                <th>Foto Tipe</th>
+                                <th>Foto Jauh</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportVisitTableBody"><tr><td colspan="18" style="text-align:center;">Memuat data...</td></tr></tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination Control -->
+                <div class="pagination-container">
+                    <span id="reportPageInfo" style="font-size:0.9rem; color:#666;">Hal 1 dari 1</span>
+                    <div class="pagination-btn-group" id="reportPagination"></div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: REFERENCE (ASSET) -->
+            <section id="view-reference" class="view-section">
+                <div class="header-title">
+                    <h1>Master Data Referensi Asset (Modul)</h1>
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                        <!-- NEW: Inject Default Data Button -->
+                        <button class="btn btn-outline" style="background: #e2e6ea; border-color: #ccc; color: #333;" onclick="loadSampleRef()"><i class="fas fa-magic"></i> Inject Data Contoh</button>
+
+                        <button class="btn btn-primary" onclick="exportRefCsv()" style="background:#28a745;"><i class="fas fa-file-csv"></i> Download All CSV</button>
+                        <label for="importCsvRef" class="btn btn-primary" style="cursor:pointer;"><i class="fas fa-file-upload"></i> Import CSV</label>
+                        <input type="file" id="importCsvRef" accept=".csv" style="display:none;">
+                        <button class="btn btn-primary" onclick="openRefModal()"><i class="fas fa-plus"></i> Manual</button>
+                    </div>
+                </div>
+                <!-- Filter & Rows per page -->
+                <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span style="font-size:0.9rem;">Tampil:</span>
+                        <select id="refRowsPerPage" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div id="importStatus" style="font-weight:bold; color: #555;"></div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Module</th><th>Device</th><th>Type</th><th>Desc (SAP)</th><th>Aksi</th></tr></thead>
+                        <tbody id="refTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination-container">
+                    <span id="refPageInfo" style="font-size:0.9rem; color:#666;">Hal 1 dari 1</span>
+                    <div class="pagination-btn-group" id="refPagination"></div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: REFERENCE SITE (NEW) -->
+            <section id="view-ref-site" class="view-section">
+                <div class="header-title">
+                    <h1>Master Data Reference Site</h1>
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                         <!-- NEW: Inject Default Data Button -->
+                        <button class="btn btn-outline" style="background: #e2e6ea; border-color: #ccc; color: #333;" onclick="loadSampleSite()"><i class="fas fa-magic"></i> Inject Data Contoh</button>
+
+                        <label for="importCsvSite" class="btn btn-primary" style="cursor:pointer;"><i class="fas fa-file-upload"></i> Import CSV</label>
+                        <input type="file" id="importCsvSite" accept=".csv" style="display:none;">
+                        <button class="btn btn-primary" onclick="openSiteModal()"><i class="fas fa-plus"></i> Tambah Site</button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span style="font-size:0.9rem;">Tampil:</span>
+                        <select id="siteRowsPerPage" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div id="importStatusSite" style="font-weight:bold; color: #555;"></div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="siteTable">
+                        <thead>
+                            <tr>
+                                <th>NO</th>
+                                <th>City Name</th>
+                                <th>City Code</th>
+                                <th>Site Code</th>
+                                <th>Site Name</th>
+                                <th>Site Code SAP</th>
+                                <th>Address</th>
+                                <th>Tag Location</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="siteTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <span id="sitePageInfo" style="font-size:0.9rem; color:#666;">Hal 1 dari 1</span>
+                    <div class="pagination-btn-group" id="sitePagination"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- HIDDEN PDF TEMPLATE -->
+    <div id="pdf-hidden-container">
+        <div id="pdf-template" class="pdf-template">
+            <div class="pdf-header">
+                <h1>LAPORAN VISIT ASSET</h1>
+                <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo">
+            </div>
+            <div class="pdf-site-info">
+                <div><p><strong>Tanggal Visit:</strong> <span id="pdf-date">-</span></p><p><strong>Kode Site:</strong> <span id="pdf-code">-</span></p><p><strong>Nama Site:</strong> <span id="pdf-name">-</span></p></div>
+                <div><p><strong>PIC Name:</strong> <span id="pdf-pic">-</span></p><p><strong>Rack No:</strong> <span id="pdf-rack">-</span></p><p><strong>Floor:</strong> <span id="pdf-floor">-</span></p></div>
+            </div>
+            <table class="pdf-table">
+                <thead><tr><th>Module / Device</th><th>Type / Board</th><th>SN / PN</th><th>Status</th><th>Foto Dokumentasi</th></tr></thead>
+                <tbody id="pdf-table-body"></tbody>
+            </table>
+            <div class="pdf-footer"><p>Generated by V.I.C.T.O.R.Y System | <span id="pdf-generated-date"></span></p></div>
+        </div>
+    </div>
+
+    <!-- MODAL CAMERA -->
+    <div id="camera-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCamera()">&times;</span>
+            <h3>Scan QR Code</h3>
+            <div id="qr-camera-view" style="width: 100%;"></div>
+            <button class="btn btn-primary w-100" style="margin-top: 15px; background: #dc3545;" onclick="closeCamera()">Tutup</button>
+        </div>
+    </div>
+
+    <!-- MODAL ADD REF ASSET -->
+    <div id="ref-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRefModal()">&times;</span>
+            <h3>Tambah Referensi Modul (Asset)</h3>
+            <form id="refForm">
+                <div class="form-group"><input type="text" id="refModule" placeholder="Module *" required></div>
+                <div class="form-group"><input type="text" id="refDevMod" placeholder="Device Module *" required></div>
+                <div class="form-group"><input type="text" id="refModType" placeholder="Modul Type *" required></div>
+                <div class="form-group"><input type="text" id="refBoard" placeholder="Board Name"></div>
+                <div class="form-group"><input type="text" id="refDesc" placeholder="Description Object"></div>
+                <div class="form-group"><input type="text" id="refTypeObj" placeholder="Type Object (SAP)"></div>
+                <div class="form-group"><input type="text" id="refManuf" placeholder="Manufacturer (SAP)"></div>
+                <div class="form-group"><input type="text" id="refProd" placeholder="Product Type (SAP)"></div>
+                <button type="submit" class="btn btn-primary w-100">SIMPAN</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ADD SITE (NEW) -->
+    <div id="site-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSiteModal()">&times;</span>
+            <h3>Tambah Reference Site</h3>
+            <form id="siteForm">
+                <div class="grid-2">
+                    <div class="form-group"><label>City Name</label><input type="text" id="siteCityName" required></div>
+                    <div class="form-group"><label>City Code</label><input type="text" id="siteCityCode" required></div>
+                    <div class="form-group"><label>Site Code</label><input type="text" id="siteCode" required></div>
+                    <div class="form-group"><label>Site Name</label><input type="text" id="siteName" required></div>
+                    <div class="form-group"><label>Site Code SAP</label><input type="text" id="siteCodeSap"></div>
+                    <div class="form-group"><label>Tag Location (Lat,Long)</label><input type="text" id="siteTagLoc"></div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea id="siteAddress" rows="3" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">SIMPAN SITE</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT VISIT -->
+    <div id="editVisitModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditVisit()">&times;</span>
+            <h3>Edit Data Visit</h3>
+            <form id="editVisitForm">
+                <input type="hidden" id="modalEditVisitId">
+                <div class="grid-2">
+                    <div class="form-group"><label>Tanggal</label><input type="date" id="modalEditDate"></div>
+                    <div class="form-group"><label>Kode Site</label><input type="text" id="modalEditSiteCode"></div>
+                    <div class="form-group"><label>Nama Site</label><input type="text" id="modalEditSiteName"></div>
+                    <div class="form-group"><label>PIC</label><input type="text" id="modalEditPicName"></div>
+                    <div class="form-group"><label>Rack</label><input type="text" id="modalEditRack"></div>
+                    <div class="form-group"><label>Floor</label><input type="text" id="modalEditFloor"></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Module</label><input type="text" id="modalEditModule"></div>
+                    <div class="form-group"><label>Device Module</label><input type="text" id="modalEditDeviceModule"></div>
+                    <div class="form-group"><label>Modul Type</label><input type="text" id="modalEditModulType"></div>
+                    <div class="form-group"><label>Board Name</label><input type="text" id="modalEditBoard"></div>
+                    <div class="form-group"><label>Description</label><input type="text" id="modalEditDesc"></div>
+                    <div class="form-group"><label>Status</label>
+                        <select id="modalEditStatus">
+                            <option value="Active">Active</option><option value="Not Active">Not Active</option><option value="Dismantle">Dismantle</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Serial Number (SN)</label><input type="text" id="modalEditSN"></div>
+                    <div class="form-group"><label>Part Number (PN)</label><input type="text" id="modalEditPN"></div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" style="margin-top:20px;">SIMPAN PERUBAHAN</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, writeBatch, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; 
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        // === CONFIG ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbTMK4ihGTmLa3fGAwHXdbMOwueDhEHW8", 
+            authDomain: "victory-app-isp.firebaseapp.com",
+            projectId: "victory-app-isp",
+            storageBucket: "victory-app-isp.firebasestorage.app",
+            messagingSenderId: "1023135709213",
+            appId: "1:1023135709213:web:68dac1fdb975913bb56ef4",
+            measurementId: "G-Q1DJ3BG41V"
+        };
+
+        let app, auth, db, storage, provider;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+            provider = new GoogleAuthProvider();
+        } catch (e) { console.error(e); alert("Firebase Error: " + e.message); }
+
+        let currentUser = null, currentUserId = null;
+        let referenceData = [], snList = [], liveQrCode = null, currentCameraTarget = null;
+        let chartInstances = {}, visitCacheById = {};
+        
+        // Pagination States
+        let reportData = [], filteredReportData = [], currentReportPage = 1, reportRowsPerPage = 10;
+        let allRefData = [], currentRefPage = 1, refRowsPerPage = 25;
+        let allSiteData = [], currentSitePage = 1, siteRowsPerPage = 25;
+
+        // === AUTH ===
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user; currentUserId = user.uid;
+                document.getElementById("login-container").style.display = "none";
+                document.getElementById("app-container").style.display = "flex";
+                document.getElementById("user-display").textContent = user.email.split('@')[0];
+                loadReferences(); loadReportData(); loadReportVisit(); loadSites();
+                
+                // Set Default Date
+                document.getElementById("inpDate").valueAsDate = new Date();
+            } else {
+                document.getElementById("login-container").style.display = "flex";
+                document.getElementById("app-container").style.display = "none";
+            }
         });
-    }
 
-    // Tambah / Update
-    const referensiForm = document.getElementById('referensiForm');
-    referensiForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const kode = document.getElementById('refKode').value.trim();
-      const nama = document.getElementById('refNama').value.trim();
-      const ket  = document.getElementById('refKet').value.trim();
-
-      if (!kode || !nama) return;
-
-      if (editingId) {
-        dataReferensi = dataReferensi.map(item =>
-          item.id === editingId ? { ...item, kode, nama, keterangan: ket } : item
-        );
-      } else {
-        const newId = dataReferensi.length ? Math.max(...dataReferensi.map(i => i.id)) + 1 : 1;
-        dataReferensi.push({ id: newId, kode, nama, keterangan: ket });
-      }
-
-      renderTable(document.getElementById('searchInput').value);
-      const modalEl = document.getElementById('modalCreate');
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      modal.hide();
-    });
-
-    // Edit
-    window.editRef = function (id) {
-      editingId = id;
-      const item = dataReferensi.find(i => i.id === id);
-      if (!item) return;
-      document.getElementById('modalTitle').innerText = 'Edit Referensi';
-      document.getElementById('refId').value = item.id;
-      document.getElementById('refKode').value = item.kode;
-      document.getElementById('refNama').value = item.nama;
-      document.getElementById('refKet').value = item.keterangan || '';
-
-      const modal = new bootstrap.Modal(document.getElementById('modalCreate'));
-      modal.show();
-    };
-
-    // Delete
-    window.deleteRef = function (id) {
-      if (!confirm('Yakin ingin menghapus data ini?')) return;
-      dataReferensi = dataReferensi.filter(i => i.id !== id);
-      renderTable(document.getElementById('searchInput').value);
-    };
-
-    // Search
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('keyup', function () {
-      renderTable(this.value);
-    });
-  </script>
-  <script>
-    // Sidebar toggle (mobile)
-    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-    const sidebar = document.getElementById('sidebar');
-    if (toggleSidebarBtn) {
-      toggleSidebarBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-      });
-    }
-
-    // Ganti halaman (Dashboard, Visit, Referensi, Users)
-    const links = document.querySelectorAll('.sidebar-link[data-page]');
-    const sections = {
-      dashboard: document.getElementById('page-dashboard'),
-      visit: document.getElementById('page-visit'),
-      referensi: document.getElementById('page-referensi'),
-      users: document.getElementById('page-users')
-    };
-
-    links.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = link.getAttribute('data-page');
-
-        // aktifkan link
-        links.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-
-        // tampilkan section
-        Object.keys(sections).forEach(key => {
-          if (sections[key]) {
-            sections[key].classList.toggle('d-none', key !== target);
-          }
-        });
-
-        // jika mobile, tutup sidebar setelah klik
-        if (window.innerWidth <= 768) {
-          sidebar.classList.remove('open');
-        }
-      });
-    });
-
-    // Saat klik "Tambah Data", reset form
-    const modalCreateEl = document.getElementById('modalCreate');
-    modalCreateEl.addEventListener('show.bs.modal', function (event) {
-      const button = event.relatedTarget;
-      // Kalau dipicu dari tombol "Tambah Data"
-      if (button && button.getAttribute('data-bs-target') === '#modalCreate') {
-        editingId = null;
-        document.getElementById('modalTitle').innerText = 'Tambah Referensi';
-        document.getElementById('refId').value = '';
-        document.getElementById('refKode').value = '';
-        document.getElementById('refNama').value = '';
-        document.getElementById('refKet').value = '';
-      }
-    });
-
-    // IMPORT CSV (front-end demo, parse dan masuk ke dataReferensi)
-    const csvFileInput = document.getElementById('csvFileInput');
-    csvFileInput.addEventListener('change', function () {
-      if (!this.files.length) return;
-      const file = this.files[0];
-      if (!file.name.endsWith('.csv')) {
-        alert('File harus berformat .csv');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const text = e.target.result;
-        const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-
-        // Asumsi header: kode,nama,keterangan
-        const newData = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i].split(',');
-          if (cols.length >= 2) {
-            newData.push({
-              id: null,
-              kode: cols[0].trim(),
-              nama: cols[1].trim(),
-              keterangan: cols[2] ? cols[2].trim() : ''
+        window.logoutApp = () => signOut(auth);
+        
+        const loginForm = document.getElementById("login-form");
+        if(loginForm) {
+            loginForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                signInWithEmailAndPassword(auth, document.getElementById("login-email").value, document.getElementById("login-password").value).catch(err => alert("Login Gagal: " + err.message));
             });
-          }
+        }
+        document.getElementById("google-login-btn").addEventListener("click", () => {
+            signInWithPopup(auth, provider).catch(err => alert("Login Google Gagal: " + err.message));
+        });
+
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
+            
+            // Set nav active state
+            const navs = document.querySelectorAll('.nav-links li');
+            if(tabId==='dashboard') navs[0].classList.add('active');
+            if(tabId==='input') navs[1].classList.add('active');
+            if(tabId==='report') navs[2].classList.add('active');
+            if(tabId==='reference') navs[3].classList.add('active');
+            if(tabId==='ref-site') navs[4].classList.add('active');
+
+            if (tabId === 'dashboard') refreshDashboard();
+            if (tabId === 'report')    loadReportVisit();
+            if (tabId === 'ref-site')  loadSites();
+        };
+
+        // === HELPER: LOAD SAMPLE DATA (AUTO INJECT) ===
+        window.loadSampleRef = async () => {
+            if(!confirm("Apakah Anda yakin ingin memasukkan data contoh Asset ke database?")) return;
+            const sampleData = [
+                {module:"GPON", deviceModule:"OLT ZTE C320", modulType:"CHASSIS", boardName:"ZTE C320", description:"Chassis ZTE C320", typeObject:"Chassis", manufacturer:"ZTE", productType:"Optical Line Terminal"},
+                {module:"METRO", deviceModule:"HUAWEI ATN 910C", modulType:"POWER", boardName:"DC POWER", description:"Power Module ATN", typeObject:"Module", manufacturer:"Huawei", productType:"Router"},
+                {module:"DWDM", deviceModule:"HUAWEI OSN 1800", modulType:"CONTROL", boardName:"SCC", description:"System Control Board", typeObject:"Card", manufacturer:"Huawei", productType:"Transmission"}
+            ];
+            
+            try {
+                let batch = writeBatch(db);
+                sampleData.forEach(d => {
+                    const ref = doc(collection(db, "references"));
+                    batch.set(ref, d);
+                });
+                await batch.commit();
+                alert("Sukses! Data contoh Asset telah dimasukkan.");
+                loadReferences();
+            } catch(e) { alert("Gagal inject data: " + e.message); }
+        };
+
+        window.loadSampleSite = async () => {
+            if(!confirm("Apakah Anda yakin ingin memasukkan data contoh Site ke database?")) return;
+            const sampleData = [
+                {cityName:"Jakarta Selatan", cityCode:"JKTS", siteCode:"JKT-01", siteName:"POP MAMPANG", siteCodeSap:"10001", address:"Jl. Mampang Prapatan No.1", tagLocation:"-6.123,106.123"},
+                {cityName:"Surabaya", cityCode:"SBY", siteCode:"SBY-02", siteName:"POP DARMO", siteCodeSap:"20002", address:"Jl. Raya Darmo", tagLocation:"-7.222,112.333"},
+                {cityName:"Bandung", cityCode:"BDG", siteCode:"BDG-05", siteName:"POP DAGO", siteCodeSap:"30005", address:"Jl. Ir. H. Juanda No. 50", tagLocation:"-6.900,107.600"}
+            ];
+            
+            try {
+                let batch = writeBatch(db);
+                sampleData.forEach(d => {
+                    const ref = doc(collection(db, "reference_sites"));
+                    batch.set(ref, d);
+                });
+                await batch.commit();
+                alert("Sukses! Data contoh Site telah dimasukkan.");
+                loadSites();
+            } catch(e) { alert("Gagal inject data: " + e.message); }
+        };
+
+        // === REFERENCE SITE LOGIC & DASHBOARD UPDATE ===
+        window.loadSites = async () => {
+            try {
+                const q = query(collection(db, 'reference_sites'));
+                const snapshot = await getDocs(q);
+                allSiteData = [];
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data(); d.id = docSnap.id; 
+                    allSiteData.push(d);
+                });
+                // Sort by Site Code
+                allSiteData.sort((a,b) => (a.siteCode || "").localeCompare(b.siteCode || ""));
+                
+                renderSiteTable();
+                
+                // UPDATE DASHBOARD SETELAH LOAD REFERENCE SITE
+                updateDashboardStats(); 
+            } catch (err) { console.error(err); }
+        };
+
+        // === REPORT & DASHBOARD LOGIC (REALTIME) ===
+        // reportData kini diakses global untuk dashboard
+        function loadReportData() {
+            const q = query(collection(db, "visit_data"));
+            onSnapshot(q, (snap) => {
+                reportData = []; // Update Global reportData untuk hitungan dashboard
+                let totalDevices = 0;
+                let deviceTypeCounts = {};
+                let statusCounts = { Active: 0, 'Not Active': 0, Dismantle: 0 };
+                let visitedSiteCodes = new Set();
+
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    d.id = docSnap.id;
+                    reportData.push(d);
+
+                    // Logic Statistik
+                    totalDevices++;
+                    if(d.siteCode) visitedSiteCodes.add(d.siteCode.trim().toUpperCase());
+                    
+                    if (statusCounts[d.status] !== undefined) statusCounts[d.status]++;
+                    else statusCounts['Active']++; // Default fallback
+
+                    const mod = d.module || "Lainnya";
+                    deviceTypeCounts[mod] = (deviceTypeCounts[mod] || 0) + 1;
+                });
+
+                // Update Chart
+                updateCharts(statusCounts, deviceTypeCounts);
+                
+                // Update Dashboard Stats Card
+                // Kita panggil fungsi terpisah agar bisa sinkron dengan Reference Site
+                updateDashboardStats(visitedSiteCodes, totalDevices);
+
+            }, (error) => {
+                console.error("Report Error:", error);
+            });
         }
 
-        if (!newData.length) {
-          alert('CSV kosong atau format tidak sesuai.');
-          return;
+        // FUNGSI KHUSUS UPDATE ANGKA DASHBOARD
+        function updateDashboardStats(visitedSet = null, totalDev = null) {
+            // Jika dipanggil dari onSnapshot, pakai parameternya
+            // Jika dipanggil dari loadSites, hitung ulang dari reportData yang ada di memori
+            
+            let uniqueVisitedCount = 0;
+            let totalDeviceCount = 0;
+            let currentVisitedSet = new Set();
+
+            if (visitedSet !== null) {
+                currentVisitedSet = visitedSet;
+                uniqueVisitedCount = visitedSet.size;
+                totalDeviceCount = totalDev;
+            } else {
+                // Hitung ulang manual dari variable global reportData
+                totalDeviceCount = reportData.length;
+                reportData.forEach(d => {
+                    if(d.siteCode) currentVisitedSet.add(d.siteCode.trim().toUpperCase());
+                });
+                uniqueVisitedCount = currentVisitedSet.size;
+            }
+
+            // Hitung Site Not Visited
+            // Logic: Total Reference Site - (Site Ref yang ada di Visited Set)
+            let notVisitedCount = 0;
+            
+            if (allSiteData.length > 0) {
+                 // Hitung secara presisi: Loop semua ref site, cek apakah ada di visited
+                 allSiteData.forEach(site => {
+                     const refCode = (site.siteCode || "").trim().toUpperCase();
+                     if(refCode && !currentVisitedSet.has(refCode)) {
+                         notVisitedCount++;
+                     }
+                 });
+            } else {
+                notVisitedCount = 0; // Jika ref site belum diload/kosong
+            }
+
+            // Update DOM
+            document.getElementById("stat-site-visit").textContent = uniqueVisitedCount;
+            document.getElementById("stat-device-input").textContent = totalDeviceCount;
+            document.getElementById("stat-site-not-visit").textContent = notVisitedCount;
         }
 
-        // assign ID baru
-        const lastId = dataReferensi.length ? Math.max(...dataReferensi.map(i => i.id)) : 0;
-        newData.forEach((item, idx) => item.id = lastId + idx + 1);
-        dataReferensi = dataReferensi.concat(newData);
-        renderTable(searchInput.value);
+        // ... (Sisa fungsi chart dan lainnya tetap sama) ...
+        function updateCharts(sData, dData) {
+            const ctx1 = document.getElementById('chartStatus').getContext('2d');
+            const ctx2 = document.getElementById('chartDeviceType').getContext('2d');
+            if(chartInstances.s) chartInstances.s.destroy();
+            if(chartInstances.d) chartInstances.d.destroy();
+            chartInstances.s = new Chart(ctx1, { type: 'doughnut', data: { labels: Object.keys(sData), datasets: [{ data: Object.values(sData), backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }] } });
+            chartInstances.d = new Chart(ctx2, { type: 'bar', data: { labels: Object.keys(dData), datasets: [{ label: 'Jumlah', data: Object.values(dData), backgroundColor: '#005a9c' }] } });
+        }
 
-        alert('Import CSV berhasil (demo front-end). Untuk versi produksi, sambungkan ke backend.');
-      };
-      reader.readAsText(file);
-    });
+        window.refreshDashboard = () => {
+             // Reload Reference & Trigges snapshot refresh implied
+             loadSites();
+             // Note: loadReportData is realtime snapshot, no need to recall it explicitly usually, 
+             // but we can trigger site reload to ensure "Not Visited" math is fresh.
+        };
 
-    // EXPORT CSV (front-end)
-    const exportCsvBtn = document.getElementById('exportCsvBtn');
-    exportCsvBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      let csv = 'kode,nama,keterangan\n';
-      dataReferensi.forEach(item => {
-        csv += `"${item.kode}","${item.nama}","${item.keterangan || ''}"\n`;
-      });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'referensi.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
+        // === REFERENCE ASSET LOGIC ===
+        async function loadReferences() {
+            try {
+                const q = query(collection(db, 'references'));
+                const snapshot = await getDocs(q);
+                allRefData = [];
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data(); d.id = docSnap.id; 
+                    allRefData.push(d);
+                });
+                allRefData.sort((a,b) => (a.module || "").localeCompare(b.module || ""));
+                renderRefTable(); populateModuleDropdown();
+            } catch (err) { console.error(err); }
+        }
 
-    // EXPORT IMAGE (pakai html2canvas)
-    const exportImgBtn = document.getElementById('exportImgBtn');
-    exportImgBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      const tableContainer = document.getElementById('tableContainer');
-      html2canvas(tableContainer).then(canvas => {
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'referensi.png';
-        link.click();
-      });
-    });
+        function renderRefTable() {
+            const tbody = document.getElementById("refTableBody");
+            tbody.innerHTML = "";
+            const start = (currentRefPage - 1) * refRowsPerPage;
+            const end = start + refRowsPerPage;
+            const pageData = allRefData.slice(start, end);
+            
+            pageData.forEach(d => {
+                tbody.innerHTML += `<tr><td>${d.module||'-'}</td><td>${d.deviceModule||'-'}</td><td>${d.modulType||'-'}</td><td>${d.description||'-'}</td><td><button style="color:red;border:none;background:none;cursor:pointer;" onclick="deleteRef('${d.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            if (allRefData.length === 0) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Data Kosong</td></tr>`;
+            renderRefPagination();
+        }
 
-    // EXPORT PDF (pakai jsPDF + html2canvas)
-    const exportPdfBtn = document.getElementById('exportPdfBtn');
-    exportPdfBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      const tableContainer = document.getElementById('tableContainer');
+        function renderRefPagination() {
+            const totalPages = Math.ceil(allRefData.length / refRowsPerPage);
+            document.getElementById("refPageInfo").textContent = `Hal ${currentRefPage} dari ${totalPages || 1} (Total: ${allRefData.length})`;
+            const container = document.getElementById("refPagination");
+            container.innerHTML = "";
+            
+            const prevBtn = document.createElement("button"); prevBtn.className = "page-btn"; prevBtn.innerHTML = "<";
+            prevBtn.disabled = currentRefPage === 1; prevBtn.onclick = () => { currentRefPage--; renderRefTable(); };
+            container.appendChild(prevBtn);
 
-      html2canvas(tableContainer).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
+            const pageBtn = document.createElement("button"); pageBtn.className = "page-btn active"; pageBtn.innerText = currentRefPage;
+            container.appendChild(pageBtn);
 
-        const imgWidth = pageWidth - 20; // margin
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        let position = 10;
+            const nextBtn = document.createElement("button"); nextBtn.className = "page-btn"; nextBtn.innerHTML = ">";
+            nextBtn.disabled = currentRefPage >= totalPages; nextBtn.onclick = () => { currentRefPage++; renderRefTable(); };
+            container.appendChild(nextBtn);
+        }
 
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        document.getElementById("refRowsPerPage").addEventListener("change", (e) => {
+            refRowsPerPage = parseInt(e.target.value); currentRefPage = 1; renderRefTable();
+        });
 
-        pdf.save('referensi.pdf');
-      });
-    });
+        // === REFERENCE SITE LOGIC (NEW) ===
+        // Already defined above (modified version) for Dashboard
 
-    // Inisialisasi awal
-    document.addEventListener('DOMContentLoaded', () => {
-      renderTable();
-    });
-  </script>
+        function renderSiteTable() {
+            const tbody = document.getElementById("siteTableBody");
+            tbody.innerHTML = "";
+            const start = (currentSitePage - 1) * siteRowsPerPage;
+            const end = start + siteRowsPerPage;
+            const pageData = allSiteData.slice(start, end);
+
+            pageData.forEach((d, index) => {
+                const no = start + index + 1;
+                tbody.innerHTML += `<tr>
+                    <td>${no}</td>
+                    <td>${d.cityName||'-'}</td>
+                    <td>${d.cityCode||'-'}</td>
+                    <td>${d.siteCode||'-'}</td>
+                    <td>${d.siteName||'-'}</td>
+                    <td>${d.siteCodeSap||'-'}</td>
+                    <td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.address||''}">${d.address||'-'}</div></td>
+                    <td>${d.tagLocation||'-'}</td>
+                    <td><button style="color:red;border:none;background:none;cursor:pointer;" onclick="deleteSite('${d.id}')"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            });
+            if (allSiteData.length === 0) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Data Site Kosong</td></tr>`;
+            renderSitePagination();
+        }
+
+        function renderSitePagination() {
+            const totalPages = Math.ceil(allSiteData.length / siteRowsPerPage);
+            document.getElementById("sitePageInfo").textContent = `Hal ${currentSitePage} dari ${totalPages || 1} (Total: ${allSiteData.length})`;
+            const container = document.getElementById("sitePagination");
+            container.innerHTML = "";
+
+            const prevBtn = document.createElement("button"); prevBtn.className = "page-btn"; prevBtn.innerHTML = "<";
+            prevBtn.disabled = currentSitePage === 1; prevBtn.onclick = () => { currentSitePage--; renderSiteTable(); };
+            container.appendChild(prevBtn);
+
+            const pageBtn = document.createElement("button"); pageBtn.className = "page-btn active"; pageBtn.innerText = currentSitePage;
+            container.appendChild(pageBtn);
+
+            const nextBtn = document.createElement("button"); nextBtn.className = "page-btn"; nextBtn.innerHTML = ">";
+            nextBtn.disabled = currentSitePage >= totalPages; nextBtn.onclick = () => { currentSitePage++; renderSiteTable(); };
+            container.appendChild(nextBtn);
+        }
+
+        document.getElementById("siteRowsPerPage").addEventListener("change", (e) => {
+            siteRowsPerPage = parseInt(e.target.value); currentSitePage = 1; renderSiteTable();
+        });
+
+        window.openSiteModal = () => document.getElementById("site-modal").style.display = "flex";
+        window.closeSiteModal = () => document.getElementById("site-modal").style.display = "none";
+        
+        document.getElementById("siteForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, 'reference_sites'), {
+                cityName: document.getElementById("siteCityName").value,
+                cityCode: document.getElementById("siteCityCode").value,
+                siteCode: document.getElementById("siteCode").value,
+                siteName: document.getElementById("siteName").value,
+                siteCodeSap: document.getElementById("siteCodeSap").value,
+                address: document.getElementById("siteAddress").value,
+                tagLocation: document.getElementById("siteTagLoc").value
+            });
+            closeSiteModal(); loadSites();
+            e.target.reset();
+        });
+
+        window.deleteSite = async (id) => { if(confirm("Hapus Site ini?")) { await deleteDoc(doc(db, 'reference_sites', id)); loadSites(); } };
+
+        // CSV Import Site (ROBUST v5.6 - Better Quote Handling)
+        document.getElementById("importCsvSite").addEventListener("change", (e) => {
+            const file = e.target.files[0]; 
+            if (!file) return;
+
+            const reader = new FileReader();
+            const statusEl = document.getElementById("importStatusSite");
+            statusEl.textContent = "Menganalisis file...";
+            statusEl.style.color = "#856404"; 
+
+            reader.onload = async (event) => {
+                try {
+                    const text = event.target.result;
+                    if (!text) throw new Error("File kosong");
+
+                    // 1. Detect Delimiter (Look at first 2 lines)
+                    const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+                    if (lines.length < 2) throw new Error("Format salah: Baris < 2. Gunakan Template!");
+
+                    const headerLine = lines[0];
+                    const countSemi = (headerLine.match(/;/g) || []).length;
+                    const countComma = (headerLine.match(/,/g) || []).length;
+                    const delimiter = countSemi >= countComma ? ";" : ",";
+                    console.log(`Detected Delimiter: '${delimiter}'`);
+
+                    let batch = writeBatch(db);
+                    let count = 0;
+                    let successCount = 0;
+                    let errorLog = "";
+
+                    // Helper: Handle quotes strictly if needed
+                    // Simple split doesn't handle "City, Name" well if delimiter is comma.
+                    // But for now we use simple split for robustness speed, advising semicolon usage.
+                    const clean = (str) => {
+                        if (!str) return "";
+                        return str.trim().replace(/^"|"$/g, ''); 
+                    };
+
+                    for(let i = 1; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (!line) continue;
+
+                        // Basic split. If quotes issues persist, better to use Inject Button.
+                        const cols = line.split(delimiter);
+                        
+                        if(cols.length < 3) {
+                            errorLog += `Baris ${i+1}: Kolom kurang (${cols.length}).\n`;
+                            continue;
+                        }
+
+                        const siteData = { 
+                            cityName: clean(cols[0]),
+                            cityCode: clean(cols[1]),
+                            siteCode: clean(cols[2]),
+                            siteName: clean(cols[3]),
+                            siteCodeSap: clean(cols[4]),
+                            address: clean(cols[5]),
+                            tagLocation: clean(cols[6])
+                        };
+
+                        const ref = doc(collection(db, "reference_sites"));
+                        batch.set(ref, siteData);
+                        
+                        count++;
+                        successCount++;
+                        
+                        if(count >= 400) { 
+                            await batch.commit(); 
+                            batch = writeBatch(db); 
+                            count = 0; 
+                        }
+                    }
+
+                    if(count > 0) await batch.commit();
+
+                    if (successCount === 0) {
+                        alert("Gagal Import Total.\n\nDetail:\n" + errorLog);
+                        statusEl.textContent = "Gagal.";
+                        statusEl.style.color = "red";
+                    } else {
+                        statusEl.textContent = `Sukses: ${successCount} data.`;
+                        statusEl.style.color = "green";
+                        if(errorLog) alert("Import sebagian sukses, namun ada error:\n" + errorLog);
+                        loadSites();
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error System: " + err.message);
+                    statusEl.textContent = "Error.";
+                    statusEl.style.color = "red";
+                } finally {
+                    e.target.value = ""; 
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // === INPUT DROPDOWNS ===
+        function populateModuleDropdown() {
+            const uniqueModules = [...new Set(allRefData.map(item => item.module).filter(x => x))].sort();
+            const sel = document.getElementById("inpModule");
+            sel.innerHTML = '<option value="">-- Pilih Module --</option>';
+            uniqueModules.forEach(m => sel.innerHTML += `<option value="${m}">${m}</option>`);
+            sel.disabled = false;
+        }
+        document.getElementById("inpModule").addEventListener("change", (e) => {
+            const val = e.target.value;
+            const nextSel = document.getElementById("inpDeviceModule");
+            nextSel.innerHTML = '<option value="">-- Pilih Device --</option>';
+            const filtered = allRefData.filter(r => r.module === val);
+            const uniqueDev = [...new Set(filtered.map(r => r.deviceModule).filter(x => x))].sort();
+            uniqueDev.forEach(d => nextSel.innerHTML += `<option value="${d}">${d}</option>`);
+            nextSel.disabled = false;
+        });
+        document.getElementById("inpDeviceModule").addEventListener("change", (e) => {
+            const mod = document.getElementById("inpModule").value;
+            const dev = e.target.value;
+            const nextSel = document.getElementById("inpModulType");
+            nextSel.innerHTML = '<option value="">-- Pilih Type --</option>';
+            const filtered = allRefData.filter(r => r.module === mod && r.deviceModule === dev);
+            const uniqueType = [...new Set(filtered.map(r => r.modulType).filter(x => x))].sort();
+            uniqueType.forEach(t => nextSel.innerHTML += `<option value="${t}">${t}</option>`);
+            nextSel.disabled = false;
+        });
+        document.getElementById("inpModulType").addEventListener("change", (e) => {
+            const mod = document.getElementById("inpModule").value;
+            const dev = document.getElementById("inpDeviceModule").value;
+            const type = e.target.value;
+            const nextSel = document.getElementById("inpBoardName");
+            nextSel.innerHTML = '<option value="">-- Pilih Board --</option>';
+            const filtered = allRefData.filter(r => r.module === mod && r.deviceModule === dev && r.modulType === type);
+            const found = filtered[0]; 
+            if(found) {
+                document.getElementById("autoDesc").value = found.description || found.descObject || "-";
+                document.getElementById("autoTypeObj").value = found.typeObject || "-";
+                document.getElementById("autoManuf").value = found.manufacturer || "-";
+                document.getElementById("autoProdType").value = found.productType || "-";
+            }
+            const uniqueBoard = [...new Set(filtered.map(r => r.boardName).filter(x => x))].sort();
+            uniqueBoard.forEach(b => nextSel.innerHTML += `<option value="${b}">${b}</option>`);
+            nextSel.disabled = false;
+        });
+
+        // Export Ref CSV
+        window.exportRefCsv = () => {
+            if(allRefData.length === 0) return alert("Data kosong");
+            const ws = XLSX.utils.json_to_sheet(allRefData.map(d => ({
+                Module: d.module, Device: d.deviceModule, Type: d.modulType, Board: d.boardName,
+                Description: d.description, TypeObject: d.typeObject, Manufacturer: d.manufacturer, ProductType: d.productType
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Master Reference");
+            XLSX.writeFile(wb, "Master_Reference_Data.csv");
+        };
+
+        // === REPORT VISIT LOGIC (PAGINATION & DOWNLOAD) ===
+        async function loadReportVisit() {
+            const tbody = document.getElementById("reportVisitTableBody");
+            tbody.innerHTML = '<tr><td colspan="18" style="text-align:center;">Memuat data...</td></tr>';
+            try {
+                const snap = await getDocs(collection(db, "visit_data"));
+                // reportData sudah dihandle oleh onSnapshot realtime di loadReportData
+                // tapi untuk tabel visit, kita load ulang untuk sorting dan pagination terpisah
+                let tableData = [];
+                visitCacheById = {};
+                snap.forEach(doc => {
+                    const d = doc.data(); d.id = doc.id;
+                    tableData.push(d);
+                    visitCacheById[doc.id] = d;
+                });
+                // Sort by date desc
+                tableData.sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                filteredReportData = [...tableData]; // init filter
+                currentReportPage = 1;
+                renderReportTable();
+                populateExportDropdown();
+            } catch (err) { console.error(err); }
+        }
+
+        function renderReportTable() {
+            const tbody = document.getElementById("reportVisitTableBody");
+            tbody.innerHTML = "";
+
+            const start = (currentReportPage - 1) * reportRowsPerPage;
+            const end = start + reportRowsPerPage;
+            const pageData = filteredReportData.slice(start, end);
+
+            pageData.forEach(d => {
+                let snDisplay = Array.isArray(d.serialNumbers) ? d.serialNumbers.join(", ") : (d.serialNumber || "-");
+                const img = (url) => url ? `<a href="${url}" target="_blank"><img src="${url}" class="tbl-img"></a>` : '-';
+                
+                tbody.innerHTML += `<tr>
+                    <td>${d.date || '-'}</td>
+                    <td>${d.siteCode || '-'}</td>
+                    <td>${d.siteName || '-'}</td>
+                    <td>${d.picName || '-'}</td>
+                    <td>${d.rackNo || '-'}</td>
+                    <td>${d.floor || '-'}</td>
+                    <td>${d.module || '-'}</td>
+                    <td>${d.deviceModule || '-'}</td>
+                    <td>${d.modulType || '-'}</td>
+                    <td>${d.boardName || '-'}</td>
+                    <td>${d.description || '-'}</td>
+                    <td><span style="padding:4px 8px;border-radius:4px;background:${d.status === 'Active'?'#d4edda':'#f8d7da'};font-size:0.8rem;">${d.status || '-'}</span></td>
+                    <td>${snDisplay}</td>
+                    <td>${d.partNumber || '-'}</td>
+                    <td>${img(d.fotoLabel)}</td>
+                    <td>${img(d.fotoType)}</td>
+                    <td>${img(d.fotoFar)}</td>
+                    <td>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-primary" style="padding:5px; font-size:0.7rem;" onclick="openEditVisit('${d.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-primary" style="padding:5px; font-size:0.7rem; background:#17a2b8;" onclick="downloadRowImages('${d.id}')" title="Download Foto"><i class="fas fa-images"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+
+            if(filteredReportData.length === 0) tbody.innerHTML = `<tr><td colspan="18" style="text-align:center;">Data tidak ditemukan</td></tr>`;
+            
+            renderReportPagination();
+        }
+
+        function renderReportPagination() {
+            const totalPages = Math.ceil(filteredReportData.length / reportRowsPerPage);
+            document.getElementById("reportPageInfo").textContent = `Hal ${currentReportPage} dari ${totalPages || 1} (Total: ${filteredReportData.length})`;
+            
+            const container = document.getElementById("reportPagination");
+            container.innerHTML = "";
+
+            // Prev
+            const prevBtn = document.createElement("button");
+            prevBtn.className = "page-btn";
+            prevBtn.innerHTML = "<";
+            prevBtn.disabled = currentReportPage === 1;
+            prevBtn.onclick = () => { currentReportPage--; renderReportTable(); };
+            container.appendChild(prevBtn);
+
+            // Page Number
+            const pageBtn = document.createElement("button");
+            pageBtn.className = "page-btn active";
+            pageBtn.innerText = currentReportPage;
+            container.appendChild(pageBtn);
+
+            // Next
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "page-btn";
+            nextBtn.innerHTML = ">";
+            nextBtn.disabled = currentReportPage >= totalPages;
+            nextBtn.onclick = () => { currentReportPage++; renderReportTable(); };
+            container.appendChild(nextBtn);
+        }
+
+        // Event Listeners Report
+        document.getElementById("reportRowsPerPage").addEventListener("change", (e) => {
+            reportRowsPerPage = parseInt(e.target.value);
+            currentReportPage = 1;
+            renderReportTable();
+        });
+
+        document.getElementById("reportSearchInput").addEventListener("input", (e) => {
+            const val = e.target.value.toLowerCase();
+            filteredReportData = reportData.filter(d => {
+                const str = Object.values(d).join(" ").toLowerCase();
+                return str.includes(val);
+            });
+            currentReportPage = 1;
+            renderReportTable();
+        });
+
+        // ============================================
+        // UPDATED: SMART DOWNLOAD (ZIP + FALLBACK)
+        // ============================================
+        window.downloadRowImages = async (id) => {
+            const d = visitCacheById[id];
+            if(!d) return alert("Data error, silakan refresh.");
+            
+            const statusDiv = document.getElementById("downloadStatus");
+            const statusText = document.getElementById("downloadStatusText");
+            
+            // Show status
+            statusDiv.style.display = "block";
+            statusText.textContent = `Memproses foto untuk Site: ${d.siteCode}...`;
+
+            const zip = new JSZip();
+            const folder = zip.folder(`Foto_${d.siteCode}_${d.date}`);
+            
+            const urls = {
+                "Label": d.fotoLabel, "Type": d.fotoType, "Far": d.fotoFar, "SN": d.fotoSN, "PN": d.fotoPN
+            };
+            
+            let count = 0;
+            const promises = [];
+            const failedUrls = []; // Track URLs that failed (for fallback)
+
+            for (const [key, url] of Object.entries(urls)) {
+                if (url) {
+                    promises.push(
+                        fetch(url, {mode: 'cors'}) // Attempt CORS fetch
+                        .then(res => {
+                            if (!res.ok) throw new Error("Network error");
+                            return res.blob();
+                        })
+                        .then(blob => {
+                            folder.file(`${key}.jpg`, blob);
+                            count++;
+                        })
+                        .catch(err => {
+                            console.warn("CORS/Fetch Error for " + key + ": ", err);
+                            failedUrls.push(url); // Add to fallback list
+                        })
+                    );
+                }
+            }
+            
+            if (promises.length === 0) {
+                statusDiv.style.display = "none";
+                return alert("Tidak ada foto untuk didownload pada data ini.");
+            }
+
+            await Promise.all(promises);
+            
+            if (count > 0) {
+                zip.generateAsync({type:"blob"}).then(function(content) {
+                    saveAs(content, `Foto_Visit_${d.siteCode}.zip`);
+                    statusText.textContent = "Berhasil mendownload ZIP!";
+                    setTimeout(() => statusDiv.style.display = "none", 3000);
+                });
+            } else {
+                statusText.textContent = "Gagal membuat ZIP (Blokir Browser/CORS). Membuka foto di tab baru...";
+                alert("Browser memblokir download ZIP otomatis (Masalah CORS). Foto akan dibuka di tab baru, silakan simpan manual (Klik Kanan > Save Image).");
+                for (const [key, url] of Object.entries(urls)) {
+                    if (url) window.open(url, '_blank');
+                }
+                setTimeout(() => statusDiv.style.display = "none", 5000);
+            }
+        };
+
+        function populateExportDropdown() {
+            const exportSel = document.getElementById("exportSiteSelect");
+            exportSel.innerHTML = '<option value="">-- Pilih Site untuk PDF --</option>';
+            const uniqueCodes = [...new Set(reportData.map(d => d.siteCode).filter(x => x))].sort();
+            uniqueCodes.forEach(code => {
+                exportSel.innerHTML += `<option value="${code}">${code}</option>`;
+            });
+        }
+
+        // PDF Export
+        async function convertImageToBase64(url) {
+            if (!url) return null;
+            try {
+                const response = await fetch(url, { mode: 'cors' });
+                const blob = await response.blob();
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) { return url; }
+        }
+        window.exportSitePdf = async () => {
+            const siteCode = document.getElementById("exportSiteSelect").value;
+            if (!siteCode) return alert("Pilih Kode Site terlebih dahulu!");
+            const loading = document.getElementById("pdfLoading");
+            loading.style.display = "block";
+            
+            const siteData = reportData.filter(d => d.siteCode === siteCode);
+            if (siteData.length === 0) { loading.style.display = "none"; return alert("Data kosong"); }
+
+            const first = siteData[0];
+            document.getElementById("pdf-date").textContent = first.date || "-";
+            document.getElementById("pdf-code").textContent = first.siteCode || "-";
+            document.getElementById("pdf-name").textContent = first.siteName || "-";
+            document.getElementById("pdf-pic").textContent = first.picName || "-";
+            document.getElementById("pdf-rack").textContent = first.rackNo || "-";
+            document.getElementById("pdf-floor").textContent = first.floor || "-";
+            document.getElementById("pdf-generated-date").textContent = new Date().toLocaleString('id-ID');
+
+            const tbody = document.getElementById("pdf-table-body");
+            tbody.innerHTML = "";
+            
+            for (const d of siteData) {
+                const [imgLabel, imgType, imgFar] = await Promise.all([
+                    convertImageToBase64(d.fotoLabel), convertImageToBase64(d.fotoType), convertImageToBase64(d.fotoFar)
+                ]);
+                const imgTag = (src) => src ? `<img src="${src}" class="pdf-img" crossorigin="anonymous">` : '';
+                tbody.innerHTML += `<tr>
+                    <td style="text-align:left;"><strong>${d.module||'-'}</strong><br><small>${d.deviceModule||'-'}</small></td>
+                    <td style="text-align:left;">${d.modulType||'-'}<br><small>${d.boardName||'-'}</small></td>
+                    <td>SN: ${Array.isArray(d.serialNumbers)?d.serialNumbers.join(", "):d.serialNumber||'-'}<br>PN: ${d.partNumber||'-'}</td>
+                    <td>${d.status||'-'}</td>
+                    <td><div class="pdf-img-container">${imgTag(imgLabel)}${imgTag(imgType)}${imgTag(imgFar)}</div></td>
+                </tr>`;
+            }
+
+            const pdfTemplate = document.getElementById("pdf-template");
+            const imagesInPdf = pdfTemplate.getElementsByTagName('img');
+            await Promise.all(Array.from(imagesInPdf).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+            }));
+            await new Promise(r => setTimeout(r, 800));
+
+            const canvas = await html2canvas(pdfTemplate, { scale: 2, useCORS: true, allowTaint: true });
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Report_Visit_${siteCode}.pdf`);
+            loading.style.display = "none";
+        };
+
+        // Submit Form
+        document.getElementById("dataForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector("button[type=submit]");
+            const status = document.getElementById("submitStatus");
+            btn.disabled = true; status.textContent = "Uploading...";
+            
+            const manualSnVal = document.getElementById("manualSN").value.trim();
+            if(manualSnVal && !snList.includes(manualSnVal.toUpperCase())) snList.push(manualSnVal.toUpperCase());
+            
+            try {
+                const uploadFile = async (id, f) => {
+                    const file = document.getElementById(id).files[0];
+                    if(!file) return null;
+                    const snap = await uploadBytes(ref(storage, `uploads/${currentUserId}/${f}/${Date.now()}_${file.name}`), file);
+                    return await getDownloadURL(snap.ref);
+                };
+                const [urlSN, urlPN, urlLabel, urlType, urlFar] = await Promise.all([
+                    uploadFile("fileSN", "sn"), uploadFile("filePN", "pn"), uploadFile("fotoLabel", "device"), uploadFile("fotoType", "device"), uploadFile("fotoFar", "device")
+                ]);
+                
+                await addDoc(collection(db, "visit_data"), {
+                    date: document.getElementById("inpDate").value,
+                    siteCode: document.getElementById("inpSiteCode").value,
+                    siteName: document.getElementById("inpSiteName").value,
+                    picName: document.getElementById("inpPic").value,
+                    rackNo: document.getElementById("inpRackNo").value,
+                    floor: document.getElementById("inpFloor").value,
+                    module: document.getElementById("inpModule").value,
+                    deviceModule: document.getElementById("inpDeviceModule").value,
+                    modulType: document.getElementById("inpModulType").value,
+                    boardName: document.getElementById("inpBoardName").value,
+                    description: document.getElementById("autoDesc").value,
+                    status: document.getElementById("inpStatus").value,
+                    serialNumbers: snList.length ? snList : [document.getElementById("valSN").value],
+                    partNumber: document.getElementById("valPN").value,
+                    fotoSN: urlSN, fotoPN: urlPN, fotoLabel: urlLabel, fotoType: urlType, fotoFar: urlFar,
+                    createdAt: new Date().toISOString()
+                });
+                status.textContent = "Sukses!"; status.style.color = "green";
+                e.target.reset(); snList = []; 
+                document.getElementById("manualSN").value = ""; 
+                document.getElementById("inpDate").valueAsDate = new Date(); // Reset date to today
+                setTimeout(() => status.textContent = "", 3000);
+            } catch(err) { status.textContent = "Gagal: " + err.message; status.style.color = "red"; } finally { btn.disabled = false; }
+        });
+
+        // Edit Visit & Other
+        window.openEditVisit = (id) => {
+            const modal = document.getElementById("editVisitModal");
+            const d = visitCacheById[id];
+            if(!d) return alert("Data tidak ditemukan");
+            document.getElementById("modalEditVisitId").value = id;
+            document.getElementById("modalEditDate").value = d.date || "";
+            document.getElementById("modalEditSiteCode").value = d.siteCode || "";
+            document.getElementById("modalEditSiteName").value = d.siteName || "";
+            document.getElementById("modalEditPicName").value = d.picName || "";
+            document.getElementById("modalEditRack").value = d.rackNo || "";
+            document.getElementById("modalEditFloor").value = d.floor || "";
+            document.getElementById("modalEditModule").value = d.module || "";
+            document.getElementById("modalEditDeviceModule").value = d.deviceModule || "";
+            document.getElementById("modalEditModulType").value = d.modulType || "";
+            document.getElementById("modalEditBoard").value = d.boardName || "";
+            document.getElementById("modalEditDesc").value = d.description || "";
+            document.getElementById("modalEditStatus").value = d.status || "Active";
+            document.getElementById("modalEditSN").value = Array.isArray(d.serialNumbers) ? d.serialNumbers.join(", ") : (d.serialNumber || "");
+            document.getElementById("modalEditPN").value = d.partNumber || "";
+            modal.style.display = "flex";
+        };
+        window.closeEditVisit = () => document.getElementById("editVisitModal").style.display = "none";
+        document.getElementById("editVisitForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("modalEditVisitId").value;
+            const snArray = document.getElementById("modalEditSN").value.split(",").map(s => s.trim()).filter(s => s);
+            const newData = {
+                date: document.getElementById("modalEditDate").value,
+                siteCode: document.getElementById("modalEditSiteCode").value,
+                siteName: document.getElementById("modalEditSiteName").value,
+                picName: document.getElementById("modalEditPicName").value,
+                rackNo: document.getElementById("modalEditRack").value,
+                floor: document.getElementById("modalEditFloor").value,
+                module: document.getElementById("modalEditModule").value,
+                deviceModule: document.getElementById("modalEditDeviceModule").value,
+                modulType: document.getElementById("modalEditModulType").value,
+                boardName: document.getElementById("modalEditBoard").value,
+                description: document.getElementById("modalEditDesc").value,
+                status: document.getElementById("modalEditStatus").value,
+                serialNumbers: snArray,
+                partNumber: document.getElementById("modalEditPN").value
+            };
+            try { await setDoc(doc(db, "visit_data", id), newData, { merge: true }); alert("Update Berhasil!"); closeEditVisit(); loadReportVisit(); } catch(err) { alert("Gagal Update: " + err.message); }
+        });
+
+        // Other utility functions (csv import ref, delete ref, scanner) are same as before
+        window.openRefModal = () => document.getElementById("ref-modal").style.display = "flex";
+        window.closeRefModal = () => document.getElementById("ref-modal").style.display = "none";
+        document.getElementById("refForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, 'references'), {
+                module: document.getElementById("refModule").value,
+                deviceModule: document.getElementById("refDevMod").value,
+                modulType: document.getElementById("refModType").value,
+                boardName: document.getElementById("refBoard").value,
+                description: document.getElementById("refDesc").value,
+                typeObject: document.getElementById("refTypeObj").value,
+                manufacturer: document.getElementById("refManuf").value,
+                productType: document.getElementById("refProd").value
+            });
+            closeRefModal(); loadReferences();
+        });
+        window.deleteRef = async (id) => { if(confirm("Hapus?")) { await deleteDoc(doc(db, 'references', id)); loadReferences(); } };
+        window.refreshDashboard = () => loadReportData();
+        window.openCamera = (target) => { document.getElementById("camera-modal").style.display = "flex"; currentCameraTarget = target; liveQrCode = new Html5Qrcode("qr-camera-view"); liveQrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { if(currentCameraTarget === 'SN') { if(!snList.includes(text)) snList.push(text); document.getElementById("valSN").value = snList.join(", "); } else document.getElementById("valPN").value = text; closeCamera(); }).catch(() => alert("Camera Error")); };
+        window.closeCamera = () => { if(liveQrCode) liveQrCode.stop(); document.getElementById("camera-modal").style.display = "none"; };
+        window.triggerFileScan = (target) => { const input = document.getElementById(target === 'SN' ? 'fileSN' : 'filePN'); if(!input.files[0]) return alert("Pilih file"); const scanner = new Html5Qrcode("qr-reader"); scanner.scanFile(input.files[0], false).then(text => { if(target === 'SN') { if(!snList.includes(text)) snList.push(text); document.getElementById("valSN").value = snList.join(", "); } else document.getElementById("valPN").value = text; }).catch(() => alert("QR tidak terbaca")); };
+
+        // CSV Import Ref Asset (ROBUST v5.6 - Better Quote Handling)
+        document.getElementById("importCsvRef").addEventListener("change", (e) => {
+            const file = e.target.files[0]; 
+            if (!file) return;
+
+            const reader = new FileReader();
+            const statusEl = document.getElementById("importStatus");
+            statusEl.textContent = "Menganalisis file...";
+            statusEl.style.color = "#856404"; 
+
+            reader.onload = async (event) => {
+                try {
+                    const text = event.target.result;
+                    if (!text) throw new Error("File kosong");
+
+                    // 1. Split lines
+                    const lines = text.split(/\r\n|\n|\r/).filter(l => l.trim().length > 0);
+                    if (lines.length < 2) throw new Error("Format salah: Baris < 2. Gunakan Template!");
+
+                    // 2. Auto-Detect Separator
+                    const headerLine = lines[0];
+                    const countSemi = (headerLine.match(/;/g) || []).length;
+                    const countComma = (headerLine.match(/,/g) || []).length;
+                    const delimiter = countSemi >= countComma ? ";" : ",";
+                    console.log(`Ref Asset Delimiter: '${delimiter}'`);
+
+                    let batch = writeBatch(db);
+                    let count = 0;
+                    let successCount = 0;
+                    let errorLog = "";
+
+                    // Helper for cleaner parsing
+                    const clean = (str) => {
+                         if (!str) return "";
+                         return str.trim().replace(/^"|"$/g, ''); 
+                    };
+
+                    // 3. Loop Data (Start index 1)
+                    for(let i = 1; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (!line) continue;
+
+                        const cols = line.split(delimiter);
+                        if(cols.length < 2) {
+                             errorLog += `Baris ${i+1}: Kolom kurang (${cols.length}).\n`;
+                             continue; 
+                        }
+
+                        const refData = { 
+                            module: clean(cols[0]), 
+                            deviceModule: clean(cols[1]), 
+                            modulType: clean(cols[2]), 
+                            boardName: clean(cols[3]),
+                            description: clean(cols[4]),
+                            // Jika ada kolom tambahan
+                            typeObject: clean(cols[5]) || "",
+                            manufacturer: clean(cols[6]) || "",
+                            productType: clean(cols[7]) || ""
+                        };
+
+                        const ref = doc(collection(db, "references"));
+                        batch.set(ref, refData);
+                        
+                        count++;
+                        successCount++;
+                        
+                        if(count >= 400) { 
+                            await batch.commit(); 
+                            batch = writeBatch(db); 
+                            count = 0; 
+                        }
+                    }
+
+                    if(count > 0) await batch.commit();
+
+                    if (successCount === 0) {
+                        alert("Gagal Import Total.\n\nDetail:\n" + errorLog);
+                        statusEl.textContent = "Gagal.";
+                        statusEl.style.color = "red";
+                    } else {
+                        statusEl.textContent = `Sukses: ${successCount} data.`;
+                        statusEl.style.color = "green";
+                        if(errorLog) alert("Import sebagian sukses, namun ada error:\n" + errorLog);
+                        loadReferences();
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error Import CSV: " + err.message);
+                    statusEl.textContent = "Error.";
+                    statusEl.style.color = "red";
+                } finally {
+                    e.target.value = ""; 
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+
+    </script>
 </body>
 </html>
