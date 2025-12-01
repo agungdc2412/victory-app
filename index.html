@@ -750,21 +750,26 @@
 
                     <!-- Identification & Photos -->
                     <div class="form-card">
-                        <h3><i class="fas fa-barcode"></i> Identifikasi & Foto</h3>
-                        <div class="grid-3">
-                            <div class="form-group">
-                                <label>Serial Number (SN)</label>
-                                <input type="text" id="inpSN" placeholder="SN Perangkat">
-                                <small>Bisa di-scan dari foto label serial number</small>
+                        <h3><i class="fas fa-camera"></i> Identifikasi & Foto</h3>
+                        <div class="form-group">
+                            <label>16. SN *</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="fileSN" accept="image/*" class="file-input">
+                                <button type="button" class="btn-icon" onclick="triggerFileScan('SN')"><i class="fas fa-file-image"></i> Scan</button>
+                                <button type="button" class="btn-icon" onclick="openCamera('SN')"><i class="fas fa-camera"></i> Cam</button>
                             </div>
-                            <div class="form-group">
-                                <label>Part Number (PN)</label>
-                                <input type="text" id="inpPN" placeholder="PN Perangkat">
+                            <input type="text" id="manualSN" placeholder="Ketik SN manual jika scan gagal..." class="std-input" style="margin-top:5px; border-color: #ffc107;">
+                            <div id="snTagsContainer" class="chips-container"></div>
+                            <input type="hidden" id="valSN">
+                        </div>
+                        <div class="form-group">
+                            <label>17. PN</label>
+                            <div class="scan-wrapper">
+                                <input type="file" id="filePN" accept="image/*" class="file-input">
+                                <button type="button" class="btn-icon" onclick="triggerFileScan('PN')"><i class="fas fa-file-image"></i> Scan</button>
+                                <button type="button" class="btn-icon" onclick="openCamera('PN')"><i class="fas fa-camera"></i> Cam</button>
                             </div>
-                            <div class="form-group">
-                                <label>Scan QR / Barcode (SN)</label>
-                                <button type="button" class="btn btn-outline btn-sm" onclick="startQRScanner('inpSN')"><i class="fas fa-qrcode"></i> Scan Serial</button>
-                            </div>
+                            <input type="text" id="valPN" placeholder="Hasil Scan PN" class="std-input" style="margin-top:5px; width:100%; padding:8px;">
                         </div>
 
                         <div class="grid-3">
@@ -2166,3 +2171,4 @@
     </script>
 </body>
 </html>
+
