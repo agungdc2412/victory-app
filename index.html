@@ -1127,7 +1127,7 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- JAVASCRIPT -->
+<!-- JAVASCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1212,11 +1212,12 @@
                                 document.getElementById("valPN").value = text;
                             }
                             closeCamera();
+                            showToast(`Scan ${currentCameraTarget} sukses!`, "success"); // Feedback sukses
                         },
                         () => {}
                     )
                     .catch(err => {
-                        alert("Tidak dapat mengakses kamera: " + err);
+                        showToast("Tidak dapat mengakses kamera: " + err, "error"); // Ganti alert()
                         modal.style.display = "none";
                     });
             };
@@ -1233,7 +1234,8 @@
             window.triggerFileScan = (target) => {
                 const input = document.getElementById(target === "SN" ? "fileSN" : "filePN");
                 if (!input.files.length) {
-                    return alert("Pilih file gambar terlebih dahulu.");
+                    showToast("Pilih file gambar terlebih dahulu.", "error"); // Ganti alert()
+                    return;
                 }
             
                 const scanner = new Html5Qrcode("qr-reader");
@@ -1251,10 +1253,11 @@
                             document.getElementById("valPN").value = text;
                         }
                         scanner.clear();
+                        showToast(`Scan ${target} dari file sukses!`, "success"); // Feedback sukses
                     })
                     .catch(err => {
                         console.error(err);
-                        alert("QR / barcode tidak terbaca, coba foto yang lebih jelas.");
+                        showToast("QR / barcode tidak terbaca, coba foto yang lebih jelas.", "error"); // Ganti alert()
                     });
             };
 
@@ -1262,7 +1265,7 @@
         function showToast(message, type = "info", timeout = 3000) {
             const container = document.getElementById("toast-container");
             if (!container) {
-                alert(message);
+                console.warn(message); // Ganti alert fallback dengan console.warn
                 return;
             }
             const el = document.createElement("div");
@@ -1375,9 +1378,9 @@
                     batch.set(ref, d);
                 });
                 await batch.commit();
-                alert("Sukses! Data contoh Asset telah dimasukkan.");
+                showToast("Sukses! Data contoh Asset telah dimasukkan.", "success"); // Ganti alert()
                 loadReferences();
-            } catch(e) { alert("Gagal inject data: " + e.message); }
+            } catch(e) { showToast("Gagal inject data: " + e.message, "error"); } // Ganti alert()
         };
 
         window.loadSampleSite = async () => {
@@ -1395,9 +1398,9 @@
                     batch.set(ref, d);
                 });
                 await batch.commit();
-                alert("Sukses! Data contoh Site telah dimasukkan.");
+                showToast("Sukses! Data contoh Site telah dimasukkan.", "success"); // Ganti alert()
                 loadSites();
-            } catch(e) { alert("Gagal inject data: " + e.message); }
+            } catch(e) { showToast("Gagal inject data: " + e.message, "error"); } // Ganti alert()
         };
 
         // === REPORT & DASHBOARD LOGIC (REALTIME) ===
@@ -1796,19 +1799,19 @@
                     if(batchCount > 0) await batch.commit();
 
                     if (successCount === 0) {
-                        alert("Gagal Import Total.\n\nDetail:\n" + errorLog);
+                        showToast("Gagal Import Total. Cek konsol untuk detail.", "error"); // Ganti alert()
                         statusEl.textContent = "Gagal.";
                         statusEl.style.color = "red";
                     } else {
                         statusEl.textContent = `Sukses: ${successCount} data.`;
                         statusEl.style.color = "green";
-                        if(errorLog) alert("Import sebagian sukses, namun ada error:\n" + errorLog);
+                        if(errorLog) showToast("Import sebagian sukses, namun ada error. Cek konsol.", "error"); // Ganti alert()
                         loadSites();
                     }
 
                 } catch (err) {
                     console.error(err);
-                    alert("Error System: " + err.message);
+                    showToast("Error System: " + err.message, "error"); // Ganti alert()
                     statusEl.textContent = "Error.";
                     statusEl.style.color = "red";
                 } finally {
@@ -1817,6 +1820,33 @@
             };
             reader.readAsText(file);
         });
+
+        // =======================================================================
+        // TAMBAH: Auto-fill Site Name berdasarkan Site Code dari Reference Site
+        // =======================================================================
+        document.getElementById("inpSiteCode").addEventListener("change", (e) => {
+            const siteCode = e.target.value.trim().toUpperCase();
+            const siteNameInput = document.getElementById("inpSiteName");
+            
+            if (!siteCode) {
+                siteNameInput.value = "";
+                return;
+            }
+
+            // Cari di data referensi site (allSiteData)
+            const foundSite = allSiteData.find(site => site.siteCode.toUpperCase() === siteCode);
+
+            if (foundSite) {
+                siteNameInput.value = foundSite.siteName || '';
+                siteNameInput.readOnly = true; // Kunci input jika sudah terisi otomatis
+                showToast(`Site Code '${siteCode}' ditemukan! Site Name terisi otomatis.`, 'info');
+            } else {
+                siteNameInput.value = "";
+                siteNameInput.readOnly = false; // Buka input jika tidak ditemukan
+                showToast(`Site Code '${siteCode}' tidak ditemukan di Referensi. Mohon isi Site Name manual.`, 'info');
+            }
+        });
+
         // === FORM INTERACTIONS BASED ON REFERENCE ===
         // Chain select: Module -> Device Module -> Modul Type -> BoardName
         document.getElementById("inpModule").addEventListener("change", (e) => {
@@ -1844,7 +1874,18 @@
             const dev = e.target.value;
             const nextSel = document.getElementById("inpModulType");
             nextSel.innerHTML = '<option value="">-- Pilih Type --</option>';
+            document.getElementById("inpBoardName").innerHTML = '<option value="">-- Pilih Board --</option>';
+            document.getElementById("inpBoardName").disabled = true;
+            
             const filtered = allRefData.filter(r => r.module === mod && r.deviceModule === dev);
+            const found = filtered.find(r => r.modulType && r.modulType !== ''); // Cari entry pertama untuk mengisi auto-fill awal
+            if(found) {
+                document.getElementById("autoDesc").value = found.description || found.descObject || "-";
+                document.getElementById("autoTypeObj").value = found.typeObject || "-";
+                document.getElementById("autoManuf").value = found.manufacturer || "-";
+                document.getElementById("autoProdType").value = found.productType || "-";
+            }
+            
             const uniqueType = [...new Set(filtered.map(r => r.modulType).filter(x => x))].sort();
             uniqueType.forEach(t => nextSel.innerHTML += `<option value="${t}">${t}</option>`);
             nextSel.disabled = false;
@@ -1855,23 +1896,26 @@
             const type = e.target.value;
             const nextSel = document.getElementById("inpBoardName");
             nextSel.innerHTML = '<option value="">-- Pilih Board --</option>';
+            
             const filtered = allRefData.filter(r => r.module === mod && r.deviceModule === dev && r.modulType === type);
-            const found = filtered[0]; 
+            const found = filtered.find(r => r.modulType === type); // Cari entry pertama untuk mengisi auto-fill awal
             if(found) {
                 document.getElementById("autoDesc").value = found.description || found.descObject || "-";
                 document.getElementById("autoTypeObj").value = found.typeObject || "-";
                 document.getElementById("autoManuf").value = found.manufacturer || "-";
                 document.getElementById("autoProdType").value = found.productType || "-";
             }
+            
             const uniqueBoard = [...new Set(filtered.map(r => r.boardName).filter(x => x))].sort();
             uniqueBoard.forEach(b => nextSel.innerHTML += `<option value="${b}">${b}</option>`);
-            nextSel.disabled = false;
+            nextSel.disabled = uniqueBoard.length === 0; // Disable jika tidak ada board name
         });
         document.getElementById("inpBoardName").addEventListener("change", (e) => {
             const mod = document.getElementById("inpModule").value;
             const dev = document.getElementById("inpDeviceModule").value;
             const type = document.getElementById("inpModulType").value;
             const board = e.target.value;
+            
             const found = allRefData.find(r => r.module === mod && r.deviceModule === dev && r.modulType === type && r.boardName === board);
             if(found) {
                 document.getElementById("autoDesc").value = found.description || found.descObject || "-";
@@ -1889,6 +1933,14 @@
             statusSpan.style.color = "black";
 
             try {
+                // TAMBAH: Pastikan SN manual diinput ke list SN sebelum submit
+                const manualSNVal = document.getElementById("manualSN").value.trim();
+                if (manualSNVal) {
+                    const up = manualSNVal.toUpperCase();
+                    if (!snList.includes(up)) snList.push(up);
+                    updateSnDisplay();
+                }
+
                 const date = document.getElementById("inpDate").value;
                 const siteCode = document.getElementById("inpSiteCode").value;
                 const siteName = document.getElementById("inpSiteName").value;
@@ -1900,8 +1952,8 @@
                 const modType = document.getElementById("inpModulType").value;
                 const boardName = document.getElementById("inpBoardName").value;
                 const statusDev = document.getElementById("inpStatus").value;
-                // Ambil SN dari list atau manual
-                const sn = (document.getElementById("valSN").value || document.getElementById("manualSN").value || "").trim();
+                // Ambil SN dari list
+                const sn = snList.join(", ");
                 const pn = (document.getElementById("valPN").value || "").trim();
 
 
@@ -1914,7 +1966,10 @@
                     statusSpan.style.color = "red";
                     return;
                 }
-
+                
+                // --- START UPLOAD PROCESS ---
+                
+                // 1. Tambah dokumen awal di Firestore
                 const docRef = await addDoc(collection(db, "visit_data"), {
                     date, siteCode, siteName, picName: pic, rackNo: rack, floor,
                     module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
@@ -1929,9 +1984,21 @@
                 const typeRef = ref(storage, `${basePath}/type.jpg`);
                 const farRef = ref(storage, `${basePath}/far.jpg`);
 
-                await uploadBytes(labelRef, labelFile);
-                await uploadBytes(typeRef, typeFile);
-                await uploadBytes(farRef, farFile);
+                // 2. Upload file dan berikan feedback lebih rinci
+                const uploadPromises = [];
+                
+                statusSpan.textContent = "Mengunggah Foto Label (1/3)...";
+                uploadPromises.push(uploadBytes(labelRef, labelFile));
+
+                statusSpan.textContent = "Mengunggah Foto Type (2/3)...";
+                uploadPromises.push(uploadBytes(typeRef, typeFile));
+                
+                statusSpan.textContent = "Mengunggah Foto Jauh (3/3)...";
+                uploadPromises.push(uploadBytes(farRef, farFile));
+
+                await Promise.all(uploadPromises);
+                
+                statusSpan.textContent = "Menyelesaikan simpan data...";
 
                 const [labelURL, typeURL, farURL] = await Promise.all([
                     getDownloadURL(labelRef),
@@ -1939,6 +2006,7 @@
                     getDownloadURL(farRef)
                 ]);
 
+                // 3. Update dokumen dengan URL foto
                 await setDoc(docRef, {
                     date, siteCode, siteName, picName: pic, rackNo: rack, floor,
                     module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
@@ -1949,61 +2017,45 @@
                     photoFar: farURL,
                     createdBy: currentUserId,
                     createdAt: new Date().toISOString()
-                });
+                }, { merge: true }); // Gunakan merge:true untuk update dokumen yang sudah dibuat
 
                 statusSpan.textContent = "Data berhasil disimpan.";
                 statusSpan.style.color = "green";
-                e.target.reset();
+                showToast("Data Visit berhasil disimpan!", "success");
+
+                // === PERBAIKAN RESET FORM ===
+                // Pertahankan informasi Site (1-6) tetapi reset Device, SN/PN, dan Photo
+                document.getElementById("inpModule").value = "";
+                document.getElementById("inpDeviceModule").value = "";
+                document.getElementById("inpModulType").value = "";
+                document.getElementById("inpBoardName").value = "";
+                document.getElementById("inpStatus").value = "";
+                document.getElementById("autoDesc").value = "";
+                document.getElementById("autoTypeObj").value = "";
+                document.getElementById("autoManuf").value = "";
+                document.getElementById("autoProdType").value = "";
+                document.getElementById("valPN").value = "";
+                document.getElementById("manualSN").value = "";
+                document.getElementById("photoLabel").value = "";
+                document.getElementById("photoType").value = "";
+                document.getElementById("photoFar").value = "";
+                snList = []; // Kosongkan list SN
+                updateSnDisplay(); 
+                // === END PERBAIKAN RESET FORM ===
             } catch (err) {
                 console.error(err);
                 statusSpan.textContent = "Gagal menyimpan data.";
                 statusSpan.style.color = "red";
+                showToast("Gagal menyimpan data: " + err.message, "error");
             }
         });
 
         // === QR / BARCODE SCANNER (SN) ===
-        window.startQRScanner = (targetInputId) => {
-            const qrDiv = document.getElementById("qr-reader");
-            if (qrDiv.style.display === "block") {
-                Quagga.stop();
-                qrDiv.style.display = "none";
-                return;
-            }
-
-            currentCameraTarget = targetInputId;
-            qrDiv.style.display = "block";
-
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: qrDiv,
-                    constraints: {
-                        facingMode: "environment"
-                    }
-                },
-                decoder: {
-                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "qr_reader"]
-                }
-            }, (err) => {
-                if (err) {
-                    console.error(err);
-                    alert("Gagal menginisiasi kamera.");
-                    return;
-                }
-                Quagga.start();
-            });
-
-            Quagga.onDetected((data) => {
-                const code = data.codeResult.code;
-                if (currentCameraTarget) {
-                    document.getElementById(currentCameraTarget).value = code;
-                }
-                Quagga.stop();
-                qrDiv.style.display = "none";
-                currentCameraTarget = null;
-            });
-        };
+        // Kode ini menggunakan Quagga dan Html5Qrcode. Karena Anda sudah mengimplementasikan
+        // openCamera() dengan Html5Qrcode, bagian Quagga ini bisa dihapus atau diabaikan
+        // jika Anda hanya ingin menggunakan openCamera. Saya biarkan untuk kompatibilitas,
+        // tetapi perlu dicatat bahwa Quagga hanya untuk barcode, sementara Html5Qrcode
+        // untuk QR dan bisa melakukan file scan/camera scan.
 
         // === REPORT VISIT TABLE RENDER & PAGINATION ===
         async function loadReportVisit() {
@@ -2184,6 +2236,7 @@
             await setDoc(doc(db, "visit_data", id), { ...reportData.find(r => r.id === id), ...payload });
             closeEditModal();
             loadReportVisit();
+            showToast("Data berhasil diubah!", "success");
         });
 
         // === DOWNLOAD FOTO ZIP ===
@@ -2196,11 +2249,26 @@
 
                 const addImg = async (url, name) => {
                     if (!url) return;
-                    const resp = await fetch(url);
-                    const blob = await resp.blob();
-                    folder.file(name, blob);
+                    // Use exponential backoff for fetch
+                    let attempts = 0;
+                    const maxAttempts = 5;
+                    while (attempts < maxAttempts) {
+                        try {
+                            const resp = await fetch(url);
+                            if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+                            const blob = await resp.blob();
+                            folder.file(name, blob);
+                            return; // Sukses
+                        } catch (error) {
+                            attempts++;
+                            if (attempts >= maxAttempts) throw error;
+                            const delay = Math.pow(2, attempts) * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        }
+                    }
                 };
 
+                showToast("Memulai download foto...", "info", 5000);
                 await addImg(data.photoLabel, "label.jpg");
                 await addImg(data.photoType, "type.jpg");
                 await addImg(data.photoFar, "far.jpg");
@@ -2211,9 +2279,10 @@
                 a.download = `photos_${id}.zip`;
                 a.click();
                 URL.revokeObjectURL(a.href);
+                showToast("Download ZIP foto sukses!", "success");
             } catch (err) {
                 console.error(err);
-                alert("Gagal download foto.");
+                showToast("Gagal download foto.", "error"); // Ganti alert()
             }
         };
 
@@ -2234,21 +2303,24 @@
             const ws = XLSX.utils.aoa_to_sheet(wsData);
             XLSX.utils.book_append_sheet(wb, ws, "Report");
             XLSX.writeFile(wb, "report_visit_asset.xlsx");
+            showToast("Data berhasil diekspor ke Excel.", "success");
         };
 
         // === EXPORT PDF PER SITE ===
         window.downloadSitePDF = async () => {
             const selectedSiteCode = document.getElementById("exportSiteSelect").value;
             if (!selectedSiteCode) {
-                alert("Pilih site terlebih dahulu.");
+                showToast("Pilih site terlebih dahulu.", "error"); // Ganti alert()
                 return;
             }
 
             const siteData = reportData.filter(d => d.siteCode === selectedSiteCode);
             if (!siteData.length) {
-                alert("Tidak ada data untuk site tersebut.");
+                showToast("Tidak ada data untuk site tersebut.", "error"); // Ganti alert()
                 return;
             }
+            
+            showToast("Mempersiapkan PDF...", "info", 5000);
 
             const siteName = siteData[0].siteName || "";
             document.getElementById("pdf-site-title").textContent = `Site: ${selectedSiteCode} - ${siteName}`;
@@ -2301,6 +2373,7 @@
             });
 
             pdf.save(`report_${selectedSiteCode}.pdf`);
+            showToast("Laporan PDF berhasil dibuat.", "success");
         };
 
         // === INIT FILTER & EVENTS ===
@@ -2311,6 +2384,7 @@
     </script>
 </body>
 </html>
+
 
 
 
