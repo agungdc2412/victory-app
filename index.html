@@ -1293,7 +1293,9 @@
         } catch (e) { console.error(e); showToast("Firebase Error: " + (e.message || e), "error"); }
 
         let currentUser = null, currentUserId = null;
-        let referenceData = [], snList = [], liveQrCode = null, currentCameraTarget = null;
+        let referenceData = [];
+        let chartInstances = {}, visitCacheById = {};
+        let reportDataLoadedFromRealtime = false;
         let chartInstances = {}, visitCacheById = {};
         let reportDataLoadedFromRealtime = false;
         
@@ -2311,6 +2313,7 @@
     </script>
 </body>
 </html>
+
 
 
 
