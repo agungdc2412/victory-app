@@ -16,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <!-- CSS -->
     <style>
@@ -34,7 +35,18 @@
         body { background-color: var(--bg-light); color: var(--text-dark); overflow-x: hidden; }
 
         a { text-decoration: none; color: inherit; }
-        
+        .chip {
+            background: var(--secondary);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chip i { cursor: pointer; }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -623,6 +635,13 @@
         <!-- Main Content Area -->
         <main class="main-content">
             <div id="qr-reader" style="display: none;"></div>
+                <div id="camera-modal" class="modal">
+                  <div class="modal-content" style="max-width:400px;">
+                    <span class="close" onclick="closeCamera()">&times;</span>
+                    <h3>Scan SN / PN</h3>
+                    <div id="qr-camera-view" style="width:100%; min-height:260px;"></div>
+                  </div>
+                </div>
 
             <!-- VIEW 1: DASHBOARD -->
             <section id="view-dashboard" class="view-section active">
@@ -1126,6 +1145,120 @@
             measurementId: "G-Q1DJ3BG41V"
         };
 
+        // === GLOBAL UNTUK SCAN SN / PN ===
+            let snList = [];
+            let liveQrCode = null;
+            let currentCameraTarget = null;
+            
+            function updateSnDisplay() {
+                const container = document.getElementById("snTagsContainer");
+                const hidden = document.getElementById("valSN");
+                container.innerHTML = "";
+            
+                if (!Array.isArray(snList)) snList = [];
+            
+                snList.forEach((sn, idx) => {
+                    const span = document.createElement("span");
+                    span.className = "chip";
+                    span.innerHTML = `
+                        ${sn}
+                        <i class="fas fa-times" onclick="removeSn(${idx})"></i>
+                    `;
+                    container.appendChild(span);
+                });
+            
+                hidden.value = snList.join(", ");
+            }
+            
+            window.removeSn = (idx) => {
+                snList.splice(idx, 1);
+                updateSnDisplay();
+            };
+            
+            // Enter di manualSN → tambah ke list
+            document.getElementById("manualSN").addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = e.target.value.trim();
+                    if (val) {
+                        const up = val.toUpperCase();
+                        if (!snList.includes(up)) snList.push(up);
+                        updateSnDisplay();
+                        e.target.value = "";
+                    }
+                }
+            });
+
+        // === FUNGSI SCAN KAMERA ===
+            window.openCamera = (target) => {
+                const modal = document.getElementById("camera-modal");
+                modal.style.display = "flex";
+                currentCameraTarget = target;
+            
+                liveQrCode = new Html5Qrcode("qr-camera-view");
+                liveQrCode
+                    .start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: 250 },
+                        (decodedText) => {
+                            const text = decodedText.trim();
+                            if (!text) return;
+            
+                            if (currentCameraTarget === "SN") {
+                                const up = text.toUpperCase();
+                                if (!snList.includes(up)) snList.push(up);
+                                updateSnDisplay();
+                            } else {
+                                document.getElementById("valPN").value = text;
+                            }
+                            closeCamera();
+                        },
+                        () => {}
+                    )
+                    .catch(err => {
+                        alert("Tidak dapat mengakses kamera: " + err);
+                        modal.style.display = "none";
+                    });
+            };
+            
+            window.closeCamera = () => {
+                if (liveQrCode) {
+                    liveQrCode.stop().then(() => liveQrCode.clear()).catch(()=>{});
+                    liveQrCode = null;
+                }
+                document.getElementById("camera-modal").style.display = "none";
+            };
+            
+            // === FUNGSI SCAN DARI FILE ===
+            window.triggerFileScan = (target) => {
+                const input = document.getElementById(target === "SN" ? "fileSN" : "filePN");
+                if (!input.files.length) {
+                    return alert("Pilih file gambar terlebih dahulu.");
+                }
+            
+                const scanner = new Html5Qrcode("qr-reader");
+                scanner
+                    .scanFile(input.files[0], false)
+                    .then(decodedText => {
+                        const text = decodedText.trim();
+                        if (!text) return;
+            
+                        if (target === "SN") {
+                            const up = text.toUpperCase();
+                            if (!snList.includes(up)) snList.push(up);
+                            updateSnDisplay();
+                        } else {
+                            document.getElementById("valPN").value = text;
+                        }
+                        scanner.clear();
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("QR / barcode tidak terbaca, coba foto yang lebih jelas.");
+                    });
+            };
+
+        
         function showToast(message, type = "info", timeout = 3000) {
             const container = document.getElementById("toast-container");
             if (!container) {
@@ -1767,8 +1900,10 @@
                 const modType = document.getElementById("inpModulType").value;
                 const boardName = document.getElementById("inpBoardName").value;
                 const statusDev = document.getElementById("inpStatus").value;
-                const sn = document.getElementById("inpSN").value;
-                const pn = document.getElementById("inpPN").value;
+                // Ambil SN dari list atau manual
+                const sn = (document.getElementById("valSN").value || document.getElementById("manualSN").value || "").trim();
+                const pn = (document.getElementById("valPN").value || "").trim();
+
 
                 const labelFile = document.getElementById("photoLabel").files[0];
                 const typeFile = document.getElementById("photoType").files[0];
@@ -2176,5 +2311,6 @@
     </script>
 </body>
 </html>
+
 
 
