@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.C.T.O.R.Y - Asset Management v7.1 (Geotagging 100KM Limit)</title> 
+    <title>V.I.C.T.O.R.Y - Asset Management v8.0 (Dupe Check & Audit Log)</title> 
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -478,6 +478,27 @@
             border-top: 2px solid var(--primary);
             padding-top: 15px;
         }
+        
+        /* NEW: Audit Log Detail Styling */
+        .log-detail-row td {
+            background-color: #f8f8f8;
+            padding: 10px 15px 10px 30px !important;
+            font-size: 0.75rem;
+            border-top: none;
+        }
+        .log-detail-row td div {
+            margin-top: 5px;
+            border-left: 3px solid #17a2b8; /* Info color */
+            padding-left: 10px;
+        }
+        .log-detail-row td span {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .log-detail-row td strong {
+            font-weight: 700;
+            color: #17a2b8;
+        }
 
 
         /* Login Screen */
@@ -652,7 +673,7 @@
         <div class="login-box">
             <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo" class="fs-logo-login">
             <h1 class="login-title">V.I.C.T.O.R.Y</h1>
-            <p class="login-subtitle">Asset Management System v7.1</p>
+            <p class="login-subtitle">Asset Management System v8.0</p>
             <button id="google-login-btn" class="btn btn-google"><i class="fab fa-google"></i> Masuk dengan Google</button>
             <div style="margin: 15px 0; color: #aaa; font-size: 0.8rem;">atau login manual</div>
             <form id="login-form">
@@ -1009,6 +1030,7 @@
                                     <th>Status Data Visit</th>
                                     <th>Device</th>
                                     <th>Created By (User)</th>
+                                    <th>Detail</th> <!-- New column for detail toggle -->
                                 </tr>
                             </thead>
                             <tbody id="logHistoryTableBody">
@@ -1458,6 +1480,32 @@
         } catch (e) { console.error("Firebase Error:", e); showToast("Firebase Error: " + (e.message || e), "error"); }
 
         // --- UTILITY FUNCTIONS ---
+        
+        /**
+         * Compare two objects and return key-value differences.
+         */
+        function getDifferences(oldData, newData) {
+            const changes = {};
+            // Keys to exclude from difference calculation
+            const excludeKeys = ['id', 'auditLog', 'createdAt', 'createdBy', 'photoLabel', 'photoType', 'photoFar', 'updatedAt', 'updatedBy', 'recordLatitude', 'recordLongitude', 'validationDistance'];
+
+            for (const key in newData) {
+                if (excludeKeys.includes(key)) continue;
+
+                const oldValue = oldData[key] !== undefined ? oldData[key] : '';
+                const newValue = newData[key] !== undefined ? newData[key] : '';
+
+                // Convert arrays (like serialNumber) back to string for simple comparison
+                const oldString = Array.isArray(oldValue) ? oldValue.join(', ') : String(oldValue);
+                const newString = Array.isArray(newValue) ? newValue.join(', ') : String(newValue);
+
+                if (oldString !== newString) {
+                    changes[key] = { old: oldString, new: newString };
+                }
+            }
+            return changes;
+        }
+
         function showToast(message, type = "info", timeout = 3000) {
             const container = document.getElementById("toast-container");
             if (!container) {
@@ -1602,10 +1650,6 @@
         
         /**
          * Calculates the distance between two geographical points using the Haversine formula.
-         * @param {number} lat1 Latitude of point 1
-         * @param {number} lon1 Longitude of point 1
-         * @param {number} lat2 Latitude of point 2
-         * @param {number} lon2 Longitude of point 2
          * @returns {number} Distance in meters
          */
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1623,7 +1667,44 @@
             return R * c; // Distance in meters
         }
 
+        /**
+         * Checks if any given SN or PN already exists in the database with a final status.
+         */
+        async function checkDuplicateAssets(snInput, pnInput) {
+            if (!snInput && !pnInput) return null;
 
+            const snList = snInput.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+            const pn = pnInput.trim().toUpperCase();
+
+            // Status yang dianggap "final" (tidak boleh diinput ulang)
+            const finalStatuses = ["Active", "Damage", "Spare", "Approved"];
+            
+            // Fetch all records considered final status
+            const snapshot = await getDocs(collection(db, "visit_data"));
+
+            for (const docSnap of snapshot.docs) {
+                const data = docSnap.data();
+                const currentStatus = data.status || data.deviceStatusFinal;
+                
+                if (finalStatuses.includes(currentStatus)) {
+                    // Check SNs
+                    const existingSNs = (data.serialNumber || "").toUpperCase().split(',').map(s => s.trim()).filter(s => s.length > 0);
+                    for (const checkSN of snList) {
+                        if (existingSNs.includes(checkSN)) {
+                            return { type: "SN", value: checkSN, vnt: data.visitNumber, site: data.siteCode };
+                        }
+                    }
+
+                    // Check PN
+                    if (pn && (data.partNumber || "").toUpperCase() === pn) {
+                         return { type: "PN", value: pn, vnt: data.visitNumber, site: data.siteCode };
+                    }
+                }
+            }
+
+            return null; // No duplicate found
+        }
+        
         // --- AUTH & INITIAL LOAD ---
 
         const checkUserRoleAndApplyPermissions = async (user) => {
@@ -1921,7 +2002,7 @@
         // === SITE REFERENCE LOGIC ===
         // ... (site logic remains the same)
 
-        // === FORM SUBMISSION & STORAGE UPLOAD (UPDATED FOR GEOTAGGING 100KM) ===
+        // === FORM SUBMISSION & STORAGE UPLOAD (UPDATED FOR DUPE CHECK & AUDIT LOG) ===
         document.getElementById("dataForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const statusSpan = document.getElementById("submitStatus");
@@ -1936,7 +2017,6 @@
                 return;
             }
             
-            // NEW: BATASAN KERAS (HARD STOP) 100 KM
             const HARD_STOP_DISTANCE = 100000; // 100 KM dalam meter (untuk regional coverage)
 
             if (validationDistance > HARD_STOP_DISTANCE && currentUserRole === 'Engineer') { 
@@ -1947,22 +2027,43 @@
             }
             // --- END VALIDASI GEOTAGGING ---
 
-            try {
-                // TAMBAH: Pastikan SN manual diinput ke list SN sebelum submit
-                const manualSNVal = document.getElementById("manualSN").value.trim();
-                if (manualSNVal) {
-                    const up = manualSNVal.toUpperCase();
-                    if (!snList.includes(up)) snList.push(up);
-                    updateSnDisplay();
-                }
+            // TAMBAH: Pastikan SN manual diinput ke list SN sebelum submit
+            const manualSNVal = document.getElementById("manualSN").value.trim();
+            if (manualSNVal) {
+                const up = manualSNVal.toUpperCase();
+                if (!snList.includes(up)) snList.push(up);
+                updateSnDisplay();
+            }
 
+            const sn = snList.join(", ");
+            const pn = (document.getElementById("valPN").value || "").trim();
+
+            if (!sn && !pn) {
+                 statusSpan.textContent = "SN atau PN wajib diisi.";
+                 statusSpan.style.color = "red";
+                 showToast("SN atau PN wajib diisi.", "error");
+                 return;
+            }
+            
+            // --- START DUPLICATE CHECK ---
+            statusSpan.textContent = "Melakukan pengecekan duplikasi SN/PN...";
+            const duplicate = await checkDuplicateAssets(sn, pn);
+            
+            if (duplicate) {
+                statusSpan.textContent = `GAGAL! ${duplicate.type} ${duplicate.value} sudah terdaftar.`;
+                statusSpan.style.color = "red";
+                showToast(`Duplikasi! ${duplicate.type} ${duplicate.value} sudah ada di VNT ${duplicate.vnt} (${duplicate.site}).`, "error", 10000);
+                return;
+            }
+            // --- END DUPLICATE CHECK ---
+
+            try {
+                
                 const date = document.getElementById("inpDate").value;
                 const siteCode = document.getElementById("inpSiteCode").value;
                 const siteName = document.getElementById("inpSiteName").value;
                 const pic = document.getElementById("inpPic").value;
-                
                 const visitNumber = generateVisitNumber(siteCode); 
-                
                 const rack = document.getElementById("inpRackNo").value;
                 const floor = document.getElementById("inpFloor").value;
                 const moduleVal = document.getElementById("inpModule").value;
@@ -1970,8 +2071,6 @@
                 const modType = document.getElementById("inpModulType").value;
                 const boardName = document.getElementById("inpBoardName").value;
                 const statusDev = document.getElementById("inpStatus").value;
-                const sn = snList.join(", ");
-                const pn = (document.getElementById("valPN").value || "").trim();
 
                 const labelFile = document.getElementById("photoLabel").files[0];
                 const typeFile = document.getElementById("photoType").files[0];
@@ -1985,8 +2084,7 @@
                 
                 // --- START UPLOAD PROCESS ---
                 
-                // 1. Tambah dokumen awal di Firestore
-                const docRef = await addDoc(collection(db, "visit_data"), {
+                const initialData = {
                     date, siteCode, siteName, picName: pic, rackNo: rack, floor,
                     module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
                     status: "Draft",
@@ -1994,15 +2092,15 @@
                     deviceStatusFinal: statusDev, 
                     serialNumber: sn, partNumber: pn,
                     description: document.getElementById("autoDesc").value || "",
-                    
-                    // NEW GEOTAGGING FIELDS
                     recordLatitude: capturedLatitude, 
                     recordLongitude: capturedLongitude,
                     validationDistance: validationDistance,
-                    
                     createdBy: currentUser.email, 
                     createdAt: new Date().toISOString()
-                });
+                };
+                
+                // 1. Tambah dokumen awal di Firestore
+                const docRef = await addDoc(collection(db, "visit_data"), initialData);
 
                 const basePath = `visit_photos/${currentUserId || 'anonymous'}/${docRef.id}`;
                 const labelRef = ref(storage, `${basePath}/label.jpg`);
@@ -2028,18 +2126,30 @@
                     getDownloadURL(farRef)
                 ]);
 
-                // 3. Update dokumen dengan URL foto
+                // 2. Tambahkan log audit awal (Creation)
+                const initialLog = {
+                    timestamp: new Date().toISOString(),
+                    user: currentUser.email,
+                    oldStatus: 'N/A',
+                    newStatus: 'Draft',
+                    changedFields: {
+                        creation: { old: 'N/A', new: 'Initial Data Entry' }
+                    }
+                };
+
+                // 3. Update dokumen dengan URL foto dan log
                 await setDoc(doc(db, "visit_data", docRef.id), {
                     photoLabel: labelURL,
                     photoType: typeURL,
                     photoFar: farURL,
+                    auditLog: [initialLog], // Start the audit log array
                 }, { merge: true });
 
                 statusSpan.textContent = `Data berhasil disimpan sebagai DRAFT (${visitNumber}).`;
                 statusSpan.style.color = "green";
                 showToast(`Data Visit berhasil disimpan sebagai DRAFT! VNT: ${visitNumber}`, "success");
 
-                // Reset Geotagging State & Form
+                // Reset Form (Hanya bagian Device Info & Identification)
                 document.getElementById("inpModule").value = "";
                 document.getElementById("inpDeviceModule").value = "";
                 document.getElementById("inpModulType").value = "";
@@ -2077,83 +2187,284 @@
             }
         });
 
-        // === REPORT VISIT TABLE RENDER (UPDATED FOR GEOTAGGING) ===
-        function renderReportTable() {
-            const tbody = document.getElementById("reportVisitTableBody");
-            tbody.innerHTML = "";
+        // === EDIT FORM SUBMISSION (UPDATED FOR AUDIT LOG) ===
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("editId").value;
+            const oldData = reportData.find(d => d.id === id);
 
-            const start = (currentReportPage - 1) * reportRowsPerPage;
-            const end = start + reportRowsPerPage;
-            const pageData = filteredReportData.slice(start, end);
+            const newData = {
+                date: document.getElementById("modalEditDate").value,
+                siteCode: document.getElementById("modalEditSiteCode").value,
+                siteName: document.getElementById("modalEditSiteName").value,
+                picName: document.getElementById("modalEditPic").value,
+                rackNo: document.getElementById("modalEditRack").value,
+                floor: document.getElementById("modalEditFloor").value,
+                module: document.getElementById("modalEditModule").value,
+                deviceModule: document.getElementById("modalEditDeviceModule").value,
+                modulType: document.getElementById("modalEditModulType").value,
+                boardName: document.getElementById("modalEditBoard").value,
+                description: document.getElementById("modalEditDesc").value,
+                status: document.getElementById("modalEditStatus").value,
+                serialNumber: document.getElementById("modalEditSN").value,
+                partNumber: document.getElementById("modalEditPN").value,
+            };
 
-            pageData.forEach(d => {
-                let snDisplay = Array.isArray(d.serialNumbers) ? d.serialNumbers.join(", ") : (d.serialNumber || "-");
-                const img = (url) => url ? `<a href="${url}" target="_blank"><i class="fas fa-camera"></i></a>` : '-';
+            const changes = getDifferences(oldData, newData);
+            const newStatus = newData.status;
+
+            try {
+                const updatePayload = {
+                    ...newData,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser.email,
+                };
                 
-                let actionButtons = '';
-                let currentStatus = d.status;
-                if (currentStatus === 'Not Active' || currentStatus === 'Dismantle') {
-                    currentStatus = 'Damage'; 
+                await updateDoc(doc(db, "visit_data", id), updatePayload);
+
+                // --- AUDIT LOGGING ---
+                if (Object.keys(changes).length > 0 || oldData.status !== newStatus) {
+                    const logEntry = {
+                        timestamp: new Date().toISOString(),
+                        user: currentUser.email,
+                        oldStatus: oldData.status,
+                        newStatus: newStatus,
+                        changedFields: changes,
+                    };
+                    
+                    // Tambahkan log baru ke array auditLog yang sudah ada
+                    const logDocRef = doc(db, "visit_data", id);
+                    const logDoc = await getDoc(logDocRef);
+                    const currentLog = logDoc.data().auditLog || [];
+
+                    await updateDoc(logDocRef, {
+                        auditLog: [...currentLog, logEntry]
+                    });
                 }
-                const finalStatusClass = currentStatus.replace(/\s/g, ''); 
+                // --- END AUDIT LOGGING ---
 
-                if (d.status === 'Draft' || d.status === 'Rejected') {
-                    actionButtons += `<button class="btn btn-sm btn-primary" onclick="updateVisitStatus('${d.id}', 'Submitted')" style="margin-right:4px;"><i class="fas fa-share-square"></i> Submit</button>`;
-                } else {
-                    actionButtons += `<span class="badge" style="background:#ddd;">${currentStatus}</span>`;
-                }
+                closeEditModal();
+                showToast("Data Visit berhasil diperbarui!", "success");
 
-                actionButtons += `<button class="btn btn-sm btn-outline" onclick="openEditModal('${d.id}')" style="margin-left:4px;"><i class="fas fa-edit"></i></button>`;
-                actionButtons += `<button class="btn btn-sm btn-outline" onclick="downloadPhotos('${d.id}')" style="margin-left:4px;"><i class="fas fa-download"></i></button>`;
-                
-                // NEW: Lokasi Display
-                let locDisplay = '-';
-                if (d.recordLatitude && d.recordLongitude) {
-                    const dist = d.validationDistance !== undefined && d.validationDistance !== null ? `${(d.validationDistance/1000).toFixed(2)} KM` : '?m';
-                    // Menggunakan 100 meter sebagai threshold visual (seperti sebelumnya)
-                    const color = d.validationDistance > 100 ? 'red' : 'green'; 
-                    locDisplay = `
-                        <a href="https://www.google.com/maps/search/?api=1&query=${d.recordLatitude},${d.recordLongitude}" target="_blank" style="color:#007bff;">
-                            ${dist} <i class="fas fa-map-marker-alt" style="color:${color};"></i>
-                        </a>
-                    `;
-                }
+            } catch (error) {
+                console.error("Error updating document:", error);
+                showToast("Gagal memperbarui data: " + error.message, "error");
+            }
+        });
 
+        // === OPEN EDIT MODAL (UPDATED FOR AUDIT LOG) ===
+        window.openEditModal = async (id) => {
+            const data = reportData.find(d => d.id === id);
+            if (!data) return;
 
-                tbody.innerHTML += `<tr>
-                    <td>${d.date || '-'}</td>
-                    <td>${d.siteCode || '-'}</td>
-                    <td>${d.siteName || '-'}</td>
-                    <td>${d.picName || '-'}</td>
-                    <td style="font-weight: 500;">${d.visitNumber || '-'}</td>
-                    <td>${d.rackNo || '-'}</td>
-                    <td>${d.floor || '-'}</td>
-                    <td>${d.module || '-'}</td>
-                    <td>${d.deviceModule || '-'}</td>
-                    <td>${d.boardName || '-'}</td>
-                    <td><span class="status-pill status-${finalStatusClass}">${currentStatus || 'Draft'}</span></td>
-                    <td>${snDisplay}</td>
-                    <td>${img(d.photoLabel)}</td>
-                    <td>${locDisplay}</td> <!-- NEW COLUMN -->
-                    <td style="white-space: nowrap;">${actionButtons}</td>
-                </tr>`;
-            });
-
-            if (!pageData.length) {
-                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;">Tidak ada data.</td></tr>`;
+            // Ensure auditLog exists, if not, create initial entry
+            if (!data.auditLog) {
+                const initialLog = {
+                    timestamp: data.createdAt,
+                    user: data.createdBy,
+                    oldStatus: 'N/A',
+                    newStatus: data.status,
+                    changedFields: { creation: { old: 'N/A', new: 'Initial Data Entry' } }
+                };
+                await updateDoc(doc(db, "visit_data", id), { auditLog: [initialLog] });
             }
 
-            const totalPages = Math.ceil(filteredReportData.length / reportRowsPerPage);
-            document.getElementById("reportPageInfo").textContent = `Page ${currentReportPage} dari ${totalPages || 1} (Total: ${filteredReportData.length})`;
-            document.getElementById("reportCurrentPage").textContent = currentReportPage;
-            document.getElementById("reportPrevPage").disabled = currentReportPage === 1;
-            document.getElementById("reportNextPage").disabled = currentReportPage >= totalPages;
-        }
+            document.getElementById("editId").value = id;
+            document.getElementById("modalVntDisplay").textContent = data.visitNumber || '-';
+            
+            const statusPill = document.getElementById("modalStatusDisplay");
+            statusPill.textContent = data.status;
+            statusPill.className = `status-pill status-${data.status.replace(/\s/g, '')}`;
+
+            // Populate form fields
+            document.getElementById("modalEditDate").value = data.date || '';
+            document.getElementById("modalEditSiteCode").value = data.siteCode || '';
+            document.getElementById("modalEditSiteName").value = data.siteName || '';
+            document.getElementById("modalEditPic").value = data.picName || '';
+            document.getElementById("modalEditRack").value = data.rackNo || '';
+            document.getElementById("modalEditFloor").value = data.floor || '';
+            document.getElementById("modalEditModule").value = data.module || '';
+            document.getElementById("modalEditDeviceModule").value = data.deviceModule || '';
+            document.getElementById("modalEditModulType").value = data.modulType || '';
+            document.getElementById("modalEditBoard").value = data.boardName || '';
+            document.getElementById("modalEditDesc").value = data.description || '';
+            document.getElementById("modalEditSN").value = data.serialNumber || '';
+            document.getElementById("modalEditPN").value = data.partNumber || '';
+            document.getElementById("modalEditStatus").value = data.status || 'Draft';
+
+
+            document.getElementById("edit-modal").style.display = "flex";
+        };
+
+        // === UPDATE STATUS (DRAFT -> SUBMITTED | SUBMITTED -> REJECTED) (UPDATED FOR AUDIT LOG) ===
+        window.updateVisitStatus = async (id, newStatus, finalStatus = null) => {
+            const oldData = reportData.find(d => d.id === id);
+            if (!oldData) return;
+
+            const oldStatus = oldData.status;
+            const changes = {};
+
+            try {
+                const updatePayload = {
+                    status: newStatus,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: currentUser.email
+                };
+
+                if (finalStatus) {
+                    updatePayload.deviceStatusFinal = finalStatus;
+                    changes.deviceStatusFinal = { old: oldData.deviceStatusFinal, new: finalStatus };
+                }
+                if (newStatus === 'Rejected') {
+                    // Jika Rejected, kembalikan status ke Draft atau Rejected (agar bisa di-edit)
+                    updatePayload.status = 'Rejected'; 
+                }
+                
+                await updateDoc(doc(db, "visit_data", id), updatePayload);
+
+                // --- AUDIT LOGGING ---
+                changes.status = { old: oldStatus, new: newStatus }; // Log status change explicitly
+                
+                const logEntry = {
+                    timestamp: new Date().toISOString(),
+                    user: currentUser.email,
+                    oldStatus: oldStatus,
+                    newStatus: newStatus,
+                    changedFields: changes,
+                };
+
+                const logDocRef = doc(db, "visit_data", id);
+                const logDoc = await getDoc(logDocRef);
+                const currentLog = logDoc.data().auditLog || [];
+
+                await updateDoc(logDocRef, {
+                    auditLog: [...currentLog, logEntry]
+                });
+                // --- END AUDIT LOGGING ---
+
+                closeFinalStatusModal(); 
+                showToast(`Status data ${oldData.visitNumber} berhasil diubah menjadi ${newStatus}.`, "success");
+
+            } catch (error) {
+                console.error("Error updating status:", error);
+                showToast(`Gagal mengubah status: ${error.message}`, "error");
+            }
+        };
+
+        // === LOG HISTORY DISPLAY (UPDATED FOR AUDIT DETAIL) ===
+        window.searchAssetHistory = async () => {
+            const input = document.getElementById("historySearchInput").value.trim().toUpperCase();
+            if (!input) { showToast("Mohon masukkan SN atau PN.", "error"); return; }
+            
+            document.getElementById('historyAssetFound').style.display = 'none';
+            document.getElementById('historyLogDetail').style.display = 'none';
+            const container = document.getElementById('assetFoundContainer');
+            container.innerHTML = '<div style="text-align:center; padding:15px;">Mencari data...</div>';
+
+            const foundData = reportData.filter(d => 
+                (d.serialNumber && d.serialNumber.toUpperCase().includes(input)) ||
+                (d.partNumber && d.partNumber.toUpperCase().includes(input))
+            );
+
+            container.innerHTML = '';
+            if (foundData.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:15px; color:#dc3545;">Data SN/PN '${input}' tidak ditemukan.</div>`;
+                document.getElementById('historyAssetFound').style.display = 'block';
+                return;
+            }
+
+            foundData.forEach(d => {
+                const currentStatus = d.status || d.deviceStatusFinal;
+                const finalStatusClass = currentStatus.replace(/\s/g, ''); 
+                
+                container.innerHTML += `
+                    <div class="card" style="border-left: 5px solid var(--secondary); margin-bottom: 10px;">
+                        <div class="grid-2">
+                            <div><strong>VNT:</strong> ${d.visitNumber || '-'}</div>
+                            <div><strong>Site Code:</strong> ${d.siteCode || '-'}</div>
+                            <div><strong>Module:</strong> ${d.module || '-'} (${d.deviceModule || ''})</div>
+                            <div><strong>SN/PN:</strong> ${d.serialNumber || d.partNumber || '-'}</div>
+                            <div><strong>Status Visit:</strong> <span class="status-pill status-${finalStatusClass}">${currentStatus}</span></div>
+                            <div><strong>Tanggal Visit:</strong> ${d.date || '-'}</div>
+                            <div style="grid-column: span 2;">
+                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${d.visitNumber}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('historyAssetFound').style.display = 'block';
+        };
+
+        window.loadAndRenderLogHistory = async (id, vnt) => {
+            document.getElementById('historyLogDetail').style.display = 'none';
+            const tbody = document.getElementById('logHistoryTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Memuat log...</td></tr>';
+
+            try {
+                const docSnap = await getDoc(doc(db, "visit_data", id));
+                const data = docSnap.data();
+                const log = data.auditLog || [];
+
+                tbody.innerHTML = '';
+                if (log.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Tidak ada riwayat perubahan (VNT: ${vnt}).</td></tr>`;
+                } else {
+                    log.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    log.forEach((entry, index) => {
+                        const date = new Date(entry.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+                        const statusClass = entry.newStatus.replace(/\s/g, '');
+                        const detailId = `log-detail-${id}-${index}`;
+                        
+                        let detailRows = '';
+                        if (entry.changedFields && Object.keys(entry.changedFields).length > 0) {
+                            detailRows = `<tr class="log-detail-row" id="${detailId}" style="display:none;">
+                                <td colspan="7">
+                                    <div><strong>Detail Perubahan:</strong><br>`;
+                            
+                            for (const key in entry.changedFields) {
+                                const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
+                                const { old: oldValue, new: newValue } = entry.changedFields[key];
+                                
+                                detailRows += `<span><strong>${fieldName}:</strong> <span style="color:#777;">${oldValue}</span> <i class="fas fa-arrow-right" style="color:#ccc;"></i> <strong>${newValue}</strong></span>`;
+                            }
+                            detailRows += `</div></td></tr>`;
+                        }
+
+                        tbody.innerHTML += `
+                            <tr onclick="toggleLogDetail('${detailId}')" style="cursor:pointer;">
+                                <td>${index + 1}</td>
+                                <td>${date}</td>
+                                <td>${vnt}</td>
+                                <td><span class="status-pill status-${statusClass}">${entry.oldStatus} <i class="fas fa-long-arrow-alt-right"></i> ${entry.newStatus}</span></td>
+                                <td>${data.module || '-'} (${data.deviceModule || '-'})</td>
+                                <td>${entry.user.split('@')[0]}</td>
+                                <td>${Object.keys(entry.changedFields || {}).length > 0 ? `<i id="icon-${detailId}" class="fas fa-chevron-down"></i>` : '-'}</td>
+                            </tr>
+                            ${detailRows}
+                        `;
+                    });
+                }
+                document.getElementById('historyLogDetail').style.display = 'block';
+
+            } catch (error) {
+                console.error("Error loading log:", error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Gagal memuat log: ${error.message}</td></tr>`;
+                document.getElementById('historyLogDetail').style.display = 'block';
+            }
+        };
+        
+        window.toggleLogDetail = (detailId) => {
+            const row = document.getElementById(detailId);
+            const icon = document.getElementById(`icon-${detailId}`);
+            if (row) {
+                const isVisible = row.style.display === 'table-row';
+                row.style.display = isVisible ? 'none' : 'table-row';
+                if (icon) icon.className = isVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+            }
+        };
         
         // ... (The rest of the JS code remains the same)
-
-        // === USER MANAGEMENT LOGIC ===
-        // ... (user management logic remains the same)
 
 
         // END SCRIPT
