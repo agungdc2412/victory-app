@@ -882,7 +882,11 @@
                     <h1>Referensi Asset (Module / Device)</h1>
                     <div class="inline">
                         <button class="btn btn-primary btn-sm" onclick="loadSampleRef()"><i class="fas fa-magic"></i> Inject Sample Asset</button>
+                        <button class="btn btn-outline btn-sm" onclick="downloadRefTemplate()"><i class="fas fa-file-download"></i> Template CSV</button> <!-- NEW -->
                         <button class="btn btn-outline btn-sm" onclick="openRefModal()"><i class="fas fa-plus"></i> Tambah Manual</button>
+                        <label class="btn btn-outline btn-sm" for="refCsvInput"><i class="fas fa-file-upload"></i> Import CSV</label> <!-- NEW -->
+                        <input type="file" id="refCsvInput" accept=".csv" style="display:none;"> <!-- NEW -->
+                        <span id="importStatusRef" style="font-size: 0.8rem; margin-left: 8px;"></span> <!-- NEW -->
                     </div>
                 </div>
                 <div class="card" style="margin-bottom: 10px;">
@@ -918,10 +922,11 @@
                                 <th>Type Object</th>
                                 <th>Manufacturer</th>
                                 <th>Product Type</th>
+                                <th>Aksi</th> <!-- NEW -->
                             </tr>
                         </thead>
                         <tbody id="refTableBody">
-                            <tr><td colspan="9" style="text-align:center;">Memuat data referensi...</td></tr>
+                            <tr><td colspan="10" style="text-align:center;">Memuat data referensi...</td></tr> <!-- UPDATE colspan -->
                         </tbody>
                     </table>
                     <div class="pagination">
@@ -944,6 +949,7 @@
                     <h1>Referensi Site (POP / Location)</h1>
                     <div class="inline">
                         <button class="btn btn-primary btn-sm" onclick="loadSampleSite()"><i class="fas fa-magic"></i> Inject Sample Site</button>
+                        <button class="btn btn-outline btn-sm" onclick="downloadSiteTemplate()"><i class="fas fa-file-download"></i> Template CSV</button> <!-- NEW -->
                         <button class="btn btn-outline btn-sm" onclick="openSiteModal()"><i class="fas fa-plus"></i> Tambah Manual</button>
                         <label class="btn btn-outline btn-sm" for="siteCsvInput"><i class="fas fa-file-upload"></i> Import CSV</label>
                         <input type="file" id="siteCsvInput" accept=".csv" style="display:none;">
@@ -1106,6 +1112,26 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT REF ASSET (NEW) -->
+    <div id="edit-ref-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditRefModal()">&times;</span>
+            <h3>Edit Referensi Modul (Asset)</h3>
+            <form id="editRefForm">
+                <input type="hidden" id="editRefId">
+                <div class="form-group"><label>Module *</label><input type="text" id="editRefModule" required></div>
+                <div class="form-group"><label>Device Module *</label><input type="text" id="editRefDevMod" required></div>
+                <div class="form-group"><label>Modul Type *</label><input type="text" id="editRefModType" required></div>
+                <div class="form-group"><label>Board Name</label><input type="text" id="editRefBoard"></div>
+                <div class="form-group"><label>Description Object</label><input type="text" id="editRefDesc"></div>
+                <div class="form-group"><label>Type Object (SAP)</label><input type="text" id="editRefTypeObj"></div>
+                <div class="form-group"><label>Manufacturer (SAP)</label><input type="text" id="editRefManuf"></div>
+                <div class="form-group"><label>Product Type (SAP)</label><input type="text" id="editRefProd"></div>
+                <button type="submit" class="btn btn-primary w-100">SIMPAN PERUBAHAN</button>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL ADD SITE (NEW) -->
     <div id="site-modal" class="modal">
         <div class="modal-content">
@@ -1123,15 +1149,35 @@
             </form>
         </div>
     </div>
+    
+    <!-- MODAL EDIT SITE (NEW) -->
+    <div id="edit-site-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditSiteModal()">&times;</span>
+            <h3>Edit Referensi Site</h3>
+            <form id="editSiteForm">
+                <input type="hidden" id="editSiteId">
+                <div class="form-group"><label>City Name *</label><input type="text" id="editSiteCityName" required></div>
+                <div class="form-group"><label>City Code *</label><input type="text" id="editSiteCityCode" required></div>
+                <div class="form-group"><label>Site Code *</label><input type="text" id="editSiteCode" required></div>
+                <div class="form-group"><label>Site Name *</label><input type="text" id="editSiteName" required></div>
+                <div class="form-group"><label>Site Code SAP</label><input type="text" id="editSiteCodeSap"></div>
+                <div class="form-group"><label>Alamat</label><input type="text" id="editSiteAddress"></div>
+                <div class="form-group"><label>Tag Location (Lat,Long)</label><input type="text" id="editSiteTagLoc"></div>
+                <button type="submit" class="btn btn-primary w-100">SIMPAN PERUBAHAN</button>
+            </form>
+        </div>
+    </div>
+
 
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-<!-- JAVASCRIPT -->
+    <!-- JAVASCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, collection, addDoc, getDocs, getDoc, setDoc, deleteDoc, writeBatch, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; 
+        import { getFirestore, doc, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; 
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
         // === CONFIG ===
@@ -1404,8 +1450,7 @@
         };
 
         // === REPORT & DASHBOARD LOGIC (REALTIME) ===
-        // reportData kini diakses global untuk dashboard
-
+        // reportData kini diakses global untuk hitungan dashboard
         function loadReportData() {
             const q = query(collection(db, "visit_data"));
             onSnapshot(q, (snap) => {
@@ -1486,7 +1531,7 @@
         };
 
 
-        // === REFERENCE ASSET LOGIC ===
+        // === REFERENCE ASSET LOGIC (UPDATE: CRUD & IMPORT/EXPORT) ===
         async function loadReferences() {
             try {
                 const q = query(collection(db, 'references'));
@@ -1551,11 +1596,15 @@
                     <td>${d.typeObject||'-'}</td>
                     <td>${d.manufacturer||'-'}</td>
                     <td>${d.productType||'-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="openEditRefModal('${d.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRef('${d.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
                 </tr>`;
             });
 
             if (!filtered.length) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Tidak ada data referensi.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">Tidak ada data referensi.</td></tr>`;
             }
 
             const totalPages = Math.ceil(filtered.length / refRowsPerPage);
@@ -1599,7 +1648,7 @@
             uniqueModules.forEach(m => moduleSelect.innerHTML += `<option value="${m}">${m}</option>`);
         }
 
-        // ADD REF
+        // ADD REF (CREATE)
         window.openRefModal = () => document.getElementById("ref-modal").style.display = "flex";
         window.closeRefModal = () => document.getElementById("ref-modal").style.display = "none";
         
@@ -1615,12 +1664,185 @@
                 manufacturer: document.getElementById("refManuf").value,
                 productType: document.getElementById("refProd").value
             };
-            await addDoc(collection(db, 'references'), payload);
+            try {
+                await addDoc(collection(db, 'references'), payload);
+                showToast("Referensi Asset berhasil ditambahkan.", "success");
+            } catch(e) {
+                showToast("Gagal menambahkan referensi: " + e.message, "error");
+            }
             closeRefModal(); loadReferences();
             e.target.reset();
         });
 
-        // === SITE REFERENCE ===
+        // EDIT REF (UPDATE)
+        window.openEditRefModal = (id) => {
+            const data = allRefData.find(r => r.id === id);
+            if (!data) return;
+            document.getElementById("editRefId").value = id;
+            document.getElementById("editRefModule").value = data.module || "";
+            document.getElementById("editRefDevMod").value = data.deviceModule || "";
+            document.getElementById("editRefModType").value = data.modulType || "";
+            document.getElementById("editRefBoard").value = data.boardName || "";
+            document.getElementById("editRefDesc").value = data.description || "";
+            document.getElementById("editRefTypeObj").value = data.typeObject || "";
+            document.getElementById("editRefManuf").value = data.manufacturer || "";
+            document.getElementById("editRefProd").value = data.productType || "";
+            document.getElementById("edit-ref-modal").style.display = "flex";
+        };
+        window.closeEditRefModal = () => document.getElementById("edit-ref-modal").style.display = "none";
+
+        document.getElementById("editRefForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("editRefId").value;
+            const payload = {
+                module: document.getElementById("editRefModule").value,
+                deviceModule: document.getElementById("editRefDevMod").value,
+                modulType: document.getElementById("editRefModType").value,
+                boardName: document.getElementById("editRefBoard").value,
+                description: document.getElementById("editRefDesc").value,
+                typeObject: document.getElementById("editRefTypeObj").value,
+                manufacturer: document.getElementById("editRefManuf").value,
+                productType: document.getElementById("editRefProd").value
+            };
+            try {
+                await setDoc(doc(db, 'references', id), payload, { merge: true });
+                showToast("Referensi Asset berhasil diubah.", "success");
+            } catch (e) {
+                showToast("Gagal mengubah referensi: " + e.message, "error");
+            }
+            closeEditRefModal(); loadReferences();
+        });
+
+        // DELETE REF (DELETE)
+        window.deleteRef = async (id) => { 
+            if(confirm("Hapus referensi asset ini? Tindakan ini tidak dapat dibatalkan.")) { 
+                try {
+                    await deleteDoc(doc(db, 'references', id)); 
+                    showToast("Referensi Asset berhasil dihapus.", "success");
+                } catch (e) {
+                    showToast("Gagal menghapus referensi: " + e.message, "error");
+                }
+                loadReferences(); 
+            } 
+        };
+
+        // DOWNLOAD REF TEMPLATE CSV
+        window.downloadRefTemplate = () => {
+            const headers = [
+                "module", "deviceModule", "modulType", "boardName", "description", 
+                "typeObject", "manufacturer", "productType"
+            ];
+            const sample = [
+                "GPON", "OLT ZTE C320", "Service Board", "SCXN", "OLT GPON 16 Port", 
+                "Board", "ZTE", "Optical Line Terminal"
+            ];
+            const csvContent = headers.join(",") + "\n" + sample.join(",");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "template_ref_asset.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            showToast("Template CSV Ref. Asset berhasil didownload.", "info");
+        };
+
+        // IMPORT REF CSV
+        document.getElementById("refCsvInput").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            const statusEl = document.getElementById("importStatusRef");
+            statusEl.textContent = "Membaca file...";
+            statusEl.style.color = "black";
+
+            reader.onload = async (ev) => {
+                try {
+                    let text = ev.target.result;
+                    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+                    const lines = text.split('\n').filter(l => l.trim());
+                    if (lines.length < 2) throw new Error("File CSV tampak kosong atau tidak valid.");
+
+                    const headerLine = lines[0];
+                    const delimiter = headerLine.includes(';') ? ';' : ',';
+                    
+                    const expectedHeaders = ["module", "deviceModule", "modulType", "boardName", "description", "typeObject", "manufacturer", "productType"];
+                    
+                    const rows = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        let line = lines[i];
+                        if (!line.trim()) continue;
+
+                        const cells = line.split(delimiter).map(c => c.replace(/^"|"$/g, '').trim());
+
+                        if (cells.length !== expectedHeaders.length) continue; 
+                        
+                        const row = {};
+                        expectedHeaders.forEach((header, index) => {
+                            row[header] = cells[index];
+                        });
+                        rows.push(row);
+                    }
+
+                    if (!rows.length) throw new Error("Tidak ada data row yang valid ditemukan.");
+
+                    statusEl.textContent = `Memproses ${rows.length} baris...`;
+
+                    let batch = writeBatch(db);
+                    let batchCount = 0;
+                    let successCount = 0;
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        try {
+                            const ref = doc(collection(db, "references"));
+                            batch.set(ref, row);
+                            batchCount++;
+                            successCount++;
+
+                            if (batchCount >= 400) {
+                                await batch.commit();
+                                batch = writeBatch(db);
+                                batchCount = 0;
+                            }
+                        } catch (err) {
+                            console.error(`Error saat memproses baris ${i + 2}:`, err);
+                            // Lanjutkan ke baris berikutnya
+                        }
+                    }
+
+                    if(batchCount > 0) await batch.commit();
+
+                    if (successCount > 0) {
+                        statusEl.textContent = `Sukses: ${successCount} data di-import.`;
+                        statusEl.style.color = "green";
+                        showToast(`Sukses meng-import ${successCount} data Asset.`, "success");
+                        loadReferences();
+                    } else {
+                        statusEl.textContent = "Gagal. Tidak ada data yang valid ter-import.";
+                        statusEl.style.color = "red";
+                        showToast("Import gagal. Cek format file.", "error");
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    showToast("Error System Import: " + err.message, "error"); 
+                    statusEl.textContent = "Error.";
+                    statusEl.style.color = "red";
+                } finally {
+                    e.target.value = ""; 
+                }
+            };
+            reader.readAsText(file);
+        });
+
+
+        // === SITE REFERENCE LOGIC (UPDATE: CRUD & EXPORT) ===
         async function loadSites() {
             try {
                 const q = query(collection(db, 'reference_sites'));
@@ -1679,7 +1901,10 @@
                     <td>${d.siteCodeSap||'-'}</td>
                     <td><div style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.address||''}">${d.address||'-'}</div></td>
                     <td>${d.tagLocation||'-'}</td>
-                    <td><button style="color:red;border:none;background:none;cursor:pointer;" onclick="deleteSite('${d.id}')"><i class="fas fa-trash"></i></button></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" style="margin-right:4px;" onclick="openEditSiteModal('${d.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSite('${d.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
                 </tr>`;
             });
             if (allSiteData.length === 0) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Data Site Kosong</td></tr>`;
@@ -1708,12 +1933,13 @@
             siteRowsPerPage = parseInt(e.target.value); currentSitePage = 1; renderSiteTable();
         });
 
+        // ADD SITE (CREATE)
         window.openSiteModal = () => document.getElementById("site-modal").style.display = "flex";
         window.closeSiteModal = () => document.getElementById("site-modal").style.display = "none";
         
         document.getElementById("siteForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, 'reference_sites'), {
+            const payload = {
                 cityName: document.getElementById("siteCityName").value,
                 cityCode: document.getElementById("siteCityCode").value,
                 siteCode: document.getElementById("siteCode").value,
@@ -1721,12 +1947,93 @@
                 siteCodeSap: document.getElementById("siteCodeSap").value,
                 address: document.getElementById("siteAddress").value,
                 tagLocation: document.getElementById("siteTagLoc").value
-            });
+            };
+            try {
+                await addDoc(collection(db, 'reference_sites'), payload);
+                showToast("Referensi Site berhasil ditambahkan.", "success");
+            } catch (e) {
+                 showToast("Gagal menambahkan referensi Site: " + e.message, "error");
+            }
             closeSiteModal(); loadSites();
             e.target.reset();
         });
+        
+        // EDIT SITE (UPDATE)
+        window.openEditSiteModal = (id) => {
+            const data = allSiteData.find(r => r.id === id);
+            if (!data) return;
+            document.getElementById("editSiteId").value = id;
+            document.getElementById("editSiteCityName").value = data.cityName || "";
+            document.getElementById("editSiteCityCode").value = data.cityCode || "";
+            document.getElementById("editSiteCode").value = data.siteCode || "";
+            document.getElementById("editSiteName").value = data.siteName || "";
+            document.getElementById("editSiteCodeSap").value = data.siteCodeSap || "";
+            document.getElementById("editSiteAddress").value = data.address || "";
+            document.getElementById("editSiteTagLoc").value = data.tagLocation || "";
+            document.getElementById("edit-site-modal").style.display = "flex";
+        };
+        window.closeEditSiteModal = () => document.getElementById("edit-site-modal").style.display = "none";
 
-        window.deleteSite = async (id) => { if(confirm("Hapus site ini?")) { await deleteDoc(doc(db, 'reference_sites', id)); loadSites(); } };
+        document.getElementById("editSiteForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("editSiteId").value;
+            const payload = {
+                cityName: document.getElementById("editSiteCityName").value,
+                cityCode: document.getElementById("editSiteCityCode").value,
+                siteCode: document.getElementById("editSiteCode").value,
+                siteName: document.getElementById("editSiteName").value,
+                siteCodeSap: document.getElementById("editSiteCodeSap").value,
+                address: document.getElementById("editSiteAddress").value,
+                tagLocation: document.getElementById("editSiteTagLoc").value
+            };
+             try {
+                await setDoc(doc(db, 'reference_sites', id), payload, { merge: true });
+                showToast("Referensi Site berhasil diubah.", "success");
+            } catch (e) {
+                showToast("Gagal mengubah referensi Site: " + e.message, "error");
+            }
+            closeEditSiteModal(); loadSites();
+        });
+
+
+        // DELETE SITE (DELETE)
+        window.deleteSite = async (id) => { 
+            if(confirm("Hapus site ini? Tindakan ini tidak dapat dibatalkan.")) { 
+                 try {
+                    await deleteDoc(doc(db, 'reference_sites', id)); 
+                    showToast("Referensi Site berhasil dihapus.", "success");
+                } catch (e) {
+                    showToast("Gagal menghapus referensi Site: " + e.message, "error");
+                }
+                loadSites(); 
+            } 
+        };
+
+        // DOWNLOAD SITE TEMPLATE CSV (NEW)
+        window.downloadSiteTemplate = () => {
+            const headers = [
+                "cityName", "cityCode", "siteCode", "siteName", "siteCodeSap", 
+                "address", "tagLocation"
+            ];
+            const sample = [
+                "Bandung", "BDG", "BDG-POP-02", "POP Bandung 2", "30004", 
+                "Jl. Asia Afrika No. 100", "-6.917,107.619"
+            ];
+            const csvContent = headers.join(",") + "\n" + sample.join(",");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "template_ref_site.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            showToast("Template CSV Ref. Site berhasil didownload.", "info");
+        };
+
 
         // CSV Import Site (ROBUST v5.6 - Better Quote Handling)
         document.getElementById("siteCsvInput").addEventListener("change", (e) => {
@@ -1735,6 +2042,7 @@
             const reader = new FileReader();
             const statusEl = document.getElementById("importStatusSite");
             statusEl.textContent = "Membaca file...";
+            statusEl.style.color = "black"; // Reset color
 
             reader.onload = async (ev) => {
                 try {
@@ -1750,21 +2058,27 @@
                     const headerLine = lines[0];
                     const delimiter = headerLine.includes(';') ? ';' : ',';
 
-                    // Parsing CSV manual, HANYA 8 kolom:
-                    // City Name;City Code;Site Code;Site Name;Site Code SAP;Address;Tag Location;Extra(ignore)
+                    // Parsing CSV manual, HANYA 7 kolom:
+                    const expectedHeaders = [
+                        "cityName", "cityCode", "siteCode", "siteName", "siteCodeSap", 
+                        "address", "tagLocation"
+                    ];
+                    
                     const rows = [];
                     for (let i = 1; i < lines.length; i++) {
                         let line = lines[i];
                         if (!line.trim()) continue;
 
-                        const cells = line.split(delimiter);
+                        const cells = line.split(delimiter).map(c => c.replace(/^"|"$/g, '').trim());
 
-                        // Pastikan minimal punya 7 kolom (kolom ke-8 boleh diabaikan)
-                        if (cells.length < 7) continue;
+                        // Pastikan jumlah kolom sesuai
+                        if (cells.length < expectedHeaders.length) continue; 
 
-                        const [cityName, cityCode, siteCode, siteName, siteCodeSap, address, tagLocation] = cells.map(c => c.replace(/^"|"$/g, '').trim());
-
-                        rows.push({ cityName, cityCode, siteCode, siteName, siteCodeSap, address, tagLocation });
+                        const row = {};
+                        expectedHeaders.forEach((header, index) => {
+                            row[header] = cells[index];
+                        });
+                        rows.push(row);
                     }
 
                     if (!rows.length) throw new Error("Tidak ada data row yang valid ditemukan.");
@@ -1775,8 +2089,7 @@
                     let batch = writeBatch(db);
                     let batchCount = 0;
                     let successCount = 0;
-                    let errorLog = "";
-
+                    
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
                         try {
@@ -1792,26 +2105,27 @@
                             }
                         } catch (err) {
                             console.error(err);
-                            errorLog += `Baris ${i + 2}: ${err.message}\n`;
+                            // Log error tapi lanjut
                         }
                     }
 
                     if(batchCount > 0) await batch.commit();
 
                     if (successCount === 0) {
-                        showToast("Gagal Import Total. Cek konsol untuk detail.", "error"); // Ganti alert()
+                        showToast("Gagal Import Total. Cek konsol untuk detail.", "error"); 
                         statusEl.textContent = "Gagal.";
                         statusEl.style.color = "red";
                     } else {
                         statusEl.textContent = `Sukses: ${successCount} data.`;
                         statusEl.style.color = "green";
-                        if(errorLog) showToast("Import sebagian sukses, namun ada error. Cek konsol.", "error"); // Ganti alert()
+                        if(rows.length !== successCount) showToast("Import sebagian sukses, namun ada error. Cek konsol.", "error"); 
+                        else showToast("Import data Site sukses!", "success");
                         loadSites();
                     }
 
                 } catch (err) {
                     console.error(err);
-                    showToast("Error System: " + err.message, "error"); // Ganti alert()
+                    showToast("Error System: " + err.message, "error"); 
                     statusEl.textContent = "Error.";
                     statusEl.style.color = "red";
                 } finally {
@@ -1820,7 +2134,7 @@
             };
             reader.readAsText(file);
         });
-
+        
         // =======================================================================
         // TAMBAH: Auto-fill Site Name berdasarkan Site Code dari Reference Site
         // =======================================================================
@@ -1830,6 +2144,7 @@
             
             if (!siteCode) {
                 siteNameInput.value = "";
+                siteNameInput.readOnly = false;
                 return;
             }
 
@@ -2007,7 +2322,7 @@
                 ]);
 
                 // 3. Update dokumen dengan URL foto
-                await setDoc(docRef, {
+                await setDoc(doc(db, "visit_data", docRef.id), {
                     date, siteCode, siteName, picName: pic, rackNo: rack, floor,
                     module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
                     status: statusDev, serialNumber: sn, partNumber: pn,
@@ -2023,8 +2338,9 @@
                 statusSpan.style.color = "green";
                 showToast("Data Visit berhasil disimpan!", "success");
 
-                // === PERBAIKAN RESET FORM ===
-                // Pertahankan informasi Site (1-6) tetapi reset Device, SN/PN, dan Photo
+                // === PERBAIKAN RESET FORM: Pertahankan Site Info, reset Device/SN/Photo ===
+                
+                // Reset Device Info
                 document.getElementById("inpModule").value = "";
                 document.getElementById("inpDeviceModule").value = "";
                 document.getElementById("inpModulType").value = "";
@@ -2034,6 +2350,8 @@
                 document.getElementById("autoTypeObj").value = "";
                 document.getElementById("autoManuf").value = "";
                 document.getElementById("autoProdType").value = "";
+                
+                // Reset SN/PN/Photo
                 document.getElementById("valPN").value = "";
                 document.getElementById("manualSN").value = "";
                 document.getElementById("photoLabel").value = "";
@@ -2051,11 +2369,7 @@
         });
 
         // === QR / BARCODE SCANNER (SN) ===
-        // Kode ini menggunakan Quagga dan Html5Qrcode. Karena Anda sudah mengimplementasikan
-        // openCamera() dengan Html5Qrcode, bagian Quagga ini bisa dihapus atau diabaikan
-        // jika Anda hanya ingin menggunakan openCamera. Saya biarkan untuk kompatibilitas,
-        // tetapi perlu dicatat bahwa Quagga hanya untuk barcode, sementara Html5Qrcode
-        // untuk QR dan bisa melakukan file scan/camera scan.
+        // Kode Quagga dihapus karena sudah diganti Html5Qrcode di openCamera/triggerFileScan
 
         // === REPORT VISIT TABLE RENDER & PAGINATION ===
         async function loadReportVisit() {
@@ -2384,10 +2698,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
