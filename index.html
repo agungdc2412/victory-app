@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.C.T.O.R.Y - Asset Management v8.0 (Dupe Check & Audit Log)</title> 
+    <title>V.I.C.T.O.R.Y - Asset Management v8.1 (Fix Load Data & Status Mapping)</title> 
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -673,7 +673,7 @@
         <div class="login-box">
             <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo" class="fs-logo-login">
             <h1 class="login-title">V.I.C.T.O.R.Y</h1>
-            <p class="login-subtitle">Asset Management System v8.0</p>
+            <p class="login-subtitle">Asset Management System v8.1</p>
             <button id="google-login-btn" class="btn btn-google"><i class="fab fa-google"></i> Masuk dengan Google</button>
             <div style="margin: 15px 0; color: #aaa; font-size: 0.8rem;">atau login manual</div>
             <form id="login-form">
@@ -1911,14 +1911,14 @@
         // --- END GEOLOCATION CAPTURE ---
 
 
-        // === DASHBOARD & REPORTING LOGIC ===
-        // ... (loadReportData, updateDashboardStats, updateCharts remain the same)
+        // === DASHBOARD & REPORTING LOGIC (FIXED) ===
         function loadReportData() {
             const q = query(collection(db, "visit_data"));
             onSnapshot(q, (snap) => {
                 reportData = []; 
                 let totalDevices = 0;
                 let deviceTypeCounts = {};
+                // Inisialisasi statusCounts dengan 7 status yang relevan:
                 let statusCounts = { Draft: 0, Submitted: 0, Approved: 0, Rejected: 0, Active: 0, Damage: 0, Spare: 0 }; 
                 let visitedSiteCodes = new Set();
 
@@ -1930,10 +1930,35 @@
                     totalDevices++;
                     if (d.siteCode) visitedSiteCodes.add(d.siteCode.trim().toUpperCase());
 
-                    if (statusCounts[d.status] !== undefined) statusCounts[d.status]++;
-                    else if (d.status === 'Not Active') statusCounts['Damage']++;
-                    else if (d.status === 'Dismantle') statusCounts['Spare']++;
-                    else statusCounts['Draft']++; 
+                    // --- Status Mapping and Counting Logic (FIXED) ---
+                    let currentWorkflowStatus = d.status;
+                    let finalOperationalStatus = d.deviceStatusFinal;
+
+                    // 1. Default Fallback and Legacy Status Mapping
+                    if (!currentWorkflowStatus) {
+                        currentWorkflowStatus = 'Draft';
+                    } else if (currentWorkflowStatus === 'Not Active') {
+                        currentWorkflowStatus = 'Damage'; // Map legacy to Damage
+                    } else if (currentWorkflowStatus === 'Dismantle') {
+                        currentWorkflowStatus = 'Spare'; // Map legacy to Spare
+                    }
+
+                    let statusToCount = currentWorkflowStatus;
+
+                    // 2. If the data is Approved, use the Operational Status for the final count
+                    if (currentWorkflowStatus === 'Approved') {
+                        // Fallback to Active if final status is missing (old Approved data or data migration needed)
+                        statusToCount = finalOperationalStatus || 'Active'; 
+                    }
+
+                    // 3. Increment the counter
+                    if (statusCounts[statusToCount] !== undefined) {
+                        statusCounts[statusToCount]++;
+                    } else {
+                        // Catch unexpected status values and map them to Draft
+                        statusCounts['Draft']++;
+                    }
+                    // --- End Status Mapping and Counting Logic ---
 
                     const mod = d.module || "Lainnya";
                     deviceTypeCounts[mod] = (deviceTypeCounts[mod] || 0) + 1;
@@ -1982,7 +2007,8 @@
             if(chartInstances.d) chartInstances.d.destroy();
             
             const statusColors = {
-                'Draft': '#006064', 'Submitted': '#f57f17', 'Approved': '#28a745', 'Rejected': '#dc3545',
+                'Draft': '#006064', 'Submitted': '#f57f17', 'Rejected': '#dc3545',
+                'Approved': '#e6ffed', // Approved status will rarely show, as it maps to final status
                 'Active': '#0f7a2a', 'Damage': '#721c24', 'Spare': '#856404', 
                 'Not Active': '#856404', 'Dismantle': '#721c24' 
             };
@@ -2464,9 +2490,18 @@
             }
         };
         
-        // ... (The rest of the JS code remains the same)
+        // --- Remaining Firebase/Utility functions (omitted for brevity) ---
+        // Placeholder for functions that were not changed or checked in detail for the fix
+        
+        // --- REFERENCE ASSET LOGIC Placeholder ---
+        // (Existing functions like loadReferences, populateModuleFilter, handleModuleChange, etc., remain unchanged)
+        
+        // --- SITE REFERENCE LOGIC Placeholder ---
+        // (Existing functions like loadSites, renderSiteTable, handleSitePagination, etc., remain unchanged)
 
-
+        // --- USER MANAGEMENT LOGIC Placeholder ---
+        // (Existing functions like loadUsers, renderUserTable, openUserModal, etc., remain unchanged)
+        
         // END SCRIPT
     </script>
 </body>
