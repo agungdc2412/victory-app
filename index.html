@@ -2190,8 +2190,8 @@
         // --- ASSET REFERENCE LOGIC (UPDATED COLLECTION NAME) ---
 
         window.loadReferences = () => {
-            // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
-            const q = query(collection(db, "asset_references")); 
+            // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "references"
+            const q = query(collection(db, "references")); 
             onSnapshot(q, (snap) => {
                 allRefData = [];
                 const modules = new Set();
@@ -2334,8 +2334,8 @@
             try {
                 const batch = writeBatch(db);
                 sampleData.forEach(d => {
-                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
-                    const ref = doc(collection(db, "asset_references")); 
+                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "references"
+                    const ref = doc(collection(db, "references")); 
                     batch.set(ref, d);
                 });
                 await batch.commit();
@@ -2364,8 +2364,8 @@
                 productType: document.getElementById("refProd").value
             };
             try {
-                // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
-                await addDoc(collection(db, 'asset_references'), payload);
+                // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "references"
+                await addDoc(collection(db, 'references'), payload);
                 showToast("Referensi Asset berhasil ditambahkan!", "success");
                 closeRefModal(); 
             } catch (err) {
@@ -2403,7 +2403,7 @@
                 productType: document.getElementById("editRefProd").value
             };
             try {
-                await updateDoc(doc(db, 'asset_references', id), payload);
+                await updateDoc(doc(db, 'references', id), payload);
                 showToast("Referensi Asset berhasil diubah!", "success");
                 closeEditRefModal();
             } catch (err) {
@@ -2414,8 +2414,8 @@
         window.deleteReference = async (id) => { 
             if (confirm("Yakin ingin menghapus referensi ini?")) {
                 try {
-                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
-                    await deleteDoc(doc(db, "asset_references", id));
+                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "references"
+                    await deleteDoc(doc(db, "references", id));
                     showToast("Referensi berhasil dihapus.", "success");
                 } catch (err) {
                     showToast("Gagal menghapus referensi: " + err.message, "error");
@@ -2427,7 +2427,7 @@
         // --- SITE REFERENCE LOGIC (UPDATED PAGINATION LOGIC) ---
 
         window.loadSites = () => {
-            const q = query(collection(db, "site_references"));
+            const q = query(collection(db, "reference_site"));
             onSnapshot(q, (snap) => {
                 allSiteData = [];
                 const cities = new Set();
@@ -2551,7 +2551,7 @@
             try {
                 const batch = writeBatch(db);
                 sampleData.forEach(d => {
-                    const ref = doc(collection(db, "site_references")); 
+                    const ref = doc(collection(db, "reference_site")); 
                     batch.set(ref, d);
                 });
                 await batch.commit();
@@ -2579,7 +2579,7 @@
                 tagLocation: document.getElementById("siteTagLoc").value
             };
             try {
-                await addDoc(collection(db, 'site_references'), payload);
+                await addDoc(collection(db, 'reference_site'), payload);
                 showToast("Referensi Site berhasil ditambahkan!", "success");
                 closeSiteModal(); 
             } catch (err) {
@@ -2615,7 +2615,7 @@
                 tagLocation: document.getElementById("editSiteTagLoc").value
             };
             try {
-                await updateDoc(doc(db, 'site_references', id), payload);
+                await updateDoc(doc(db, 'reference_site', id), payload);
                 showToast("Referensi Site berhasil diubah!", "success");
                 closeEditSiteModal();
             } catch (err) {
@@ -2627,7 +2627,7 @@
         window.deleteSite = async (id) => { 
             if (confirm("Yakin ingin menghapus referensi site ini?")) {
                 try {
-                    await deleteDoc(doc(db, "site_references", id));
+                    await deleteDoc(doc(db, "reference_site", id));
                     showToast("Referensi site berhasil dihapus.", "success");
                 } catch (err) {
                     showToast("Gagal menghapus referensi site: " + err.message, "error");
@@ -3320,3 +3320,4 @@
     </script>
 </body>
 </html>
+
