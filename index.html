@@ -2427,7 +2427,7 @@
         // --- SITE REFERENCE LOGIC (UPDATED PAGINATION LOGIC) ---
 
         window.loadSites = () => {
-            const q = query(collection(db, "reference_site"));
+            const q = query(collection(db, "reference_sites"));
             onSnapshot(q, (snap) => {
                 allSiteData = [];
                 const cities = new Set();
@@ -2551,7 +2551,7 @@
             try {
                 const batch = writeBatch(db);
                 sampleData.forEach(d => {
-                    const ref = doc(collection(db, "reference_site")); 
+                    const ref = doc(collection(db, "reference_sites")); 
                     batch.set(ref, d);
                 });
                 await batch.commit();
@@ -2579,7 +2579,7 @@
                 tagLocation: document.getElementById("siteTagLoc").value
             };
             try {
-                await addDoc(collection(db, 'reference_site'), payload);
+                await addDoc(collection(db, 'reference_sites'), payload);
                 showToast("Referensi Site berhasil ditambahkan!", "success");
                 closeSiteModal(); 
             } catch (err) {
@@ -2615,7 +2615,7 @@
                 tagLocation: document.getElementById("editSiteTagLoc").value
             };
             try {
-                await updateDoc(doc(db, 'reference_site', id), payload);
+                await updateDoc(doc(db, 'reference_sites', id), payload);
                 showToast("Referensi Site berhasil diubah!", "success");
                 closeEditSiteModal();
             } catch (err) {
@@ -2627,7 +2627,7 @@
         window.deleteSite = async (id) => { 
             if (confirm("Yakin ingin menghapus referensi site ini?")) {
                 try {
-                    await deleteDoc(doc(db, "reference_site", id));
+                    await deleteDoc(doc(db, "reference_sites", id));
                     showToast("Referensi site berhasil dihapus.", "success");
                 } catch (err) {
                     showToast("Gagal menghapus referensi site: " + err.message, "error");
@@ -3320,4 +3320,5 @@
     </script>
 </body>
 </html>
+
 
