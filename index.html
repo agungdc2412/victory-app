@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.I.C.T.O.R.Y - Asset Management v8.2 (Restore Full Dependencies)</title> 
+    <title>V.I.C.T.O.R.Y - Asset Management v8.3 (Fix Ref Table & Pagination)</title> 
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -673,7 +673,7 @@
         <div class="login-box">
             <img src="https://uwp.ac.id/file_gambar/partner/Fiberstar.png" alt="FiberStar Logo" class="fs-logo-login">
             <h1 class="login-title">V.I.C.T.O.R.Y</h1>
-            <p class="login-subtitle">Asset Management System v8.2</p>
+            <p class="login-subtitle">Asset Management System v8.3</p>
             <button id="google-login-btn" class="btn btn-google"><i class="fab fa-google"></i> Masuk dengan Google</button>
             <div style="margin: 15px 0; color: #aaa; font-size: 0.8rem;">atau login manual</div>
             <form id="login-form">
@@ -2187,10 +2187,11 @@
             updateVisitStatus(id, 'Approved', finalStatus);
         };
         
-        // --- ASSET REFERENCE LOGIC (RESTORED) ---
+        // --- ASSET REFERENCE LOGIC (UPDATED COLLECTION NAME) ---
 
         window.loadReferences = () => {
-            const q = query(collection(db, "asset_references"));
+            // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
+            const q = query(collection(db, "asset_references")); 
             onSnapshot(q, (snap) => {
                 allRefData = [];
                 const modules = new Set();
@@ -2198,10 +2199,16 @@
                     const data = docSnap.data();
                     data.id = docSnap.id;
                     allRefData.push(data);
+                    // Menyimpan data ke referenceData untuk Form Input
+                    referenceData.push(data); 
                     if (data.module) modules.add(data.module);
                 });
                 populateModuleFilter(modules);
+                populateModuleSelect(); // PERBAIKAN: Memastikan select di form input terisi
                 renderRefTable();
+            }, (error) => {
+                console.error("Error loading asset references:", error);
+                showToast("Gagal memuat data Ref. Asset.", "error");
             });
         };
 
@@ -2209,9 +2216,20 @@
             const filter = document.getElementById("refFilterModule");
             filter.innerHTML = '<option value="">Semua Module</option>';
             modules.forEach(m => filter.innerHTML += `<option value="${m}">${m}</option>`);
+            // Hapus listener lama jika ada, lalu tambahkan yang baru.
+            filter.removeEventListener("change", handleModuleChange);
             filter.addEventListener("change", handleModuleChange);
             handleModuleChange();
         }
+        
+        // PERBAIKAN: Fungsi untuk mengisi select Module di Form Input
+        function populateModuleSelect() {
+            const moduleSelect = document.getElementById("inpModule");
+            moduleSelect.innerHTML = '<option value="">-- Pilih Module --</option>';
+            const uniqueModules = [...new Set(referenceData.map(r => r.module).filter(x => x))].sort();
+            uniqueModules.forEach(m => moduleSelect.innerHTML += `<option value="${m}">${m}</option>`);
+        }
+
 
         function handleModuleChange() {
             const moduleFilter = document.getElementById("refFilterModule").value;
@@ -2283,6 +2301,9 @@
                 `;
                 tbody.appendChild(row);
             });
+            // Update button disabled state based on filtered data
+            document.getElementById("refPrevPage").disabled = currentRefPage === 1;
+            document.getElementById("refNextPage").disabled = currentRefPage >= totalPages;
         };
 
         window.handleRefPagination = (direction) => {
@@ -2301,19 +2322,109 @@
         document.getElementById("refPrevPage").addEventListener("click", () => handleRefPagination('prev'));
         document.getElementById("refNextPage").addEventListener("click", () => handleRefPagination('next'));
 
-        window.loadSampleRef = async () => { /* ... implementation for loading sample data ... */ showToast("Injecting sample asset data...", "info"); };
-        window.downloadRefTemplate = () => { /* ... implementation for downloading template ... */ };
-        window.openRefModal = () => { document.getElementById("ref-modal").style.display = "flex"; };
-        window.closeRefModal = () => { document.getElementById("refForm").reset(); document.getElementById("ref-modal").style.display = "none"; };
-        window.deleteReference = async (id) => { 
-            if (confirm("Yakin ingin menghapus referensi ini?")) {
-                await deleteDoc(doc(db, "asset_references", id));
-                showToast("Referensi berhasil dihapus.", "success");
+        window.loadSampleRef = async () => { 
+            if(!confirm("Yakin ingin meng-inject data sampel Asset? Data yang sudah ada tidak akan dihapus, namun mungkin terjadi duplikasi.")) return;
+            showToast("Meng-inject data sampel Asset...", "info"); 
+            const sampleData = [
+                {module:"GPON", deviceModule:"OLT ZTE C320", modulType:"Service Board", boardName:"SCXN", description:"OLT GPON 16 Port", typeObject:"Board", manufacturer:"ZTE", productType:"Optical Line Terminal"},
+                {module:"METRO", deviceModule:"HUAWEI ATN 910B", modulType:"Main Control", boardName:"SRU", description:"Metro Ethernet", typeObject:"Module", manufacturer:"Huawei", productType:"Router"},
+                {module:"DWDM", deviceModule:"HUAWEI OSN 1800", modulType:"MUX/DEMUX", boardName:"L4GX", description:"DWDM Transmission", typeObject:"Card", manufacturer:"Huawei", productType:"Transmission"}
+            ];
+            
+            try {
+                const batch = writeBatch(db);
+                sampleData.forEach(d => {
+                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
+                    const ref = doc(collection(db, "asset_references")); 
+                    batch.set(ref, d);
+                });
+                await batch.commit();
+                showToast("Sukses! Data contoh Asset telah dimasukkan.", "success");
+            } catch(e) { 
+                console.error("Error injecting sample data:", e);
+                showToast("Gagal inject data: " + e.message, "error"); 
             }
         };
-        // Add submit listeners and functions for refForm and editRefForm (omitted for brevity but required for full app)
+
+        window.downloadRefTemplate = () => { /* ... implementation for downloading template ... */ };
+        window.openRefModal = () => { document.getElementById("refForm").reset(); document.getElementById("ref-modal").style.display = "flex"; };
+        window.closeRefModal = () => { document.getElementById("ref-modal").style.display = "none"; };
         
-        // --- SITE REFERENCE LOGIC (RESTORED) ---
+        // Submit Ref Asset
+        document.getElementById("refForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                module: document.getElementById("refModule").value,
+                deviceModule: document.getElementById("refDevMod").value,
+                modulType: document.getElementById("refModType").value,
+                boardName: document.getElementById("refBoard").value,
+                description: document.getElementById("refDesc").value,
+                typeObject: document.getElementById("refTypeObj").value,
+                manufacturer: document.getElementById("refManuf").value,
+                productType: document.getElementById("refProd").value
+            };
+            try {
+                // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
+                await addDoc(collection(db, 'asset_references'), payload);
+                showToast("Referensi Asset berhasil ditambahkan!", "success");
+                closeRefModal(); 
+            } catch (err) {
+                 showToast("Gagal menambahkan referensi: " + err.message, "error");
+            }
+        });
+
+        window.openEditRefModal = (id) => {
+            const data = allRefData.find(d => d.id === id);
+            if (!data) return;
+            document.getElementById("editRefId").value = id;
+            document.getElementById("editRefModule").value = data.module || '';
+            document.getElementById("editRefDevMod").value = data.deviceModule || '';
+            document.getElementById("editRefModType").value = data.modulType || '';
+            document.getElementById("editRefBoard").value = data.boardName || '';
+            document.getElementById("editRefDesc").value = data.description || '';
+            document.getElementById("editRefTypeObj").value = data.typeObject || '';
+            document.getElementById("editRefManuf").value = data.manufacturer || '';
+            document.getElementById("editRefProd").value = data.productType || '';
+            document.getElementById("edit-ref-modal").style.display = "flex";
+        };
+        window.closeEditRefModal = () => { document.getElementById("edit-ref-modal").style.display = "none"; };
+
+        document.getElementById("editRefForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("editRefId").value;
+            const payload = {
+                module: document.getElementById("editRefModule").value,
+                deviceModule: document.getElementById("editRefDevMod").value,
+                modulType: document.getElementById("editRefModType").value,
+                boardName: document.getElementById("editRefBoard").value,
+                description: document.getElementById("editRefDesc").value,
+                typeObject: document.getElementById("editRefTypeObj").value,
+                manufacturer: document.getElementById("editRefManuf").value,
+                productType: document.getElementById("editRefProd").value
+            };
+            try {
+                await updateDoc(doc(db, 'asset_references', id), payload);
+                showToast("Referensi Asset berhasil diubah!", "success");
+                closeEditRefModal();
+            } catch (err) {
+                showToast("Gagal mengubah referensi: " + err.message, "error");
+            }
+        });
+        
+        window.deleteReference = async (id) => { 
+            if (confirm("Yakin ingin menghapus referensi ini?")) {
+                try {
+                    // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "asset_references"
+                    await deleteDoc(doc(db, "asset_references", id));
+                    showToast("Referensi berhasil dihapus.", "success");
+                } catch (err) {
+                    showToast("Gagal menghapus referensi: " + err.message, "error");
+                }
+            }
+        };
+
+        
+        // --- SITE REFERENCE LOGIC (UPDATED PAGINATION LOGIC) ---
 
         window.loadSites = () => {
             const q = query(collection(db, "site_references"));
@@ -2357,7 +2468,9 @@
             const totalPages = Math.ceil(filteredData.length / siteRowsPerPage);
             const start = (currentSitePage - 1) * siteRowsPerPage;
             const end = start + siteRowsPerPage;
-            const currentData = filteredData.slice(start, end);
+            
+            // PERBAIKAN: Gunakan filteredData untuk slicing
+            const currentData = filteredData.slice(start, end); 
 
             const tbody = document.getElementById("siteTableBody");
             tbody.innerHTML = '';
@@ -2365,6 +2478,9 @@
 
             if (currentData.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Tidak ada data referensi site.</td></tr>`;
+                // PERBAIKAN: Nonaktifkan tombol navigasi jika tidak ada data atau hanya 1 halaman
+                document.getElementById("sitePrevPage").disabled = true;
+                document.getElementById("siteNextPage").disabled = true;
                 return;
             }
 
@@ -2386,10 +2502,29 @@
                 `;
                 tbody.appendChild(row);
             });
+            
+            // PERBAIKAN: Logika disable tombol berdasarkan data yang difilter
+            document.getElementById("sitePrevPage").disabled = currentSitePage === 1;
+            document.getElementById("siteNextPage").disabled = currentSitePage >= totalPages;
+            document.getElementById("siteCurrentPage").textContent = currentSitePage;
         };
 
         window.handleSitePagination = (direction) => {
-            const totalPages = Math.ceil(allSiteData.length / siteRowsPerPage);
+            // PERBAIKAN: Hitung totalPages berdasarkan filteredData
+            const search = document.getElementById("siteSearchInput").value.trim().toLowerCase();
+            const cityFilter = document.getElementById("siteFilterCity").value;
+            const filteredData = allSiteData.filter(d => {
+                let match = true;
+                if (cityFilter && d.cityName !== cityFilter) match = false;
+                if (search) {
+                    const combinedText = `${d.cityName} ${d.siteCode} ${d.siteName} ${d.siteCodeSap} ${d.address}`.toLowerCase();
+                    if (!combinedText.includes(search)) match = false;
+                }
+                return match;
+            });
+            
+            const totalPages = Math.ceil(filteredData.length / siteRowsPerPage);
+            
             if (direction === 'prev' && currentSitePage > 1) {
                 currentSitePage--;
             } else if (direction === 'next' && currentSitePage < totalPages) {
@@ -2404,14 +2539,101 @@
         document.getElementById("sitePrevPage").addEventListener("click", () => handleSitePagination('prev'));
         document.getElementById("siteNextPage").addEventListener("click", () => handleSitePagination('next'));
 
-        window.deleteSite = async (id) => { 
-            if (confirm("Yakin ingin menghapus referensi site ini?")) {
-                await deleteDoc(doc(db, "site_references", id));
-                showToast("Referensi site berhasil dihapus.", "success");
+        window.loadSampleSite = async () => { 
+            if(!confirm("Yakin ingin meng-inject data sampel Site? Data yang sudah ada tidak akan dihapus, namun mungkin terjadi duplikasi.")) return;
+            showToast("Meng-inject data sampel Site...", "info"); 
+            const sampleData = [
+                {cityName:"Jakarta", cityCode:"JKT", siteCode:"JKT-POP-01", siteName:"POP Jakarta 1", siteCodeSap:"10001", address:"Jl. Gatot Subroto No.1", tagLocation:"-6.200,106.816"},
+                {cityName:"Surabaya", cityCode:"SBY", siteCode:"SBY-POP-01", siteName:"POP Surabaya 1", siteCodeSap:"20002", address:"Jl. Raya Darmo", tagLocation:"-7.222,112.333"},
+                {cityName:"Bandung", cityCode:"BDG", siteCode:"BDG-POP-01", siteName:"POP Bandung 1", siteCodeSap:"30003", address:"Jl. Ir. H. Juanda No. 50", tagLocation:"-6.900,107.600"}
+            ];
+            
+            try {
+                const batch = writeBatch(db);
+                sampleData.forEach(d => {
+                    const ref = doc(collection(db, "site_references")); 
+                    batch.set(ref, d);
+                });
+                await batch.commit();
+                showToast("Sukses! Data contoh Site telah dimasukkan.", "success");
+            } catch(e) { 
+                console.error("Error injecting sample data:", e);
+                showToast("Gagal inject data: " + e.message, "error"); 
             }
         };
 
         // Add form submission logic for siteForm and editSiteForm (omitted for brevity but required for full app)
+
+        window.openSiteModal = () => { document.getElementById("siteForm").reset(); document.getElementById("site-modal").style.display = "flex"; };
+        window.closeSiteModal = () => { document.getElementById("site-modal").style.display = "none"; };
+        
+        document.getElementById("siteForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                cityName: document.getElementById("siteCityName").value,
+                cityCode: document.getElementById("siteCityCode").value,
+                siteCode: document.getElementById("siteCode").value,
+                siteName: document.getElementById("siteName").value,
+                siteCodeSap: document.getElementById("siteCodeSap").value,
+                address: document.getElementById("siteAddress").value,
+                tagLocation: document.getElementById("siteTagLoc").value
+            };
+            try {
+                await addDoc(collection(db, 'site_references'), payload);
+                showToast("Referensi Site berhasil ditambahkan!", "success");
+                closeSiteModal(); 
+            } catch (err) {
+                 showToast("Gagal menambahkan referensi: " + err.message, "error");
+            }
+        });
+
+        window.openEditSiteModal = (id) => {
+            const data = allSiteData.find(d => d.id === id);
+            if (!data) return;
+            document.getElementById("editSiteId").value = id;
+            document.getElementById("editSiteCityName").value = data.cityName || '';
+            document.getElementById("editSiteCityCode").value = data.cityCode || '';
+            document.getElementById("editSiteCode").value = data.siteCode || '';
+            document.getElementById("editSiteName").value = data.siteName || '';
+            document.getElementById("editSiteCodeSap").value = data.siteCodeSap || '';
+            document.getElementById("editSiteAddress").value = data.address || '';
+            document.getElementById("editSiteTagLoc").value = data.tagLocation || '';
+            document.getElementById("edit-site-modal").style.display = "flex";
+        };
+        window.closeEditSiteModal = () => { document.getElementById("edit-site-modal").style.display = "none"; };
+
+        document.getElementById("editSiteForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("editSiteId").value;
+            const payload = {
+                cityName: document.getElementById("editSiteCityName").value,
+                cityCode: document.getElementById("editSiteCityCode").value,
+                siteCode: document.getElementById("editSiteCode").value,
+                siteName: document.getElementById("editSiteName").value,
+                siteCodeSap: document.getElementById("editSiteCodeSap").value,
+                address: document.getElementById("editSiteAddress").value,
+                tagLocation: document.getElementById("editSiteTagLoc").value
+            };
+            try {
+                await updateDoc(doc(db, 'site_references', id), payload);
+                showToast("Referensi Site berhasil diubah!", "success");
+                closeEditSiteModal();
+            } catch (err) {
+                showToast("Gagal mengubah referensi: " + err.message, "error");
+            }
+        });
+
+
+        window.deleteSite = async (id) => { 
+            if (confirm("Yakin ingin menghapus referensi site ini?")) {
+                try {
+                    await deleteDoc(doc(db, "site_references", id));
+                    showToast("Referensi site berhasil dihapus.", "success");
+                } catch (err) {
+                    showToast("Gagal menghapus referensi site: " + err.message, "error");
+                }
+            }
+        };
 
         // --- USER MANAGEMENT LOGIC (RESTORED) ---
         
@@ -2932,12 +3154,16 @@
             deviceModuleSelect.innerHTML = '<option value="">-- Pilih Device --</option>';
             deviceModuleSelect.disabled = true;
             
+            // Reset options for subsequent selects
+            document.getElementById('inpModulType').innerHTML = '<option value="">-- Pilih Type --</option>';
+            document.getElementById('inpModulType').disabled = true;
+            document.getElementById('inpBoardName').innerHTML = '<option value="">-- Pilih Board --</option>';
+            document.getElementById('inpBoardName').disabled = true;
+
             const devices = new Set(ref.map(d => d.deviceModule));
             devices.forEach(d => deviceModuleSelect.innerHTML += `<option value="${d}">${d}</option>`);
             if(devices.size > 0) deviceModuleSelect.disabled = false;
             
-            document.getElementById('inpModulType').innerHTML = '<option value="">-- Pilih Type --</option>';
-            document.getElementById('inpModulType').disabled = true;
         });
 
         document.getElementById('inpDeviceModule').addEventListener('change', () => {
@@ -2947,13 +3173,15 @@
             const typeSelect = document.getElementById('inpModulType');
             typeSelect.innerHTML = '<option value="">-- Pilih Type --</option>';
             typeSelect.disabled = true;
+            
+            // Reset options for subsequent selects
+            document.getElementById('inpBoardName').innerHTML = '<option value="">-- Pilih Board --</option>';
+            document.getElementById('inpBoardName').disabled = true;
 
             const types = new Set(ref.map(d => d.modulType));
             types.forEach(t => typeSelect.innerHTML += `<option value="${t}">${t}</option>`);
             if(types.size > 0) typeSelect.disabled = false;
 
-            document.getElementById('inpBoardName').innerHTML = '<option value="">-- Pilih Board --</option>';
-            document.getElementById('inpBoardName').disabled = true;
         });
 
         document.getElementById('inpModulType').addEventListener('change', () => {
