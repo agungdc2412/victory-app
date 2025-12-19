@@ -919,7 +919,7 @@
                 <div class="header-title">
                     <h1>Report Kunjungan Site & Asset (Draft & History)</h1>
                     <div class="inline">
-                        <input type="text" id="reportSearchInput" placeholder="Cari Site / PIC / VNT / SN" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8rem;">
+                        <input type="text" id="reportSearchInput" placeholder="Cari Site / PIC / Label ID / SN" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8rem;">
                         <select id="exportSiteSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8rem;">
                             <option value="">-- Pilih Site untuk export PDF --</option>
                         </select>
@@ -935,7 +935,7 @@
                                 <th>Site Code</th>
                                 <th>Site Name</th>
                                 <th>PIC</th>
-                                <th>VNT</th>
+                                <th>Label ID</th>
                                 <th>Rack</th>
                                 <th>Lantai</th>
                                 <th>Module</th>
@@ -979,7 +979,7 @@
                                 <th>Tanggal</th>
                                 <th>Site Code</th>
                                 <th>PIC</th>
-                                <th>VNT</th>
+                                <th>Label ID</th>
                                 <th>Module</th>
                                 <th>Board Name</th>
                                 <th>SN</th>
@@ -1026,7 +1026,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Updated Date</th>
-                                    <th>Visit Number</th>
+                                    <th>Label ID</th>
                                     <th>Status Data Visit</th>
                                     <th>Device</th>
                                     <th>Created By (User)</th>
@@ -1259,7 +1259,7 @@
             <h3>Edit Data Visit</h3>
             <form id="editForm">
                 <input type="hidden" id="editId">
-                <p style="margin-bottom: 10px; font-weight: 500; font-size: 0.9rem;">VNT: <span id="modalVntDisplay">-</span> | Status Saat Ini: <span id="modalStatusDisplay" class="status-pill status-Draft">Draft</span></p>
+                <p style="margin-bottom: 10px; font-weight: 500; font-size: 0.9rem;">Label ID: <span id="modalLabel IDDisplay">-</span> | Status Saat Ini: <span id="modalStatusDisplay" class="status-pill status-Draft">Draft</span></p>
                 
                 <div class="grid-2">
                     <div class="form-group"><label>Tanggal</label><input type="date" id="modalEditDate"></div>
@@ -1641,17 +1641,37 @@
                 });
         };
         
-        function generateVisitNumber(siteCode) {
-            const now = new Date();
-            const year = String(now.getFullYear()).slice(2);
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
-            const site = siteCode.replace(/[^A-Z0-9]/ig, '').toUpperCase().slice(0, 5); 
-            return `VNT-${site}-${year}${month}${day}-${hour}${minute}${second}`;
+       async function generateLabelId(siteCode, module) {
+            if (!siteCode || !module) return null;
+        
+            const prefix = `ASSET-${siteCode}-${module}`;
+        
+            // Cari Label ID terakhir untuk site + module yang sama
+            const q = query(
+                collection(db, "visit_data"),
+                where("labelPrefix", "==", prefix)
+            );
+        
+            const snap = await getDocs(q);
+        
+            let maxSeq = 0;
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                if (d.labelSeq) {
+                    maxSeq = Math.max(maxSeq, d.labelSeq);
+                }
+            });
+        
+            const nextSeq = maxSeq + 1;
+            const padded = String(nextSeq).padStart(5, "0");
+        
+            return {
+                labelId: `${prefix}-${padded}`,
+                labelPrefix: prefix,
+                labelSeq: nextSeq
+            };
         }
+
         
         /**
          * Calculates the distance between two geographical points using the Haversine formula.
@@ -1697,13 +1717,13 @@
                     const existingSNs = (data.serialNumber || "").toUpperCase().split(',').map(s => s.trim()).filter(s => s.length > 0);
                     for (const checkSN of snList) {
                         if (existingSNs.includes(checkSN)) {
-                            return { type: "SN", value: checkSN, vnt: data.visitNumber, site: data.siteCode };
+                            return { type: "SN", value: checkSN, Label ID: data.labelid, site: data.siteCode };
                         }
                     }
 
                     // Check PN
                     if (pn && (data.partNumber || "").toUpperCase() === pn) {
-                         return { type: "PN", value: pn, vnt: data.visitNumber, site: data.siteCode };
+                         return { type: "PN", value: pn, Label ID: data.labelid, site: data.siteCode };
                     }
                 }
             }
@@ -2042,11 +2062,11 @@
             filteredReportData = reportData.filter(d => {
                 const site = d.siteCode || '';
                 const pic = d.picName || '';
-                const vnt = d.visitNumber || '';
+                const Label ID = labelId || '';
                 const sn = d.serialNumber || '';
                 return site.toUpperCase().includes(search) || 
                        pic.toUpperCase().includes(search) || 
-                       vnt.toUpperCase().includes(search) || 
+                       Label ID.toUpperCase().includes(search) || 
                        sn.toUpperCase().includes(search);
             });
             currentReportPage = 1; 
@@ -2084,7 +2104,7 @@
                         <td>${d.siteCode || '-'}</td>
                         <td>${d.siteName || '-'}</td>
                         <td>${d.picName || '-'}</td>
-                        <td>${d.visitNumber || '-'}</td>
+                        <td>${d.labelId || '-'}</td>
                         <td>${d.rackNo || '-'}</td>
                         <td>${d.floor || '-'}</td>
                         <td>${d.module || '-'}</td>
@@ -2153,7 +2173,7 @@
                         <td>${d.date || '-'}</td>
                         <td>${d.siteCode || '-'}</td>
                         <td>${d.picName || '-'}</td>
-                        <td>${d.visitNumber || '-'}</td>
+                        <td>${d.labelId || '-'}</td>
                         <td>${d.module || '-'}</td>
                         <td>${d.boardName || '-'}</td>
                         <td>${d.serialNumber || '-'}</td>
@@ -2731,7 +2751,7 @@
             if (duplicate) {
                 statusSpan.textContent = `GAGAL! ${duplicate.type} ${duplicate.value} sudah terdaftar.`;
                 statusSpan.style.color = "red";
-                showToast(`Duplikasi! ${duplicate.type} ${duplicate.value} sudah ada di VNT ${duplicate.vnt} (${duplicate.site}).`, "error", 10000);
+                showToast(`Duplikasi! ${duplicate.type} ${duplicate.value} sudah ada di Label ID ${duplicate.Label ID} (${duplicate.site}).`, "error", 10000);
                 return;
             }
             // --- END DUPLICATE CHECK ---
@@ -2742,7 +2762,34 @@
                 const siteCode = document.getElementById("inpSiteCode").value;
                 const siteName = document.getElementById("inpSiteName").value;
                 const pic = document.getElementById("inpPic").value;
-                const visitNumber = generateVisitNumber(siteCode); 
+                const labelResult = await generateLabelId(
+                    document.getElementById("inpSiteCode").value.trim(),
+                    document.getElementById("inpModule").value.trim()
+                );
+                
+                if (!labelResult) {
+                    showToast("Gagal generate Label ID", "error");
+                    return;
+                }
+
+                await addDoc(collection(db, "visit_data"), {
+                    labelId: labelResult.labelId,
+                    labelPrefix: labelResult.labelPrefix,
+                    labelSeq: labelResult.labelSeq,
+                
+                    siteCode,
+                    module,
+                    deviceModule,
+                    modulType,
+                    status: "Draft",
+                
+                    createdAt: new Date().toISOString(),
+                    createdBy: currentUser?.email || null,
+                
+                    // field lama tetap
+                });
+
+
                 const rack = document.getElementById("inpRackNo").value;
                 const floor = document.getElementById("inpFloor").value;
                 const moduleVal = document.getElementById("inpModule").value;
@@ -2767,7 +2814,7 @@
                     date, siteCode, siteName, picName: pic, rackNo: rack, floor,
                     module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
                     status: "Draft",
-                    visitNumber: visitNumber, 
+                    labelid: labelid, 
                     deviceStatusFinal: statusDev, 
                     serialNumber: sn, partNumber: pn,
                     description: document.getElementById("autoDesc").value || "",
@@ -2824,9 +2871,9 @@
                     auditLog: [initialLog], // Start the audit log array
                 }, { merge: true });
 
-                statusSpan.textContent = `Data berhasil disimpan sebagai DRAFT (${visitNumber}).`;
+                statusSpan.textContent = `Data berhasil disimpan sebagai DRAFT (${labelid}).`;
                 statusSpan.style.color = "green";
-                showToast(`Data Visit berhasil disimpan sebagai DRAFT! VNT: ${visitNumber}`, "success");
+                showToast(`Data Visit berhasil disimpan sebagai DRAFT! Label ID: ${labelid}`, "success");
 
                 // Reset Form (Hanya bagian Device Info & Identification)
                 document.getElementById("inpModule").value = "";
@@ -2949,7 +2996,7 @@
             }
 
             document.getElementById("editId").value = id;
-            document.getElementById("modalVntDisplay").textContent = data.visitNumber || '-';
+            document.getElementById("modalLabel IDDisplay").textContent = data.labelid || '-';
             
             const statusPill = document.getElementById("modalStatusDisplay");
             statusPill.textContent = data.status;
@@ -3024,7 +3071,7 @@
                 // --- END AUDIT LOGGING ---
 
                 closeFinalStatusModal(); 
-                showToast(`Status data ${oldData.visitNumber} berhasil diubah menjadi ${newStatus}.`, "success");
+                showToast(`Status data ${oldData.labelid} berhasil diubah menjadi ${newStatus}.`, "success");
 
             } catch (error) {
                 console.error("Error updating status:", error);
@@ -3061,14 +3108,14 @@
                 container.innerHTML += `
                     <div class="card" style="border-left: 5px solid var(--secondary); margin-bottom: 10px;">
                         <div class="grid-2">
-                            <div><strong>VNT:</strong> ${d.visitNumber || '-'}</div>
+                            <div><strong>Label ID:</strong> ${labelId || '-'}</div>
                             <div><strong>Site Code:</strong> ${d.siteCode || '-'}</div>
                             <div><strong>Module:</strong> ${d.module || '-'} (${d.deviceModule || ''})</div>
                             <div><strong>SN/PN:</strong> ${d.serialNumber || d.partNumber || '-'}</div>
                             <div><strong>Status Visit:</strong> <span class="status-pill status-${finalStatusClass}">${currentStatus}</span></div>
                             <div><strong>Tanggal Visit:</strong> ${d.date || '-'}</div>
                             <div style="grid-column: span 2;">
-                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${d.visitNumber}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
+                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${labelId}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
                             </div>
                         </div>
                     </div>
@@ -3077,7 +3124,7 @@
             document.getElementById('historyAssetFound').style.display = 'block';
         };
 
-        window.loadAndRenderLogHistory = async (id, vnt) => {
+        window.loadAndRenderLogHistory = async (id, Label ID) => {
             document.getElementById('historyLogDetail').style.display = 'none';
             const tbody = document.getElementById('logHistoryTableBody');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Memuat log...</td></tr>';
@@ -3089,7 +3136,7 @@
 
                 tbody.innerHTML = '';
                 if (log.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Tidak ada riwayat perubahan (VNT: ${vnt}).</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Tidak ada riwayat perubahan (Label ID: ${Label ID}).</td></tr>`;
                 } else {
                     log.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                     log.forEach((entry, index) => {
@@ -3116,7 +3163,7 @@
                             <tr onclick="toggleLogDetail('${detailId}')" style="cursor:pointer;">
                                 <td>${index + 1}</td>
                                 <td>${date}</td>
-                                <td>${vnt}</td>
+                                <td>${Label ID}</td>
                                 <td><span class="status-pill status-${statusClass}">${entry.oldStatus} <i class="fas fa-long-arrow-alt-right"></i> ${entry.newStatus}</span></td>
                                 <td>${data.module || '-'} (${data.deviceModule || '-'})</td>
                                 <td>${entry.user.split('@')[0]}</td>
@@ -3287,7 +3334,7 @@
                 'Site Code': d.siteCode || '-',
                 'Site Name': d.siteName || '-',
                 'PIC': d.picName || '-',
-                'VNT': d.visitNumber || '-',
+                'Label ID': labelId || '-',
                 'Rack': d.rackNo || '-',
                 'Lantai': d.floor || '-',
                 'Module': d.module || '-',
@@ -3320,5 +3367,6 @@
     </script>
 </body>
 </html>
+
 
 
