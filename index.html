@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VICTORY v8.5 — Asset Management</title>
+    <title>V.9 VICTORY - Fiberstar Asset Tagging </title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -17,6 +17,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- qrcode.js — untuk GENERATE QR pada label cetak -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <!-- CSS -->
     <style>
@@ -3767,19 +3769,27 @@
 
         function lpGenerateQR(id, value) {
             const el = document.getElementById(`lpqr-${id}`);
-            if (!el || lpQRMap[id]) return;
+            if (!el) return;
+            // Bersihkan isi lama
+            el.innerHTML = "";
             try {
-                lpQRMap[id] = new QRCode(el, {
-                    text: value, width: 108, height: 108,
-                    colorDark: "#003570", colorLight: "#ffffff",
+                new QRCode(el, {
+                    text: value,
+                    width: 108,
+                    height: 108,
+                    colorDark: "#003570",
+                    colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.M
                 });
-            } catch(e) { console.warn("QR error:", e); }
+            } catch(e) {
+                // Fallback: tampilkan teks jika QRCode belum tersedia
+                el.innerHTML = `<div style="font-size:3px;word-break:break-all;color:#003570;padding:2px;">${value.substring(0,30)}</div>`;
+                console.warn("QRCode error:", e);
+            }
         }
 
         function lpShowPreview(items) {
             // clear old QRs
-            Object.values(lpQRMap).forEach(q => { try { q.clear(); } catch(e){} });
             lpQRMap = {};
 
             const area  = document.getElementById("lp-preview-area");
@@ -3789,14 +3799,14 @@
 
             items.forEach(d => area.appendChild(lpBuildLabel(d)));
 
-            // generate QR after DOM render
+            // generate QR setelah DOM render — beri waktu 150ms agar element sudah ada
             setTimeout(() => {
                 items.forEach(d => {
                     const rid = d._id || d.id;
                     const qrVal = `ID:${d.labelId||""}|SITE:${d.siteCode||""}|SN:${d.serialNumber||""}|LOC:${d.rackNo||""}/${d.floor||""}|MOD:${d.module||""}`;
                     lpGenerateQR(rid, qrVal);
                 });
-            }, 80);
+            }, 150);
 
             panel.scrollIntoView({ behavior: "smooth" });
         }
@@ -3843,4 +3853,3 @@
     </script>
 </body>
 </html>
-
