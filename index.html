@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> v8.5 (labelId)</title> 
+    <title>VICTORY v8.5 — Asset Management</title>
     
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Libraries -->
@@ -663,6 +663,132 @@
         .btn-icon { background: #e0e0e0; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
         .btn-icon:hover { background: #d0d0d0; }
         .chips-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+
+        /* ═══════════════════════════════════════════
+           LABEL PRINT MODULE CSS
+        ═══════════════════════════════════════════ */
+        .lp-badge {
+            display: inline-block; padding: 2px 7px; border-radius: 10px;
+            font-size: 0.72rem; font-weight: 700;
+        }
+        .lp-ok      { background: #e6ffed; color: #0f7a2a; }
+        .lp-urgent  { background: #fff3cd; color: #9a6200; }
+        .lp-overdue { background: #fbecec; color: #c62828; }
+
+        /* Label card — screen preview at 2× */
+        .lp-label-wrapper { display: flex; flex-direction: column; gap: 6px; }
+        .lp-label-meta    { display: flex; gap: 8px; align-items: center; font-size: 0.75rem; color: #888; }
+
+        .lp-label-card {
+            width: 189px; height: 94px;
+            background: white;
+            border: 0.7px solid #bcc;
+            border-radius: 3px;
+            display: flex; flex-direction: row;
+            position: relative; overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            transform: scale(2);
+            transform-origin: top left;
+            margin-right: 189px;
+            margin-bottom: 94px;
+            flex-shrink: 0;
+        }
+        .lp-stripe {
+            width: 7px; flex-shrink: 0;
+            background: linear-gradient(180deg, #003570 0%, #00AEEF 100%);
+        }
+        .lp-body {
+            flex: 1; display: flex; flex-direction: column;
+            padding: 3px 2px 3px 4px; gap: 1px; min-width: 0;
+        }
+        .lp-hdr {
+            display: flex; align-items: center; gap: 3px;
+            border-bottom: 0.5px solid #dde; padding-bottom: 2px; flex-shrink: 0;
+        }
+        .lp-brand {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800; font-size: 9px; color: #F47920;
+            letter-spacing: 0.8px; flex-shrink: 0;
+        }
+        .lp-chip {
+            font-size: 4px; font-weight: 700; padding: 0.5px 2px;
+            border-radius: 1px; flex-shrink: 0; line-height: 1;
+        }
+        .lp-chip-mod { background: #00AEEF; color: white; }
+        .lp-chip-ok      { background: #22a85a; color: white; }
+        .lp-chip-urgent  { background: #F47920; color: white; }
+        .lp-chip-overdue { background: #dc3545; color: white; }
+        .lp-data { flex: 1; display: flex; flex-direction: column; gap: 0.5px; min-width: 0; }
+        .lp-row  { display: flex; align-items: baseline; gap: 2px; min-width: 0; }
+        .lp-key  { font-size: 4px; font-weight: 700; color: #7a9; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; min-width: 18px; line-height: 1.5; }
+        .lp-val  { font-family: 'Barlow Condensed', sans-serif; font-size: 6px; font-weight: 600; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+        .lp-val-id { font-family: 'Source Code Pro', monospace; font-size: 5px; font-weight: 700; color: #003570; }
+        .lp-val-asset { font-size: 6.5px; font-weight: 700; color: #0a1a2e; }
+        .lp-footer {
+            display: flex; align-items: center; gap: 3px;
+            border-top: 0.5px solid #dde; padding-top: 2px; flex-shrink: 0;
+        }
+        .lp-sn-row { display: flex; align-items: baseline; gap: 2px; flex: 1; min-width: 0; }
+        .lp-sn   { font-family: 'Source Code Pro', monospace; font-size: 4.5px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lp-date { font-size: 4px; color: #9ab; flex-shrink: 0; white-space: nowrap; }
+        .lp-qr-area {
+            width: 44px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 2px 2px 2px 0; flex-shrink: 0; gap: 1px;
+        }
+        .lp-qr-box { width: 36px !important; height: 36px !important; }
+        .lp-qr-box canvas, .lp-qr-box img { width: 36px !important; height: 36px !important; }
+        .lp-qr-sub { font-family: 'Source Code Pro', monospace; font-size: 3px; color: #666; text-align: center; word-break: break-all; max-width: 40px; line-height: 1.2; }
+        .lp-accent {
+            position: absolute; bottom: 0; left: 7px; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #F47920, transparent);
+        }
+        .lp-btn-preview-row {
+            background: none; border: 1px solid #ddd; border-radius: 4px;
+            padding: 4px 8px; cursor: pointer; color: #0057A8; font-size: 0.78rem;
+        }
+        .lp-btn-preview-row:hover { background: #0057A8; color: white; }
+
+        /* ══ PRINT MEDIA — labels at exact 50×25mm ══ */
+        @media print {
+            @page { size: A4; margin: 10mm; }
+            body > *                        { display: none !important; }
+            #app-container                  { display: flex !important; }
+            .sidebar, .mobile-header        { display: none !important; }
+            .main-content                   { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+            .view-section                   { display: none !important; }
+            #view-label-print               { display: block !important; }
+            .header-title, .card, .table-container,
+            #lp-preview-panel > .header-title { display: none !important; }
+            #lp-preview-panel               { display: block !important; margin: 0 !important; padding: 0 !important; border: none !important; }
+            #lp-preview-area                { display: flex !important; flex-wrap: wrap; gap: 3mm; padding: 0; }
+            .lp-label-wrapper               { break-inside: avoid; }
+            .lp-label-meta                  { display: none !important; }
+            .lp-label-card {
+                transform: none !important;
+                margin-right: 0 !important; margin-bottom: 0 !important;
+                width: 50mm !important; height: 25mm !important;
+                box-shadow: none !important;
+                border: 0.3pt solid #aaa !important;
+                break-inside: avoid; page-break-inside: avoid;
+            }
+            .lp-stripe { width: 2.8mm !important; }
+            .lp-body   { padding: 1.2mm 0.8mm 1.2mm 1.6mm !important; }
+            .lp-brand  { font-size: 3.6pt !important; }
+            .lp-chip   { font-size: 1.6pt !important; padding: 0.2pt 0.8pt !important; }
+            .lp-key    { font-size: 1.6pt !important; min-width: 7mm !important; }
+            .lp-val    { font-size: 2.4pt !important; }
+            .lp-val-id { font-size: 2.2pt !important; }
+            .lp-val-asset { font-size: 2.8pt !important; }
+            .lp-sn     { font-size: 1.8pt !important; }
+            .lp-date   { font-size: 1.6pt !important; }
+            .lp-qr-sub { font-size: 1.2pt !important; }
+            .lp-qr-area { width: 17mm !important; }
+            .lp-qr-box, .lp-qr-box canvas, .lp-qr-box img { width: 14mm !important; height: 14mm !important; }
+            .lp-accent { height: 0.8mm !important; }
+            #lp-preview-panel { display: block !important; }
+        }
         
     </style>
 </head>
@@ -703,6 +829,7 @@
                 <li id="nav-ref-asset" onclick="switchTab('reference')"><i class="fas fa-database"></i> Ref. Asset (Modul)</li>
                 <li id="nav-ref-site" onclick="switchTab('ref-site')"><i class="fas fa-map-marked-alt"></i> Ref. Site</li>
                 <li id="nav-user-management" onclick="switchTab('user-management')"><i class="fas fa-users-cog"></i> User Management</li> <!-- NEW TAB -->
+                <li id="nav-label-print" onclick="switchTab('label-print')"><i class="fas fa-tags"></i> Cetak Label</li>
                 <li onclick="logoutApp()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</li>
             </ul>
         </nav>
@@ -1201,6 +1328,96 @@
                     </table>
                 </div>
             </section>
+
+            <!-- VIEW 9: CETAK LABEL -->
+            <section id="view-label-print" class="view-section">
+                <div class="header-title">
+                    <div>
+                        <h1><i class="fas fa-tags" style="color:var(--primary);margin-right:8px;"></i>Cetak Label Asset</h1>
+                        <small>Pilih asset dari data Visit yang sudah ada, preview, lalu cetak label 50×25mm</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="lpLoad()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                </div>
+
+                <!-- Filter bar -->
+                <div class="card" style="margin-bottom:14px;">
+                    <div class="grid-3" style="align-items:flex-end;gap:10px;">
+                        <div class="form-group" style="margin:0">
+                            <label>Filter Site</label>
+                            <select id="lp-f-site" onchange="lpFilter()"><option value="">Semua Site</option></select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label>Filter Status</label>
+                            <select id="lp-f-status" onchange="lpFilter()">
+                                <option value="">Semua Status</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Submitted">Submitted</option>
+                                <option value="Active">Active</option>
+                                <option value="Damage">Damage</option>
+                                <option value="Spare">Spare</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label>Filter Module</label>
+                            <select id="lp-f-module" onchange="lpFilter()"><option value="">Semua Module</option></select>
+                        </div>
+                        <div class="form-group" style="margin:0;grid-column:span 2;">
+                            <label>Cari labelId / SN / Board</label>
+                            <input type="text" id="lp-search" placeholder="Ketik untuk mencari..." oninput="lpFilter()">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="lp-sel-count" style="font-size:0.8rem;color:#888;white-space:nowrap;">Belum ada yang dipilih</span>
+                            <button class="btn btn-outline btn-sm" id="lp-btn-preview" onclick="lpPreview()" disabled><i class="fas fa-eye"></i> Preview</button>
+                            <button class="btn btn-primary btn-sm" id="lp-btn-print" onclick="lpPrint()" disabled><i class="fas fa-print"></i> Cetak Terpilih</button>
+                            <button class="btn btn-success btn-sm" onclick="lpPrintAll()"><i class="fas fa-print"></i> Cetak Semua Filter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLA Legend -->
+                <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;font-size:0.75rem;color:#666;align-items:center;">
+                    <span><span class="lp-badge lp-ok">OK</span> Dalam batas SLA</span>
+                    <span><span class="lp-badge lp-urgent">URGENT</span> ≤ 2 hari kerja tersisa</span>
+                    <span><span class="lp-badge lp-overdue">OVERDUE</span> Melewati batas SLA</span>
+                    <span style="margin-left:auto;font-style:italic;">SLA: Network 7HK · Non-Network/Power 14HK · IT/GA 30HK</span>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="lp-cb-all" onchange="lpSelectAll(this.checked)" title="Pilih semua"></th>
+                                <th>Label ID</th>
+                                <th>Site</th>
+                                <th>Module / Device</th>
+                                <th>Board</th>
+                                <th>Serial Number</th>
+                                <th>Status</th>
+                                <th>SLA</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="lp-tbody">
+                            <tr><td colspan="9" style="text-align:center;padding:24px;color:#aaa;">Klik "Refresh Data" untuk memuat.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Preview area -->
+                <div id="lp-preview-panel" style="display:none;margin-top:20px;">
+                    <div class="header-title" style="margin-bottom:16px;">
+                        <div>
+                            <h3 style="font-size:1rem;font-weight:600;">Preview Label Siap Cetak</h3>
+                            <small>Ukuran aktual saat print: 50mm × 25mm · QR otomatis</small>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print"></i> Print Sekarang</button>
+                    </div>
+                    <div id="lp-preview-area" style="display:flex;flex-wrap:wrap;gap:32px;padding:8px 0;"></div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -3363,14 +3580,267 @@
         document.getElementById("siteSearchInput").addEventListener("input", () => { currentSitePage = 1; renderSiteTable(); });
         document.getElementById("siteFilterCity").addEventListener("change", () => { currentSitePage = 1; renderSiteTable(); });
 
+        // ═══════════════════════════════════════════════════════════
+        //  MODUL CETAK LABEL — terintegrasi dengan data visit_data
+        // ═══════════════════════════════════════════════════════════
+
+        // SLA config sesuai SOP Asset Tagging Fiberstar
+        const LP_SLA = {
+            GPON:7, METRO:7, DWDM:7, TRANSMISSION:7, IP:7, FIBER:14,
+            POWER:14, INFRA:14, IT:30, GA:30
+        };
+        function lpGetSLA(module) {
+            const k = (module||"").toUpperCase();
+            for (const key of Object.keys(LP_SLA)) {
+                if (k.includes(key)) return LP_SLA[key];
+            }
+            return 14;
+        }
+        function lpCalcSLA(dateStr, module) {
+            if (!dateStr) return { overdue:false, urgent:false, daysLeft:null, slaText:"-" };
+            const diff  = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+            const sla   = lpGetSLA(module);
+            const left  = sla - diff;
+            return {
+                daysLeft : left,
+                overdue  : left < 0,
+                urgent   : left >= 0 && left <= 2,
+                slaText  : left < 0 ? `OVD ${Math.abs(left)}HK` : `SLA ${left}HK`
+            };
+        }
+
+        let lpAllData = [], lpFiltered = [], lpSelected = new Set(), lpQRMap = {};
+
+        // Load data dari cache reportData global (sudah dimuat oleh loadReportData)
+        window.lpLoad = function() {
+            // Gunakan reportData yang sudah ada di memori, atau muat ulang
+            if (reportData && reportData.length > 0) {
+                lpBuild(reportData);
+            } else {
+                showToast("Data belum dimuat. Buka Report Visit terlebih dahulu atau tunggu sebentar.", "info");
+                // Trigger load jika belum ada
+                loadReportData();
+                setTimeout(() => { if (reportData.length > 0) lpBuild(reportData); }, 2500);
+            }
+        };
+
+        function lpBuild(data) {
+            lpAllData = data.map(d => ({
+                ...d,
+                _sla: lpCalcSLA(d.date, d.module),
+                _status: d.status === "Approved" ? (d.deviceStatusFinal || "Active") : (d.status || "Draft")
+            }));
+            lpAllData.sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
+
+            // Populate filters
+            const sites   = [...new Set(lpAllData.map(d=>d.siteCode).filter(Boolean))].sort();
+            const modules = [...new Set(lpAllData.map(d=>d.module).filter(Boolean))].sort();
+            const fSite = document.getElementById("lp-f-site");
+            const fMod  = document.getElementById("lp-f-module");
+            fSite.innerHTML = '<option value="">Semua Site</option>' + sites.map(s=>`<option>${s}</option>`).join("");
+            fMod.innerHTML  = '<option value="">Semua Module</option>' + modules.map(m=>`<option>${m}</option>`).join("");
+
+            lpSelected.clear();
+            lpFilter();
+            showToast(`${lpAllData.length} record dimuat ke Cetak Label.`, "success");
+        }
+
+        window.lpFilter = function() {
+            const site   = (document.getElementById("lp-f-site").value||"").toLowerCase();
+            const status = document.getElementById("lp-f-status").value;
+            const mod    = (document.getElementById("lp-f-module").value||"").toLowerCase();
+            const search = (document.getElementById("lp-search").value||"").trim().toLowerCase();
+            lpFiltered = lpAllData.filter(d => {
+                if (site   && !(d.siteCode||"").toLowerCase().includes(site))    return false;
+                if (status && d._status !== status)                              return false;
+                if (mod    && !(d.module||"").toLowerCase().includes(mod))       return false;
+                if (search) {
+                    const hay = `${d.labelId} ${d.siteCode} ${d.serialNumber} ${d.boardName} ${d.deviceModule} ${d.picName}`.toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
+            lpSelected = new Set([...lpSelected].filter(id => lpFiltered.some(d=>d._id===id||d.id===id)));
+            lpRenderTable();
+            lpUpdateCount();
+        };
+
+        function lpRenderTable() {
+            const tbody = document.getElementById("lp-tbody");
+            tbody.innerHTML = "";
+            if (!lpFiltered.length) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa;">Tidak ada data. Klik Refresh Data.</td></tr>`;
+                return;
+            }
+            lpFiltered.forEach(d => {
+                const sla = d._sla;
+                let slaBadge = "";
+                if (!d.date)       slaBadge = `<span class="lp-badge" style="background:#eee;color:#888;">-</span>`;
+                else if (sla.overdue) slaBadge = `<span class="lp-badge lp-overdue">Overdue ${Math.abs(sla.daysLeft)}HK</span>`;
+                else if (sla.urgent)  slaBadge = `<span class="lp-badge lp-urgent">Urgent ${sla.daysLeft}HK</span>`;
+                else                  slaBadge = `<span class="lp-badge lp-ok">OK ${sla.daysLeft}HK</span>`;
+
+                const rid = d._id || d.id;
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="lp-cb" data-id="${rid}" ${lpSelected.has(rid)?"checked":""}></td>
+                    <td><code style="font-family:'Source Code Pro',monospace;font-size:0.78rem;font-weight:700;color:#003570;">${d.labelId||"-"}</code></td>
+                    <td>${d.siteCode||"-"}</td>
+                    <td>${d.module||"-"} / ${d.deviceModule||"-"}</td>
+                    <td>${d.boardName||"-"}</td>
+                    <td><code style="font-size:0.75rem;">${(d.serialNumber||"").substring(0,20)||"-"}</code></td>
+                    <td><span class="status-pill status-${(d._status||"draft").toLowerCase()}">${d._status}</span></td>
+                    <td>${slaBadge}</td>
+                    <td><button class="lp-btn-preview-row" onclick="lpPreviewOne('${rid}')"><i class="fas fa-eye"></i></button></td>
+                `;
+                tr.querySelector(".lp-cb").addEventListener("change", e => {
+                    e.target.checked ? lpSelected.add(rid) : lpSelected.delete(rid);
+                    lpUpdateCount();
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function lpUpdateCount() {
+            const n = lpSelected.size;
+            document.getElementById("lp-sel-count").textContent = n > 0 ? `${n} label dipilih` : "Belum ada yang dipilih";
+            document.getElementById("lp-btn-preview").disabled = n === 0;
+            document.getElementById("lp-btn-print").disabled   = n === 0;
+        }
+
+        window.lpSelectAll = function(checked) {
+            lpFiltered.forEach(d => {
+                const rid = d._id||d.id;
+                checked ? lpSelected.add(rid) : lpSelected.delete(rid);
+            });
+            document.querySelectorAll(".lp-cb").forEach(cb => cb.checked = checked);
+            lpUpdateCount();
+        };
+
+        // ── Build label DOM element ──
+        function lpBuildLabel(d) {
+            const sla    = d._sla;
+            let chipCls  = sla.overdue ? "lp-chip-overdue" : sla.urgent ? "lp-chip-urgent" : "lp-chip-ok";
+            let slaText  = d.date ? sla.slaText : "NO DATE";
+            const rid    = d._id || d.id;
+            const assetName = `${d.deviceModule||""} ${d.boardName||""}`.trim().substring(0,32) || "-";
+            const snShort   = (d.serialNumber||"-").substring(0,20);
+            const locStr    = [d.siteCode, d.rackNo, d.floor].filter(Boolean).join(" / ") || "-";
+            const dateShort = d.date
+                ? (()=>{ const [y,m,dd]=d.date.split("-"); return `${dd}/${m}/${y.slice(2)}`; })()
+                : "-";
+
+            const wrap = document.createElement("div");
+            wrap.className = "lp-label-wrapper";
+            wrap.innerHTML = `
+                <div class="lp-label-card" id="lc-${rid}">
+                    <div class="lp-stripe"></div>
+                    <div class="lp-body">
+                        <div class="lp-hdr">
+                            <span class="lp-brand">FIBERSTAR</span>
+                            <span class="lp-chip lp-chip-mod">${(d.module||"N/A").substring(0,10)}</span>
+                            <span class="lp-chip ${chipCls}">${slaText}</span>
+                        </div>
+                        <div class="lp-data">
+                            <div class="lp-row"><span class="lp-key">ID</span><span class="lp-val lp-val-id">${d.labelId||"-"}</span></div>
+                            <div class="lp-row"><span class="lp-key">Asset</span><span class="lp-val lp-val-asset">${assetName}</span></div>
+                            <div class="lp-row"><span class="lp-key">Lok.</span><span class="lp-val">${locStr}</span></div>
+                        </div>
+                        <div class="lp-footer">
+                            <div class="lp-sn-row"><span class="lp-key">SN</span><span class="lp-sn">${snShort}</span></div>
+                            <span class="lp-date">${dateShort}</span>
+                        </div>
+                    </div>
+                    <div class="lp-qr-area">
+                        <div id="lpqr-${rid}" class="lp-qr-box"></div>
+                        <div class="lp-qr-sub">${(d.labelId||"").substring(0,12)}</div>
+                    </div>
+                    <div class="lp-accent"></div>
+                </div>
+                <div class="lp-label-meta">
+                    <span class="status-pill status-${(d._status||"draft").toLowerCase()}">${d._status||"-"}</span>
+                    <span>PIC: ${d.picName||"-"}</span>
+                </div>
+            `;
+            return wrap;
+        }
+
+        function lpGenerateQR(id, value) {
+            const el = document.getElementById(`lpqr-${id}`);
+            if (!el || lpQRMap[id]) return;
+            try {
+                lpQRMap[id] = new QRCode(el, {
+                    text: value, width: 108, height: 108,
+                    colorDark: "#003570", colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch(e) { console.warn("QR error:", e); }
+        }
+
+        function lpShowPreview(items) {
+            // clear old QRs
+            Object.values(lpQRMap).forEach(q => { try { q.clear(); } catch(e){} });
+            lpQRMap = {};
+
+            const area  = document.getElementById("lp-preview-area");
+            const panel = document.getElementById("lp-preview-panel");
+            area.innerHTML = "";
+            panel.style.display = "block";
+
+            items.forEach(d => area.appendChild(lpBuildLabel(d)));
+
+            // generate QR after DOM render
+            setTimeout(() => {
+                items.forEach(d => {
+                    const rid = d._id || d.id;
+                    const qrVal = `ID:${d.labelId||""}|SITE:${d.siteCode||""}|SN:${d.serialNumber||""}|LOC:${d.rackNo||""}/${d.floor||""}|MOD:${d.module||""}`;
+                    lpGenerateQR(rid, qrVal);
+                });
+            }, 80);
+
+            panel.scrollIntoView({ behavior: "smooth" });
+        }
+
+        window.lpPreviewOne = function(rid) {
+            const d = lpAllData.find(x => (x._id||x.id) === rid);
+            if (d) lpShowPreview([d]);
+        };
+
+        window.lpPreview = function() {
+            const items = lpAllData.filter(d => lpSelected.has(d._id||d.id));
+            if (items.length) lpShowPreview(items);
+        };
+
+        window.lpPrint = function() {
+            const items = lpAllData.filter(d => lpSelected.has(d._id||d.id));
+            if (!items.length) { showToast("Pilih minimal 1 label.", "error"); return; }
+            lpShowPreview(items);
+            setTimeout(() => window.print(), 900);
+        };
+
+        window.lpPrintAll = function() {
+            if (!lpFiltered.length) { showToast("Tidak ada data untuk dicetak.", "error"); return; }
+            lpShowPreview(lpFiltered);
+            setTimeout(() => window.print(), 900);
+        };
+
+        // Auto-load when switching to label-print tab
+        const _origSwitchTab = window.switchTab;
+        window.switchTab = function(tabId) {
+            _origSwitchTab(tabId);
+            if (tabId === 'label-print') {
+                // update navMap — label-print is index 8
+                const navLinks = document.querySelectorAll('.nav-links li:not(.logout-link)');
+                if (navLinks[8]) {
+                    document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
+                    navLinks[8].classList.add('active');
+                }
+                lpLoad();
+            }
+        };
+
         // END SCRIPT
     </script>
 </body>
 </html>
-
-
-
-
-
-
 
