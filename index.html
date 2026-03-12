@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V11. VICTORY</title>
+    <title>V.12 VICTORY</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -2083,7 +2083,9 @@
                     loadReportData(); 
                     loadReportVisit(); 
                     loadSites();
-                    loadUsers(); 
+                    loadUsers();
+                    // Bersihkan dokumen _uploading yang tertinggal dari sesi gagal sebelumnya
+                    cleanupStaleUploads();
                 });
                 
                 document.getElementById("inpDate").valueAsDate = new Date();
@@ -3141,6 +3143,8 @@
 
             let savedCount = 0;
             const savedLabels = [];
+            // Lacak semua docId yang berhasil dibuat, untuk cleanup jika ada error
+            const createdDocIds = [];
 
             try {
                 for (const dev of deviceQueue) {
@@ -3148,36 +3152,57 @@
 
                     // Generate labelId
                     const labelResult = await generatelabelId(dev.siteCode, dev.module);
-                    if (!labelResult) { showToast("Gagal generate labelId.", "error"); break; }
+                    if (!labelResult) { throw new Error("Gagal generate labelId untuk " + dev.objectName); }
 
-                    // Upload foto
+                    // 1. Buat dokumen placeholder dulu (minimal) — catat ID-nya untuk cleanup
                     const tempDocRef = await addDoc(collection(db, "visit_data"), {
                         labelId      : labelResult.labelId,
                         labelPrefix  : labelResult.labelPrefix,
                         labelSeq     : labelResult.labelSeq,
-                        status       : "Draft",
+                        status       : "_uploading", // status sementara, bukan Draft
                         createdAt    : new Date().toISOString(),
                         createdBy    : currentUser?.email || null,
                     });
+                    // Catat ID ini — jika upload gagal, dokumen ini akan dihapus
+                    createdDocIds.push(tempDocRef.id);
 
-                    const basePath  = `visit_photos/${currentUserId || 'anonymous'}/${tempDocRef.id}`;
-                    const labelRef  = ref(storage, `${basePath}/label.jpg`);
-                    const typeRef   = ref(storage, `${basePath}/type.jpg`);
-                    const farRef    = ref(storage, `${basePath}/far.jpg`);
+                    // 2. Upload 3 foto ke Firebase Storage
+                    statusSpan.textContent = `Mengupload foto device ${savedCount + 1}/${deviceQueue.length}...`;
+                    let labelURL, typeURL, farURL;
+                    try {
+                        const basePath = `visit_photos/${currentUserId || 'anonymous'}/${tempDocRef.id}`;
+                        const labelRef = ref(storage, `${basePath}/label.jpg`);
+                        const typeRef  = ref(storage, `${basePath}/type.jpg`);
+                        const farRef   = ref(storage, `${basePath}/far.jpg`);
 
-                    await Promise.all([
-                        uploadBytes(labelRef, dev.photoLabelFile),
-                        uploadBytes(typeRef,  dev.photoTypeFile),
-                        uploadBytes(farRef,   dev.photoFarFile),
-                    ]);
+                        await Promise.all([
+                            uploadBytes(labelRef, dev.photoLabelFile),
+                            uploadBytes(typeRef,  dev.photoTypeFile),
+                            uploadBytes(farRef,   dev.photoFarFile),
+                        ]);
 
-                    const [labelURL, typeURL, farURL] = await Promise.all([
-                        getDownloadURL(labelRef),
-                        getDownloadURL(typeRef),
-                        getDownloadURL(farRef),
-                    ]);
+                        [labelURL, typeURL, farURL] = await Promise.all([
+                            getDownloadURL(labelRef),
+                            getDownloadURL(typeRef),
+                            getDownloadURL(farRef),
+                        ]);
+                    } catch (uploadErr) {
+                        // ══ CLEANUP: hapus dokumen placeholder yang baru dibuat ══
+                        statusSpan.textContent = `Upload foto gagal untuk "${dev.objectName}". Membersihkan data sementara...`;
+                        try {
+                            await deleteDoc(doc(db, "visit_data", tempDocRef.id));
+                            console.log(`[Cleanup] Dokumen ${tempDocRef.id} berhasil dihapus.`);
+                            // Hapus dari daftar createdDocIds
+                            createdDocIds.splice(createdDocIds.indexOf(tempDocRef.id), 1);
+                        } catch (cleanupErr) {
+                            console.error(`[Cleanup] Gagal hapus dokumen ${tempDocRef.id}:`, cleanupErr);
+                        }
+                        // Lempar error asli agar ditangkap catch luar
+                        throw new Error(`Upload foto gagal untuk "${dev.objectName}": ${uploadErr.message}\n\nKemungkinan penyebab:\n• Firebase Storage Rules belum diatur (allow write: if request.auth != null)\n• Firebase Storage belum diaktifkan di Console`);
+                    }
 
-                    // Final data ke Firestore
+                    // 3. Update dokumen dengan data lengkap + URL foto
+                    statusSpan.textContent = `Menyimpan data final device ${savedCount + 1}/${deviceQueue.length}...`;
                     const finalData = {
                         // Site Info
                         date             : dev.date,
@@ -3198,13 +3223,13 @@
                         labelId          : labelResult.labelId,
                         labelPrefix      : labelResult.labelPrefix,
                         labelSeq         : labelResult.labelSeq,
-                        // Status workflow
+                        // Status workflow — ubah dari _uploading ke Draft
                         status           : "Draft",
                         // GPS
                         recordLatitude   : capturedLatitude,
                         recordLongitude  : capturedLongitude,
                         validationDistance: validationDistance,
-                        // Foto
+                        // Foto URL
                         photoLabel       : labelURL,
                         photoType        : typeURL,
                         photoFar         : farURL,
@@ -3218,12 +3243,12 @@
                             newStatus    : 'Draft',
                             changedFields: { creation: { old: 'N/A', new: 'Initial Data Entry' } }
                         }],
-                        // Backward compat fields (kosong tapi tetap ada)
-                        rackNo           : "",
-                        deviceModule     : dev.objectName,
-                        modulType        : dev.objectType,
-                        boardName        : "",
-                        description      : `${dev.objectName} ${dev.objectType}`.trim(),
+                        // Backward compat
+                        rackNo       : "",
+                        deviceModule : dev.objectName,
+                        modulType    : dev.objectType,
+                        boardName    : "",
+                        description  : `${dev.objectName} ${dev.objectType}`.trim(),
                     };
 
                     await setDoc(doc(db, "visit_data", tempDocRef.id), finalData, { merge: true });
@@ -3232,19 +3257,18 @@
                     savedCount++;
                 }
 
-                // Sukses — reset semua
+                // ══ SUKSES SEMUA — reset form ══
                 deviceQueue = [];
                 renderDeviceQueue();
                 resetDeviceFields();
-                // Reset site info juga setelah selesai
                 document.getElementById("inpDate").valueAsDate = new Date();
-                document.getElementById("inpSiteCode").value  = "";
-                document.getElementById("inpSiteName").value  = "";
-                document.getElementById("inpPic").value       = "";
-                document.getElementById("inpFloor").value     = "";
+                document.getElementById("inpSiteCode").value   = "";
+                document.getElementById("inpSiteName").value   = "";
+                document.getElementById("inpPic").value        = "";
+                document.getElementById("inpFloor").value      = "";
                 capturedLatitude = null; capturedLongitude = null; validationDistance = null;
-                document.getElementById("inpLatitude").value  = "";
-                document.getElementById("inpLongitude").value = "";
+                document.getElementById("inpLatitude").value   = "";
+                document.getElementById("inpLongitude").value  = "";
                 document.getElementById("locationDisplay").textContent  = "Lokasi belum di-capture.";
                 document.getElementById("locationDisplay").style.color  = "gray";
                 document.getElementById("validationDisplay").textContent = "";
@@ -3254,10 +3278,38 @@
                 showToast(`${savedCount} device berhasil disimpan! Label: ${savedLabels.join(", ")}`, "success");
 
             } catch (err) {
-                console.error(err);
-                statusSpan.textContent = "Gagal menyimpan: " + err.message;
+                console.error("[submitDevice Error]", err);
+
+                // ══ CLEANUP MASSAL: hapus semua dokumen _uploading yang tersisa ══
+                if (createdDocIds.length > 0) {
+                    statusSpan.textContent = "Membersihkan data tidak lengkap...";
+                    const cleanupPromises = createdDocIds.map(async (docId) => {
+                        try {
+                            // Cek dulu apakah dokumennya masih _uploading (belum jadi Draft)
+                            const snap = await getDoc(doc(db, "visit_data", docId));
+                            if (snap.exists() && snap.data().status === "_uploading") {
+                                await deleteDoc(doc(db, "visit_data", docId));
+                                console.log(`[Cleanup massal] Dokumen ${docId} dihapus.`);
+                            }
+                        } catch (e) {
+                            console.warn(`[Cleanup massal] Gagal hapus ${docId}:`, e);
+                        }
+                    });
+                    await Promise.allSettled(cleanupPromises);
+                }
+
+                // Tampilkan pesan error yang informatif
+                const errMsg = err.message || "Error tidak diketahui";
+                statusSpan.innerHTML = `<span style="color:red;">✗ ${errMsg.split('\n')[0]}</span>`;
                 statusSpan.style.color = "red";
-                showToast("Error: " + err.message, "error");
+
+                // Toast dengan petunjuk jika error Storage
+                if (errMsg.includes("storage") || errMsg.includes("Storage") || errMsg.includes("Upload foto")) {
+                    showToast("💡 Cek Firebase Console → Storage → Rules. Pastikan: allow write: if request.auth != null", "error");
+                } else {
+                    showToast("Gagal menyimpan: " + errMsg.split('\n')[0], "error");
+                }
+
             } finally {
                 document.getElementById("btnAddDevice").disabled  = false;
                 document.getElementById("btnSaveDraft").disabled  = false;
@@ -3266,6 +3318,20 @@
 
         // Dummy listener untuk kompatibilitas (form lama dihapus, pastikan tidak error)
         // document.getElementById("dataForm") tidak ada lagi, tapi checkDuplicateAssets & generatelabelId tetap dipakai
+
+        // ══ CLEANUP: hapus dokumen status "_uploading" yang tertinggal dari sesi sebelumnya ══
+        async function cleanupStaleUploads() {
+            try {
+                const snap = await getDocs(query(collection(db, "visit_data"), where("status", "==", "_uploading")));
+                if (snap.empty) return;
+                const batch = writeBatch(db);
+                snap.forEach(d => batch.delete(doc(db, "visit_data", d.id)));
+                await batch.commit();
+                console.log(`[Cleanup] ${snap.size} dokumen _uploading lama berhasil dihapus.`);
+            } catch (e) {
+                console.warn("[Cleanup] Gagal hapus stale uploads:", e);
+            }
+        }
 
         // === EDIT FORM SUBMISSION (UPDATED FOR AUDIT LOG) ===
         document.getElementById("editForm").addEventListener("submit", async (e) => {
