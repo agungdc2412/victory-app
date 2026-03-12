@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.12 VICTORY</title>
+    <title>V13. VICTORY</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -2288,8 +2288,9 @@
                 updateCharts(statusCounts, deviceTypeCounts);
                 updateDashboardStats(visitedSiteCodes, totalDevices);
                 
-                renderReportTable(); // Dibuat lengkap di bawah
-                loadReviewData(); // Dibuat lengkap di bawah
+                renderReportTable(); // Dibuat lengkap di bawah — dipanggil via loadReportVisit
+                loadReportVisit();   // Sinkronkan filter + render ulang tabel
+                loadReviewData();
                 
                 document.getElementById('assetFoundContainer').innerHTML = '';
                 document.getElementById('historyAssetFound').style.display = 'none';
@@ -2348,21 +2349,32 @@
             const rows = parseInt(document.getElementById("reportRowsPerPage").value, 10);
             reportRowsPerPage = rows;
 
+            // Filter — jika search kosong, tampilkan semua (kecuali status _uploading)
             filteredReportData = reportData.filter(d => {
-                const site = d.siteCode || '';
-                const pic = d.picName || '';
-                const labelId = labelId || '';
-                const sn = d.serialNumber || '';
-                return site.toUpperCase().includes(search) || 
-                       pic.toUpperCase().includes(search) || 
-                       labelId.toUpperCase().includes(search) || 
-                       sn.toUpperCase().includes(search);
+                // Jangan tampilkan dokumen sementara
+                if (d.status === '_uploading') return false;
+
+                if (!search) return true;
+                const site    = (d.siteCode    || '').toUpperCase();
+                const pic     = (d.picName     || '').toUpperCase();
+                const lid     = (d.labelId     || '').toUpperCase();
+                const sn      = (d.serialNumber|| '').toUpperCase();
+                const objName = (d.objectName  || d.deviceModule || '').toUpperCase();
+                return site.includes(search) || pic.includes(search) ||
+                       lid.includes(search)  || sn.includes(search)  ||
+                       objName.includes(search);
             });
             currentReportPage = 1; 
             renderReportTable();
         };
 
         window.renderReportTable = () => {
+            // Pastikan filteredReportData selalu sinkron dengan reportData
+            // (dipanggil dari loadReportData langsung, sebelum loadReportVisit dijalankan)
+            if (filteredReportData.length === 0 && reportData.length > 0) {
+                filteredReportData = reportData.filter(d => d.status !== '_uploading');
+            }
+
             const tbody = document.getElementById("reportVisitTableBody");
             const selectSite = document.getElementById("exportSiteSelect");
             tbody.innerHTML = '';
@@ -4058,4 +4070,5 @@
     </script>
 </body>
 </html>
+
 
