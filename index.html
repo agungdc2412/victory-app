@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V.9 VICTORY - Fiberstar Asset Tagging </title>
+    <title>V.10 VICTORY</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -894,153 +894,197 @@
                     </div>
                 </div>
             </section>
-            <!-- VIEW 2: FORM INPUT -->
+            <!-- VIEW 2: FORM INPUT (REDESIGNED v9) -->
             <section id="view-input" class="view-section">
-                <div class="header-title"><h1>Form Input Data Asset</h1></div>
-                <form id="dataForm" class="form-layout">
-                    <!-- Site Info -->
-                    <div class="form-card">
-                        <h3><i class="fas fa-map-marker-alt"></i> Informasi Site</h3>
-                        <div class="grid-2">
-                            <div class="form-group"><label>1. Tanggal *</label><input type="date" id="inpDate" required></div>
-                            <div class="form-group"><label>2. Site Code *</label><input type="text" id="inpSiteCode" placeholder="Contoh: JKT-01" required></div>
-                            <div class="form-group"><label>3. Site Name *</label><input type="text" id="inpSiteName" placeholder="Nama Site Lengkap" required></div>
-                            <div class="form-group"><label>4. Nama PIC *</label><input type="text" id="inpPic" required></div>
-                            <div class="form-group">
-                                <label>5. No Rack *</label>
-                                <select id="inpRackNo" required>
-                                    <option value="">-- Pilih --</option>
-                                    <option>RACK-01</option>
-                                    <option>RACK-02</option>
-                                    <option>RACK-03</option>
-                                    <option>ODF</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>6. Lantai *</label>
-                                <select id="inpFloor" required>
-                                    <option value="">-- Pilih --</option>
-                                    <option>GF</option>
-                                    <option>1st</option>
-                                    <option>2nd</option>
-                                    <option>3rd</option>
-                                    <option>Basement</option>
-                                </select>
-                            </div>
+                <div class="header-title">
+                    <div>
+                        <h1><i class="fas fa-edit" style="color:var(--primary);margin-right:8px;"></i>Form Input Data Asset</h1>
+                        <small>Isi informasi site terlebih dahulu, lalu tambahkan perangkat satu per satu</small>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     BAGIAN 1: SITE INFORMATION (isi sekali)
+                ══════════════════════════════════════════ -->
+                <div class="form-card" id="siteInfoCard">
+                    <h3><i class="fas fa-map-marker-alt" style="color:#17a2b8;"></i> Site Information</h3>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>1. Visit Date *</label>
+                            <input type="date" id="inpDate" required>
                         </div>
-                        
-                        <!-- NEW: GEOTAGGING INPUTS -->
-                        <div class="form-card" style="padding:10px; margin-top:15px; border-left: 4px solid #17a2b8;">
-                            <h3><i class="fas fa-globe-asia" style="color:#17a2b8;"></i> Geotagging Lokasi *</h3>
-                            <button type="button" id="btnCaptureLocation" class="btn btn-outline" style="width:100%; margin-bottom: 5px;"><i class="fas fa-crosshairs"></i> Capture Lokasi Saat Ini</button>
-                            <input type="hidden" id="inpLatitude" required>
-                            <input type="hidden" id="inpLongitude" required>
-                            <span id="locationDisplay" class="location-status" style="color:gray;">Lokasi belum di-capture.</span>
-                            <span id="validationDisplay" class="location-status" style="font-weight:700;"></span>
+                        <div class="form-group">
+                            <label>2. Site Code *</label>
+                            <input type="text" id="inpSiteCode" placeholder="Contoh: JKT-POP-01" required oninput="this.value=this.value.toUpperCase(); validateLocation();">
+                        </div>
+                        <div class="form-group">
+                            <label>3. Site Name *</label>
+                            <input type="text" id="inpSiteName" placeholder="Nama Site Lengkap" required>
+                        </div>
+                        <div class="form-group">
+                            <label>4. PIC Name *</label>
+                            <input type="text" id="inpPic" placeholder="Nama teknisi / PIC lapangan" required>
+                        </div>
+                        <div class="form-group">
+                            <label>5. Floor Name</label>
+                            <input type="text" id="inpFloor" placeholder="Contoh: Lantai 1, GF, Basement, Rooftop">
                         </div>
                     </div>
 
-                    <!-- Device Info -->
-                    <div class="form-card">
-                        <h3><i class="fas fa-microchip"></i> Detail Perangkat</h3>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label>7. Module *</label>
-                                <select id="inpModule" required>
-                                    <option value="">-- Pilih Module --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>8. Device Module *</label>
-                                <select id="inpDeviceModule" required disabled>
-                                    <option value="">-- Pilih Device --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>9. Modul Type *</label>
-                                <select id="inpModulType" required disabled>
-                                    <option value="">-- Pilih Type --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>10. Board Name *</label>
-                                <select id="inpBoardName" required disabled>
-                                    <option value="">-- Pilih Board --</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>11. Status Device *</label>
-                                <select id="inpStatus" required>
-                                    <option value="">-- Pilih Status --</option>
-                                    <option value="Active">Active (Aktif di Lokasi)</option>
-                                    <option value="Damage">Damage (Rusak, Tidak Aktif)</option>
-                                    <option value="Spare">Spare (Cadangan, Tidak Aktif)</option>
-                                </select>
-                            </div>
+                    <!-- GEOTAGGING -->
+                    <div style="background:#f0faff; border:1px solid #bee3f8; border-radius:8px; padding:14px; margin-top:10px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <i class="fas fa-crosshairs" style="color:#17a2b8;font-size:1rem;"></i>
+                            <strong style="font-size:0.9rem;">Location Capture / Geotagging *</strong>
                         </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label>Keterangan (SAP Description)</label>
-                                <textarea id="autoDesc" rows="2" placeholder="Otomatis terisi berdasarkan referensi SAP" readonly></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Detail SAP</label>
-                                <div class="grid-2">
-                                    <input type="text" id="autoTypeObj" placeholder="Type Object (SAP)" readonly>
-                                    <input type="text" id="autoManuf" placeholder="Manufacturer (SAP)" readonly>
-                                    <input type="text" id="autoProdType" placeholder="Product Type (SAP)" readonly>
-                                </div>
-                            </div>
+                        <button type="button" id="btnCaptureLocation" class="btn btn-outline" style="width:100%; margin-bottom:8px;">
+                            <i class="fas fa-location-arrow"></i> Capture Lokasi Saat Ini
+                        </button>
+                        <input type="hidden" id="inpLatitude">
+                        <input type="hidden" id="inpLongitude">
+                        <div id="locationDisplay" style="font-size:0.8rem; color:gray; margin-bottom:3px;">Lokasi belum di-capture.</div>
+                        <div id="validationDisplay" style="font-size:0.8rem; font-weight:700;"></div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════
+                     BAGIAN 2: DEVICE IDENTIFICATION
+                     (bisa ditambah berkali-kali per site)
+                ══════════════════════════════════════════ -->
+                <div class="form-card" id="deviceCard">
+                    <h3><i class="fas fa-microchip" style="color:var(--primary);"></i> Device Identification</h3>
+                    <small style="color:#888; display:block; margin-bottom:14px;">Isi data perangkat di bawah ini. Klik "Tambah Device" untuk menyimpan dan menambah perangkat berikutnya.</small>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Object Name *</label>
+                            <input type="text" id="inpObjectName" placeholder="Nama perangkat (contoh: OLT ZTE C320)" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Object Type *</label>
+                            <input type="text" id="inpObjectType" placeholder="Tipe/model perangkat (contoh: C320-A)">
+                        </div>
+                        <div class="form-group">
+                            <label>Equipment Category *</label>
+                            <select id="inpModule" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="GPON">GPON</option>
+                                <option value="METRO">METRO / IP</option>
+                                <option value="DWDM">DWDM / Transmission</option>
+                                <option value="POWER">Power / Battery</option>
+                                <option value="FIBER">Fiber / ODF / Passive</option>
+                                <option value="IT">IT Equipment</option>
+                                <option value="GA">GA / Gedung</option>
+                                <option value="INFRA">Infrastruktur</option>
+                                <option value="OTHER">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Manufacturer</label>
+                            <input type="text" id="inpManufacturer" placeholder="Merek / pabrikan (contoh: ZTE, Huawei, Cisco)">
+                        </div>
+                        <div class="form-group">
+                            <label>Manufacturer Country</label>
+                            <select id="inpManufCountry">
+                                <option value="">-- Pilih Negara --</option>
+                                <option value="China">China</option>
+                                <option value="USA">USA</option>
+                                <option value="Korea">Korea</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Sweden">Sweden</option>
+                                <option value="Finland">Finland</option>
+                                <option value="Taiwan">Taiwan</option>
+                                <option value="Indonesia">Indonesia</option>
+                                <option value="Other">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status Device *</label>
+                            <select id="inpStatus" required>
+                                <option value="">-- Pilih Status --</option>
+                                <option value="Active">Active — Aktif & beroperasi</option>
+                                <option value="Damage">Damage — Rusak / tidak aktif</option>
+                                <option value="Spare">Spare — Cadangan</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Identification & Photos -->
-                    <div class="form-card">
-                        <h3><i class="fas fa-camera"></i> Identifikasi & Foto</h3>
-                        <div class="form-group">
-                            <label>16. SN *</label>
-                            <div class="scan-wrapper">
-                                <input type="file" id="fileSN" accept="image/*" class="file-input">
-                                <button type="button" class="btn-icon" onclick="triggerFileScan('SN')"><i class="fas fa-file-image"></i> Scan</button>
-                                <button type="button" class="btn-icon" onclick="openCamera('SN')"><i class="fas fa-camera"></i> Cam</button>
-                            </div>
-                            <input type="text" id="manualSN" placeholder="Ketik SN manual jika scan gagal..." class="std-input" style="margin-top:5px; border-color: #ffc107;">
-                            <div id="snTagsContainer" class="chips-container"></div>
-                            <input type="hidden" id="valSN">
+                    <!-- Serial Number -->
+                    <div class="form-group" style="margin-top:6px;">
+                        <label><i class="fas fa-barcode" style="color:#555;"></i> Serial Number (SN) *</label>
+                        <div class="scan-wrapper">
+                            <input type="file" id="fileSN" accept="image/*" style="display:none;">
+                            <button type="button" class="btn-icon" onclick="triggerFileScan('SN')"><i class="fas fa-file-image"></i> Upload Foto</button>
+                            <button type="button" class="btn-icon" onclick="openCamera('SN')"><i class="fas fa-camera"></i> Kamera</button>
                         </div>
-                        <div class="form-group">
-                            <label>17. PN</label>
-                            <div class="scan-wrapper">
-                                <input type="file" id="filePN" accept="image/*" class="file-input">
-                                <button type="button" class="btn-icon" onclick="triggerFileScan('PN')"><i class="fas fa-file-image"></i> Scan</button>
-                                <button type="button" class="btn-icon" onclick="openCamera('PN')"><i class="fas fa-camera"></i> Cam</button>
-                            </div>
-                            <input type="text" id="valPN" placeholder="Hasil Scan PN" class="std-input" style="margin-top:5px; width:100%; padding:8px;">
-                        </div>
+                        <input type="text" id="manualSN" placeholder="Ketik SN atau scan barcode..." class="std-input" style="margin-top:6px; border-color:#ffc107; width:100%; padding:8px;">
+                        <div id="snTagsContainer" class="chips-container"></div>
+                        <input type="hidden" id="valSN">
+                    </div>
 
+                    <!-- Part Number -->
+                    <div class="form-group">
+                        <label><i class="fas fa-qrcode" style="color:#555;"></i> Part Number (PN)</label>
+                        <div class="scan-wrapper">
+                            <input type="file" id="filePN" accept="image/*" style="display:none;">
+                            <button type="button" class="btn-icon" onclick="triggerFileScan('PN')"><i class="fas fa-file-image"></i> Upload Foto</button>
+                            <button type="button" class="btn-icon" onclick="openCamera('PN')"><i class="fas fa-camera"></i> Kamera</button>
+                        </div>
+                        <input type="text" id="valPN" placeholder="Ketik PN atau scan barcode..." class="std-input" style="margin-top:6px; width:100%; padding:8px;">
+                    </div>
+
+                    <!-- Foto dokumentasi -->
+                    <div style="margin-top:8px;">
+                        <label style="font-weight:600; font-size:0.9rem;"><i class="fas fa-camera" style="color:#555;"></i> Foto Dokumentasi *</label>
+                        <small style="display:block; color:#888; margin-bottom:10px;">Semua foto wajib diisi. Gunakan tombol kamera untuk mengambil foto langsung.</small>
                         <div class="grid-3">
-                            <div class="form-group file-input">
-                                <label>Foto Label Dekat *</label>
-                                <input type="file" id="photoLabel" accept="image/*" required>
-                                <small>Foto close-up label perangkat</small>
+                            <div class="form-group" style="border:1px dashed #ddd; border-radius:8px; padding:10px; text-align:center;">
+                                <label style="color:#555; font-size:0.82rem;"><i class="fas fa-expand" style="color:#17a2b8;"></i> Foto dari Jauh *</label>
+                                <input type="file" id="photoFar" accept="image/*" capture="environment" required style="margin-top:6px; width:100%;">
+                                <small style="color:#aaa;">Tampilkan keseluruhan rack/area</small>
                             </div>
-                            <div class="form-group file-input">
-                                <label>Foto Type / Info *</label>
-                                <input type="file" id="photoType" accept="image/*" required>
-                                <small>Foto bagian type/model perangkat</small>
+                            <div class="form-group" style="border:1px dashed #ddd; border-radius:8px; padding:10px; text-align:center;">
+                                <label style="color:#555; font-size:0.82rem;"><i class="fas fa-search" style="color:#28a745;"></i> Foto dari Dekat *</label>
+                                <input type="file" id="photoType" accept="image/*" capture="environment" required style="margin-top:6px; width:100%;">
+                                <small style="color:#aaa;">Tampilkan perangkat secara jelas</small>
                             </div>
-                            <div class="form-group file-input">
-                                <label>Foto Jauh (Context) *</label>
-                                <input type="file" id="photoFar" accept="image/*" required>
-                                <small>Foto tampilan perangkat di rack / room</small>
+                            <div class="form-group" style="border:1px dashed #ddd; border-radius:8px; padding:10px; text-align:center;">
+                                <label style="color:#555; font-size:0.82rem;"><i class="fas fa-tag" style="color:var(--primary);"></i> Foto Label Perangkat *</label>
+                                <input type="file" id="photoLabel" accept="image/*" capture="environment" required style="margin-top:6px; width:100%;">
+                                <small style="color:#aaa;">Label/nameplate yang terpasang</small>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> SIMPAN DATA VISIT (DRAFT)</button>
-                            <span id="submitStatus" style="margin-left: 10px; font-size: 0.85rem;"></span>
                         </div>
                     </div>
-                </form>
+
+                    <!-- Preview device yang sudah ditambahkan (session ini) -->
+                    <div id="deviceQueueWrapper" style="display:none; margin-top:16px;">
+                        <div style="background:#f8f9fa; border-radius:8px; padding:12px;">
+                            <strong style="font-size:0.85rem; color:#333;"><i class="fas fa-list" style="color:var(--primary);"></i> Antrian Device Session Ini</strong>
+                            <div id="deviceQueueList" style="margin-top:8px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:center;">
+                        <button type="button" id="btnAddDevice" class="btn btn-primary" onclick="submitDevice(false)">
+                            <i class="fas fa-plus-circle"></i> Tambah Device
+                        </button>
+                        <button type="button" id="btnSaveDraft" class="btn btn-success" onclick="submitDevice(true)">
+                            <i class="fas fa-save"></i> Simpan & Selesai (Draft)
+                        </button>
+                        <span id="submitStatus" style="font-size:0.82rem; color:#555;"></span>
+                    </div>
+                    <!-- hidden fields tetap ada untuk kompatibilitas JS lama -->
+                    <input type="hidden" id="inpRackNo" value="">
+                    <input type="hidden" id="inpDeviceModule" value="">
+                    <input type="hidden" id="inpModulType" value="">
+                    <input type="hidden" id="inpBoardName" value="">
+                    <input type="hidden" id="autoDesc" value="">
+                    <input type="hidden" id="autoTypeObj" value="">
+                    <input type="hidden" id="autoManuf" value="">
+                    <input type="hidden" id="autoProdType" value="">
+                </div>
             </section>
 
             <!-- VIEW 3: REPORT VISIT (CHECKER/ADMIN) -->
@@ -1064,16 +1108,14 @@
                                 <th>Site Code</th>
                                 <th>Site Name</th>
                                 <th>PIC</th>
-                                <th>labelId</th>
-                                <th>Rack</th>
-                                <th>Lantai</th>
-                                <th>Module</th>
-                                <th>Device Module</th>
-                                <th>Board Name</th>
-                                <th>Status</th>
+                                <th>Label ID</th>
+                                <th>Object Name</th>
+                                <th>Kategori</th>
+                                <th>Manufacturer</th>
                                 <th>SN</th>
+                                <th>Status</th>
                                 <th>Foto</th>
-                                <th>Lokasi</th> <!-- NEW COLUMN -->
+                                <th>Lokasi</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -1478,37 +1520,63 @@
             <h3>Edit Data Visit</h3>
             <form id="editForm">
                 <input type="hidden" id="editId">
-                <p style="margin-bottom: 10px; font-weight: 500; font-size: 0.9rem;">labelId: <span id="modallabelIdDisplay">-</span> | Status Saat Ini: <span id="modalStatusDisplay" class="status-pill status-Draft">Draft</span></p>
-                
+                <p style="margin-bottom:10px;font-weight:500;font-size:0.9rem;">
+                    Label ID: <strong id="modallabelIdDisplay">-</strong> &nbsp;|&nbsp;
+                    Status: <span id="modalStatusDisplay" class="status-pill status-Draft">Draft</span>
+                </p>
+                <!-- Site Info -->
                 <div class="grid-2">
                     <div class="form-group"><label>Tanggal</label><input type="date" id="modalEditDate"></div>
                     <div class="form-group"><label>Site Code</label><input type="text" id="modalEditSiteCode"></div>
                     <div class="form-group"><label>Site Name</label><input type="text" id="modalEditSiteName"></div>
-                    <div class="form-group"><label>PIC</label><input type="text" id="modalEditPic"></div>
-                    <div class="form-group"><label>No Rack</label><input type="text" id="modalEditRack"></div>
-                    <div class="form-group"><label>Lantai</label><input type="text" id="modalEditFloor"></div>
+                    <div class="form-group"><label>PIC Name</label><input type="text" id="modalEditPic"></div>
+                    <div class="form-group"><label>Floor Name</label><input type="text" id="modalEditFloor"></div>
                 </div>
-                <div class="grid-2">
-                    <div class="form-group"><label>Module</label><input type="text" id="modalEditModule"></div>
-                    <div class="form-group"><label>Device Module</label><input type="text" id="modalEditDeviceModule"></div>
-                    <div class="form-group"><label>Modul Type</label><input type="text" id="modalEditModulType"></div>
-                    <div class="form-group"><label>Board Name</label><input type="text" id="modalEditBoard"></div>
-                    <div class="form-group"><label>Description</label><input type="text" id="modalEditDesc"></div>
-                    <div class="form-group"><label>Status Final Device (Hanya Admin)</label>
+                <!-- Device Info -->
+                <div class="grid-2" style="margin-top:8px;">
+                    <div class="form-group"><label>Object Name</label><input type="text" id="modalEditObjectName"></div>
+                    <div class="form-group"><label>Object Type</label><input type="text" id="modalEditObjectType"></div>
+                    <div class="form-group"><label>Equipment Category</label>
+                        <select id="modalEditModule">
+                            <option value="">-- Pilih --</option>
+                            <option value="GPON">GPON</option>
+                            <option value="METRO">METRO / IP</option>
+                            <option value="DWDM">DWDM / Transmission</option>
+                            <option value="POWER">Power / Battery</option>
+                            <option value="FIBER">Fiber / ODF / Passive</option>
+                            <option value="IT">IT Equipment</option>
+                            <option value="GA">GA / Gedung</option>
+                            <option value="INFRA">Infrastruktur</option>
+                            <option value="OTHER">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Manufacturer</label><input type="text" id="modalEditManufacturer"></div>
+                    <div class="form-group"><label>Manufacturer Country</label><input type="text" id="modalEditManufCountry"></div>
+                    <div class="form-group"><label>Serial Number (SN)</label><input type="text" id="modalEditSN"></div>
+                    <div class="form-group"><label>Part Number (PN)</label><input type="text" id="modalEditPN"></div>
+                    <div class="form-group"><label>Status Workflow</label>
                         <select id="modalEditStatus">
                             <option value="Draft">Draft</option>
                             <option value="Submitted">Submitted</option>
                             <option value="Approved">Approved</option>
                             <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Status Device Final</label>
+                        <select id="modalEditDeviceStatus">
                             <option value="Active">Active</option>
                             <option value="Damage">Damage</option>
                             <option value="Spare">Spare</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Serial Number (SN)</label><input type="text" id="modalEditSN"></div>
-                    <div class="form-group"><label>Part Number (PN)</label><input type="text" id="modalEditPN"></div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100" style="margin-top:20px;">SIMPAN PERUBAHAN</button>
+                <!-- Hidden backward-compat fields -->
+                <input type="hidden" id="modalEditRack" value="">
+                <input type="hidden" id="modalEditDeviceModule" value="">
+                <input type="hidden" id="modalEditModulType" value="">
+                <input type="hidden" id="modalEditBoard" value="">
+                <input type="hidden" id="modalEditDesc" value="">
+                <button type="submit" class="btn btn-primary w-100" style="margin-top:20px;"><i class="fas fa-save"></i> SIMPAN PERUBAHAN</button>
             </form>
         </div>
     </div>
@@ -2307,7 +2375,7 @@
             document.getElementById("reportPageInfo").textContent = `Page ${currentReportPage} of ${totalPages || 1} (${filteredReportData.length} entries)`;
 
             if (currentData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;">Tidak ada data kunjungan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;">Tidak ada data kunjungan.</td></tr>`;
                 return;
             }
 
@@ -2316,6 +2384,11 @@
             currentData.forEach(d => {
                 const currentStatus = d.status === 'Approved' ? (d.deviceStatusFinal || 'Active') : d.status;
                 const statusClass = currentStatus.replace(/\s/g, '');
+                const distStr = d.validationDistance ? `${(d.validationDistance/1000).toFixed(2)} KM` : '-';
+                // Backward compat: objectName → deviceModule jika data lama
+                const objName = d.objectName || d.deviceModule || '-';
+                const category = d.module || '-';
+                const manuf = d.manufacturer || d.autoManuf || '-';
                 
                 tbody.innerHTML += `
                     <tr>
@@ -2323,20 +2396,18 @@
                         <td>${d.siteCode || '-'}</td>
                         <td>${d.siteName || '-'}</td>
                         <td>${d.picName || '-'}</td>
-                        <td>${d.labelId || '-'}</td>
-                        <td>${d.rackNo || '-'}</td>
-                        <td>${d.floor || '-'}</td>
-                        <td>${d.module || '-'}</td>
-                        <td>${d.deviceModule || '-'}</td>
-                        <td>${d.boardName || '-'}</td>
+                        <td><code style="font-size:0.75rem;font-weight:700;color:#003570;">${d.labelId || '-'}</code></td>
+                        <td>${objName}</td>
+                        <td>${category}</td>
+                        <td>${manuf}</td>
+                        <td><code style="font-size:0.75rem;">${(d.serialNumber||'').substring(0,20)||'-'}</code></td>
                         <td><span class="status-pill status-${statusClass}">${currentStatus}</span></td>
-                        <td>${d.serialNumber || '-'}</td>
                         <td>
                             <a href="${d.photoLabel || '#'}" target="_blank">
                                 <img src="${d.photoLabel || 'https://placehold.co/60x36/cccccc/333333?text=Foto'}" alt="Foto" class="tbl-img">
                             </a>
                         </td>
-                        <td>${(d.validationDistance / 1000).toFixed(2)} KM</td>
+                        <td style="font-size:0.75rem;">${distStr}</td>
                         <td>
                             <button class="btn btn-sm btn-outline" onclick="openEditModal('${d.id}')"><i class="fas fa-edit"></i> Edit</button>
                             ${d.status === 'Draft' ? `<button class="btn btn-sm btn-success" onclick="updateVisitStatus('${d.id}', 'Submitted')"><i class="fas fa-file-upload"></i> Submit</button>` : ''}
@@ -2920,217 +2991,281 @@
         // Add modal functions and form submission logic for User Management (omitted for brevity but required for full app)
 
 
-        // === FORM SUBMISSION & STORAGE UPLOAD (UPDATED FOR DUPE CHECK & AUDIT LOG) ===
-        document.getElementById("dataForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const statusSpan = document.getElementById("submitStatus");
-            statusSpan.textContent = "Menyimpan data...";
-            statusSpan.style.color = "black";
-            
-            // --- VALIDASI GEOTAGGING ---
+        // ═══════════════════════════════════════════════════════════
+        //  FORM INPUT v9 — Multi-device per session
+        // ═══════════════════════════════════════════════════════════
+
+        // Antrian device yang akan di-submit dalam 1 sesi visit
+        let deviceQueue = [];
+
+        // Validasi Site Info
+        function validateSiteInfo() {
+            const date     = document.getElementById("inpDate").value;
+            const siteCode = document.getElementById("inpSiteCode").value.trim();
+            const siteName = document.getElementById("inpSiteName").value.trim();
+            const pic      = document.getElementById("inpPic").value.trim();
+            if (!date)     { showToast("Visit Date wajib diisi.", "error"); return null; }
+            if (!siteCode) { showToast("Site Code wajib diisi.", "error"); return null; }
+            if (!siteName) { showToast("Site Name wajib diisi.", "error"); return null; }
+            if (!pic)      { showToast("PIC Name wajib diisi.", "error"); return null; }
             if (!capturedLatitude || !capturedLongitude) {
-                statusSpan.textContent = "Mohon Capture Lokasi (Geotagging) terlebih dahulu.";
-                statusSpan.style.color = "red";
-                showToast("Geotagging wajib dilakukan.", "error");
-                return;
+                showToast("Location Capture wajib dilakukan terlebih dahulu.", "error"); return null;
             }
-            
-            const HARD_STOP_DISTANCE = 100000; // 100 KM dalam meter (untuk regional coverage)
+            return { date, siteCode, siteName, picName: pic };
+        }
 
-            if (validationDistance > HARD_STOP_DISTANCE && currentUserRole === 'Engineer') { 
-                statusSpan.textContent = `Jarak terlalu jauh (> ${HARD_STOP_DISTANCE/1000} KM). Submission dibatalkan.`;
-                statusSpan.style.color = "red";
-                showToast(`GAGAL: Lokasi Anda terlalu jauh dari Site Referensi (> ${HARD_STOP_DISTANCE/1000} KM). Mohon pindah lokasi.`, "error");
-                return;
-            }
-            // --- END VALIDASI GEOTAGGING ---
+        // Validasi Device Info
+        function validateDeviceInfo() {
+            const objectName  = document.getElementById("inpObjectName").value.trim();
+            const module      = document.getElementById("inpModule").value;
+            const statusDev   = document.getElementById("inpStatus").value;
 
-            // TAMBAH: Pastikan SN manual diinput ke list SN sebelum submit
+            // SN — ambil dari snList atau manualSN
             const manualSNVal = document.getElementById("manualSN").value.trim();
             if (manualSNVal) {
                 const up = manualSNVal.toUpperCase();
                 if (!snList.includes(up)) snList.push(up);
                 updateSnDisplay();
             }
-
             const sn = snList.join(", ");
-            const pn = (document.getElementById("valPN").value || "").trim();
 
-            if (!sn && !pn) {
-                 statusSpan.textContent = "SN atau PN wajib diisi.";
-                 statusSpan.style.color = "red";
-                 showToast("SN atau PN wajib diisi.", "error");
-                 return;
-            }
-            
-            // --- START DUPLICATE CHECK ---
-            statusSpan.textContent = "Melakukan pengecekan duplikasi SN/PN...";
+            if (!objectName)  { showToast("Object Name wajib diisi.", "error"); return null; }
+            if (!module)      { showToast("Equipment Category wajib dipilih.", "error"); return null; }
+            if (!statusDev)   { showToast("Status Device wajib dipilih.", "error"); return null; }
+            if (!sn)          { showToast("Serial Number (SN) wajib diisi.", "error"); return null; }
+
+            const labelFile = document.getElementById("photoLabel").files[0];
+            const typeFile  = document.getElementById("photoType").files[0];
+            const farFile   = document.getElementById("photoFar").files[0];
+            if (!labelFile) { showToast("Foto Label Perangkat wajib diambil.", "error"); return null; }
+            if (!typeFile)  { showToast("Foto dari Dekat wajib diambil.", "error"); return null; }
+            if (!farFile)   { showToast("Foto dari Jauh wajib diambil.", "error"); return null; }
+
+            return {
+                objectName,
+                objectType       : document.getElementById("inpObjectType").value.trim(),
+                module,
+                manufacturer     : document.getElementById("inpManufacturer").value.trim(),
+                manufCountry     : document.getElementById("inpManufCountry").value,
+                serialNumber     : sn,
+                partNumber       : document.getElementById("valPN").value.trim(),
+                deviceStatusFinal: statusDev,
+                photoLabelFile   : labelFile,
+                photoTypeFile    : typeFile,
+                photoFarFile     : farFile,
+            };
+        }
+
+        // Reset hanya bagian device (site info tetap)
+        function resetDeviceFields() {
+            document.getElementById("inpObjectName").value    = "";
+            document.getElementById("inpObjectType").value    = "";
+            document.getElementById("inpModule").value        = "";
+            document.getElementById("inpManufacturer").value  = "";
+            document.getElementById("inpManufCountry").value  = "";
+            document.getElementById("inpStatus").value        = "";
+            document.getElementById("valPN").value            = "";
+            document.getElementById("manualSN").value         = "";
+            document.getElementById("photoLabel").value       = "";
+            document.getElementById("photoType").value        = "";
+            document.getElementById("photoFar").value         = "";
+            snList = [];
+            updateSnDisplay();
+            document.getElementById("submitStatus").textContent = "";
+        }
+
+        // Render antrian device
+        function renderDeviceQueue() {
+            const wrapper = document.getElementById("deviceQueueWrapper");
+            const list    = document.getElementById("deviceQueueList");
+            if (deviceQueue.length === 0) { wrapper.style.display = "none"; return; }
+            wrapper.style.display = "block";
+            list.innerHTML = deviceQueue.map((d, i) => `
+                <div style="display:flex; justify-content:space-between; align-items:center;
+                            background:white; border:1px solid #ddd; border-radius:6px;
+                            padding:8px 12px; margin-bottom:6px; font-size:0.82rem;">
+                    <span>
+                        <strong>#${i+1}</strong>
+                        <span class="status-pill status-${(d.deviceStatusFinal||'').toLowerCase()}" style="margin:0 6px;">${d.deviceStatusFinal}</span>
+                        <strong>${d.objectName}</strong>
+                        <span style="color:#888;"> · ${d.module} · SN: ${d.serialNumber}</span>
+                    </span>
+                    <button onclick="removeFromQueue(${i})" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:1rem;" title="Hapus"><i class="fas fa-times-circle"></i></button>
+                </div>
+            `).join("");
+        }
+
+        window.removeFromQueue = function(i) {
+            deviceQueue.splice(i, 1);
+            renderDeviceQueue();
+            showToast("Device dihapus dari antrian.", "info");
+        };
+
+        // Fungsi utama: Tambah Device atau Simpan Draft
+        window.submitDevice = async function(isFinal) {
+            const statusSpan = document.getElementById("submitStatus");
+
+            const siteInfo   = validateSiteInfo();
+            if (!siteInfo) return;
+
+            const deviceInfo = validateDeviceInfo();
+            if (!deviceInfo) return;
+
+            // Cek duplikasi SN
+            statusSpan.textContent = "Mengecek duplikasi SN...";
+            const pn = deviceInfo.partNumber;
+            const sn = deviceInfo.serialNumber;
             const duplicate = await checkDuplicateAssets(sn, pn);
-            
             if (duplicate) {
-                statusSpan.textContent = `GAGAL! ${duplicate.type} ${duplicate.value} sudah terdaftar.`;
-                statusSpan.style.color = "red";
-                showToast(`Duplikasi! ${duplicate.type} ${duplicate.value} sudah ada di labelId ${duplicate.labelId} (${duplicate.site}).`, "error", 10000);
+                statusSpan.textContent = "";
+                showToast(`Duplikasi! ${duplicate.type} ${duplicate.value} sudah ada di ${duplicate.labelId} (${duplicate.site}).`, "error");
                 return;
             }
-            // --- END DUPLICATE CHECK ---
+
+            // Tambah ke antrian
+            deviceQueue.push({ ...siteInfo, ...deviceInfo });
+            renderDeviceQueue();
+
+            if (!isFinal) {
+                // Mode "Tambah Device" — reset field device saja, site info tetap
+                resetDeviceFields();
+                showToast(`Device "${deviceInfo.objectName}" ditambahkan ke antrian. Isi device berikutnya.`, "success");
+                statusSpan.textContent = `✓ ${deviceQueue.length} device dalam antrian.`;
+                return;
+            }
+
+            // Mode "Simpan & Selesai" — upload semua device dari antrian ke Firebase
+            statusSpan.textContent = `Menyimpan ${deviceQueue.length} device...`;
+            document.getElementById("btnAddDevice").disabled  = true;
+            document.getElementById("btnSaveDraft").disabled  = true;
+
+            let savedCount = 0;
+            const savedLabels = [];
 
             try {
-                
-                const date = document.getElementById("inpDate").value;
-                const siteCode = document.getElementById("inpSiteCode").value;
-                const siteName = document.getElementById("inpSiteName").value;
-                const pic = document.getElementById("inpPic").value;
-                const labelResult = await generatelabelId(
-                    document.getElementById("inpSiteCode").value.trim(),
-                    document.getElementById("inpModule").value.trim()
-                );
-                
-                if (!labelResult) {
-                    showToast("Gagal generate labelId", "error");
-                    return;
+                for (const dev of deviceQueue) {
+                    statusSpan.textContent = `Menyimpan device ${savedCount + 1}/${deviceQueue.length}: ${dev.objectName}...`;
+
+                    // Generate labelId
+                    const labelResult = await generatelabelId(dev.siteCode, dev.module);
+                    if (!labelResult) { showToast("Gagal generate labelId.", "error"); break; }
+
+                    // Upload foto
+                    const tempDocRef = await addDoc(collection(db, "visit_data"), {
+                        labelId      : labelResult.labelId,
+                        labelPrefix  : labelResult.labelPrefix,
+                        labelSeq     : labelResult.labelSeq,
+                        status       : "Draft",
+                        createdAt    : new Date().toISOString(),
+                        createdBy    : currentUser?.email || null,
+                    });
+
+                    const basePath  = `visit_photos/${currentUserId || 'anonymous'}/${tempDocRef.id}`;
+                    const labelRef  = ref(storage, `${basePath}/label.jpg`);
+                    const typeRef   = ref(storage, `${basePath}/type.jpg`);
+                    const farRef    = ref(storage, `${basePath}/far.jpg`);
+
+                    await Promise.all([
+                        uploadBytes(labelRef, dev.photoLabelFile),
+                        uploadBytes(typeRef,  dev.photoTypeFile),
+                        uploadBytes(farRef,   dev.photoFarFile),
+                    ]);
+
+                    const [labelURL, typeURL, farURL] = await Promise.all([
+                        getDownloadURL(labelRef),
+                        getDownloadURL(typeRef),
+                        getDownloadURL(farRef),
+                    ]);
+
+                    // Final data ke Firestore
+                    const finalData = {
+                        // Site Info
+                        date             : dev.date,
+                        siteCode         : dev.siteCode,
+                        siteName         : dev.siteName,
+                        picName          : dev.picName,
+                        floor            : document.getElementById("inpFloor").value.trim(),
+                        // Device Info
+                        objectName       : dev.objectName,
+                        objectType       : dev.objectType,
+                        module           : dev.module,
+                        manufacturer     : dev.manufacturer,
+                        manufCountry     : dev.manufCountry,
+                        serialNumber     : dev.serialNumber,
+                        partNumber       : dev.partNumber,
+                        deviceStatusFinal: dev.deviceStatusFinal,
+                        // Label
+                        labelId          : labelResult.labelId,
+                        labelPrefix      : labelResult.labelPrefix,
+                        labelSeq         : labelResult.labelSeq,
+                        // Status workflow
+                        status           : "Draft",
+                        // GPS
+                        recordLatitude   : capturedLatitude,
+                        recordLongitude  : capturedLongitude,
+                        validationDistance: validationDistance,
+                        // Foto
+                        photoLabel       : labelURL,
+                        photoType        : typeURL,
+                        photoFar         : farURL,
+                        // Audit
+                        createdBy        : currentUser?.email || null,
+                        createdAt        : new Date().toISOString(),
+                        auditLog         : [{
+                            timestamp    : new Date().toISOString(),
+                            user         : currentUser?.email || null,
+                            oldStatus    : 'N/A',
+                            newStatus    : 'Draft',
+                            changedFields: { creation: { old: 'N/A', new: 'Initial Data Entry' } }
+                        }],
+                        // Backward compat fields (kosong tapi tetap ada)
+                        rackNo           : "",
+                        deviceModule     : dev.objectName,
+                        modulType        : dev.objectType,
+                        boardName        : "",
+                        description      : `${dev.objectName} ${dev.objectType}`.trim(),
+                    };
+
+                    await setDoc(doc(db, "visit_data", tempDocRef.id), finalData, { merge: true });
+
+                    savedLabels.push(labelResult.labelId);
+                    savedCount++;
                 }
 
-                await addDoc(collection(db, "visit_data"), {
-                    labelId: labelResult.labelId,
-                    labelPrefix: labelResult.labelPrefix,
-                    labelSeq: labelResult.labelSeq,
-                
-                    siteCode,
-                    module,
-                    deviceModule,
-                    modulType,
-                    status: "Draft",
-                
-                    createdAt: new Date().toISOString(),
-                    createdBy: currentUser?.email || null,
-                
-                    // field lama tetap
-                });
+                // Sukses — reset semua
+                deviceQueue = [];
+                renderDeviceQueue();
+                resetDeviceFields();
+                // Reset site info juga setelah selesai
+                document.getElementById("inpDate").valueAsDate = new Date();
+                document.getElementById("inpSiteCode").value  = "";
+                document.getElementById("inpSiteName").value  = "";
+                document.getElementById("inpPic").value       = "";
+                document.getElementById("inpFloor").value     = "";
+                capturedLatitude = null; capturedLongitude = null; validationDistance = null;
+                document.getElementById("inpLatitude").value  = "";
+                document.getElementById("inpLongitude").value = "";
+                document.getElementById("locationDisplay").textContent  = "Lokasi belum di-capture.";
+                document.getElementById("locationDisplay").style.color  = "gray";
+                document.getElementById("validationDisplay").textContent = "";
 
-
-                const rack = document.getElementById("inpRackNo").value;
-                const floor = document.getElementById("inpFloor").value;
-                const moduleVal = document.getElementById("inpModule").value;
-                const devMod = document.getElementById("inpDeviceModule").value;
-                const modType = document.getElementById("inpModulType").value;
-                const boardName = document.getElementById("inpBoardName").value;
-                const statusDev = document.getElementById("inpStatus").value;
-
-                const labelFile = document.getElementById("photoLabel").files[0];
-                const typeFile = document.getElementById("photoType").files[0];
-                const farFile = document.getElementById("photoFar").files[0];
-
-                if (!labelFile || !typeFile || !farFile) {
-                    statusSpan.textContent = "Mohon lengkapi semua foto.";
-                    statusSpan.style.color = "red";
-                    return;
-                }
-                
-                // --- START UPLOAD PROCESS ---
-                
-                const initialData = {
-                    date, siteCode, siteName, picName: pic, rackNo: rack, floor,
-                    module: moduleVal, deviceModule: devMod, modulType: modType, boardName,
-                    status: "Draft",
-                    labelId: labelId, 
-                    deviceStatusFinal: statusDev, 
-                    serialNumber: sn, partNumber: pn,
-                    description: document.getElementById("autoDesc").value || "",
-                    recordLatitude: capturedLatitude, 
-                    recordLongitude: capturedLongitude,
-                    validationDistance: validationDistance,
-                    createdBy: currentUser.email, 
-                    createdAt: new Date().toISOString()
-                };
-                
-                // 1. Tambah dokumen awal di Firestore
-                const docRef = await addDoc(collection(db, "visit_data"), initialData);
-
-                const basePath = `visit_photos/${currentUserId || 'anonymous'}/${docRef.id}`;
-                const labelRef = ref(storage, `${basePath}/label.jpg`);
-                const typeRef = ref(storage, `${basePath}/type.jpg`);
-                const farRef = ref(storage, `${basePath}/far.jpg`);
-
-                const uploadPromises = [];
-                
-                statusSpan.textContent = "Mengunggah Foto Label (1/3)...";
-                uploadPromises.push(uploadBytes(labelRef, labelFile));
-                statusSpan.textContent = "Mengunggah Foto Type (2/3)...";
-                uploadPromises.push(uploadBytes(typeRef, typeFile));
-                statusSpan.textContent = "Mengunggah Foto Jauh (3/3)...";
-                uploadPromises.push(uploadBytes(farRef, farFile));
-
-                await Promise.all(uploadPromises);
-                
-                statusSpan.textContent = "Menyelesaikan simpan data...";
-
-                const [labelURL, typeURL, farURL] = await Promise.all([
-                    getDownloadURL(labelRef),
-                    getDownloadURL(typeRef),
-                    getDownloadURL(farRef)
-                ]);
-
-                // 2. Tambahkan log audit awal (Creation)
-                const initialLog = {
-                    timestamp: new Date().toISOString(),
-                    user: currentUser.email,
-                    oldStatus: 'N/A',
-                    newStatus: 'Draft',
-                    changedFields: {
-                        creation: { old: 'N/A', new: 'Initial Data Entry' }
-                    }
-                };
-
-                // 3. Update dokumen dengan URL foto dan log
-                await setDoc(doc(db, "visit_data", docRef.id), {
-                    photoLabel: labelURL,
-                    photoType: typeURL,
-                    photoFar: farURL,
-                    auditLog: [initialLog], // Start the audit log array
-                }, { merge: true });
-
-                statusSpan.textContent = `Data berhasil disimpan sebagai DRAFT (${labelId}).`;
+                statusSpan.textContent = `✓ ${savedCount} device berhasil disimpan sebagai Draft!`;
                 statusSpan.style.color = "green";
-                showToast(`Data Visit berhasil disimpan sebagai DRAFT! labelId: ${labelId}`, "success");
-
-                // Reset Form (Hanya bagian Device Info & Identification)
-                document.getElementById("inpModule").value = "";
-                document.getElementById("inpDeviceModule").value = "";
-                document.getElementById("inpModulType").value = "";
-                document.getElementById("inpBoardName").value = "";
-                document.getElementById("inpStatus").value = "";
-                document.getElementById("autoDesc").value = "";
-                document.getElementById("autoTypeObj").value = "";
-                document.getElementById("autoManuf").value = "";
-                document.getElementById("autoProdType").value = "";
-                
-                document.getElementById("valPN").value = "";
-                document.getElementById("manualSN").value = "";
-                document.getElementById("photoLabel").value = "";
-                document.getElementById("photoType").value = "";
-                document.getElementById("photoFar").value = "";
-                snList = []; 
-                updateSnDisplay();
-                
-                // Reset Geolocation state
-                capturedLatitude = null;
-                capturedLongitude = null;
-                validationDistance = null;
-                document.getElementById("inpLatitude").value = '';
-                document.getElementById("inpLongitude").value = '';
-                locationDisplay.textContent = "Lokasi belum di-capture.";
-                locationDisplay.style.color = 'gray';
-                validationDisplay.textContent = '';
-
+                showToast(`${savedCount} device berhasil disimpan! Label: ${savedLabels.join(", ")}`, "success");
 
             } catch (err) {
                 console.error(err);
-                statusSpan.textContent = "Gagal menyimpan data.";
+                statusSpan.textContent = "Gagal menyimpan: " + err.message;
                 statusSpan.style.color = "red";
-                showToast("Gagal menyimpan data: " + err.message, "error");
+                showToast("Error: " + err.message, "error");
+            } finally {
+                document.getElementById("btnAddDevice").disabled  = false;
+                document.getElementById("btnSaveDraft").disabled  = false;
             }
-        });
+        };
+
+        // Dummy listener untuk kompatibilitas (form lama dihapus, pastikan tidak error)
+        // document.getElementById("dataForm") tidak ada lagi, tapi checkDuplicateAssets & generatelabelId tetap dipakai
 
         // === EDIT FORM SUBMISSION (UPDATED FOR AUDIT LOG) ===
         document.getElementById("editForm").addEventListener("submit", async (e) => {
@@ -3139,20 +3274,23 @@
             const oldData = reportData.find(d => d.id === id);
 
             const newData = {
-                date: document.getElementById("modalEditDate").value,
-                siteCode: document.getElementById("modalEditSiteCode").value,
-                siteName: document.getElementById("modalEditSiteName").value,
-                picName: document.getElementById("modalEditPic").value,
-                rackNo: document.getElementById("modalEditRack").value,
-                floor: document.getElementById("modalEditFloor").value,
-                module: document.getElementById("modalEditModule").value,
-                deviceModule: document.getElementById("modalEditDeviceModule").value,
-                modulType: document.getElementById("modalEditModulType").value,
-                boardName: document.getElementById("modalEditBoard").value,
-                description: document.getElementById("modalEditDesc").value,
-                status: document.getElementById("modalEditStatus").value,
-                serialNumber: document.getElementById("modalEditSN").value,
-                partNumber: document.getElementById("modalEditPN").value,
+                date             : document.getElementById("modalEditDate").value,
+                siteCode         : document.getElementById("modalEditSiteCode").value,
+                siteName         : document.getElementById("modalEditSiteName").value,
+                picName          : document.getElementById("modalEditPic").value,
+                floor            : document.getElementById("modalEditFloor").value,
+                objectName       : document.getElementById("modalEditObjectName").value,
+                objectType       : document.getElementById("modalEditObjectType").value,
+                module           : document.getElementById("modalEditModule").value,
+                manufacturer     : document.getElementById("modalEditManufacturer").value,
+                manufCountry     : document.getElementById("modalEditManufCountry").value,
+                serialNumber     : document.getElementById("modalEditSN").value,
+                partNumber       : document.getElementById("modalEditPN").value,
+                status           : document.getElementById("modalEditStatus").value,
+                deviceStatusFinal: document.getElementById("modalEditDeviceStatus").value,
+                // backward compat
+                deviceModule     : document.getElementById("modalEditObjectName").value,
+                modulType        : document.getElementById("modalEditObjectType").value,
             };
 
             const changes = getDifferences(oldData, newData);
@@ -3222,20 +3360,21 @@
             statusPill.className = `status-pill status-${data.status.replace(/\s/g, '')}`;
 
             // Populate form fields
-            document.getElementById("modalEditDate").value = data.date || '';
-            document.getElementById("modalEditSiteCode").value = data.siteCode || '';
-            document.getElementById("modalEditSiteName").value = data.siteName || '';
-            document.getElementById("modalEditPic").value = data.picName || '';
-            document.getElementById("modalEditRack").value = data.rackNo || '';
-            document.getElementById("modalEditFloor").value = data.floor || '';
-            document.getElementById("modalEditModule").value = data.module || '';
-            document.getElementById("modalEditDeviceModule").value = data.deviceModule || '';
-            document.getElementById("modalEditModulType").value = data.modulType || '';
-            document.getElementById("modalEditBoard").value = data.boardName || '';
-            document.getElementById("modalEditDesc").value = data.description || '';
-            document.getElementById("modalEditSN").value = data.serialNumber || '';
-            document.getElementById("modalEditPN").value = data.partNumber || '';
-            document.getElementById("modalEditStatus").value = data.status || 'Draft';
+            document.getElementById("modalEditDate").value         = data.date || '';
+            document.getElementById("modalEditSiteCode").value     = data.siteCode || '';
+            document.getElementById("modalEditSiteName").value     = data.siteName || '';
+            document.getElementById("modalEditPic").value          = data.picName || '';
+            document.getElementById("modalEditFloor").value        = data.floor || '';
+            // New fields
+            document.getElementById("modalEditObjectName").value   = data.objectName || data.deviceModule || '';
+            document.getElementById("modalEditObjectType").value   = data.objectType || data.modulType || '';
+            document.getElementById("modalEditModule").value       = data.module || '';
+            document.getElementById("modalEditManufacturer").value = data.manufacturer || '';
+            document.getElementById("modalEditManufCountry").value = data.manufCountry || '';
+            document.getElementById("modalEditSN").value           = data.serialNumber || '';
+            document.getElementById("modalEditPN").value           = data.partNumber || '';
+            document.getElementById("modalEditStatus").value       = data.status || 'Draft';
+            document.getElementById("modalEditDeviceStatus").value = data.deviceStatusFinal || 'Active';
 
 
             document.getElementById("edit-modal").style.display = "flex";
@@ -3853,3 +3992,4 @@
     </script>
 </body>
 </html>
+
