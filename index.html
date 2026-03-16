@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VICTORY v8.5 — Asset Management</title>
+    <title>VICTORY v9 — Asset Management</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -1490,6 +1490,108 @@
         </main>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════
+         MODAL: ASSET DETAIL (ditampilkan saat QR di-scan)
+    ══════════════════════════════════════════════════════ -->
+    <div id="asset-detail-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:680px;padding:0;overflow:hidden;border-radius:12px;">
+
+            <!-- Header Modal -->
+            <div style="background:var(--secondary);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="background:var(--primary);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-qrcode" style="color:white;font-size:1rem;"></i>
+                    </div>
+                    <div>
+                        <div style="color:white;font-weight:700;font-size:1rem;letter-spacing:0.5px;">ASSET DETAIL</div>
+                        <div style="color:#aaa;font-size:0.75rem;" id="adm-label-id">—</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span id="adm-status-pill" class="status-pill" style="font-size:0.8rem;">—</span>
+                    <span class="close" onclick="closeAssetDetailModal()" style="position:static;color:#aaa;font-size:1.4rem;">&times;</span>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div style="padding:20px;background:#fff;">
+
+                <!-- Identitas Aset -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                    <div style="grid-column:span 2;">
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Nama Asset</div>
+                        <div id="adm-asset-name" style="font-size:1.1rem;font-weight:700;color:var(--secondary);">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Site Code</div>
+                        <div id="adm-site-code" style="font-weight:600;color:var(--secondary);">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Lokasi (Rack / Floor)</div>
+                        <div id="adm-location" style="font-weight:600;color:var(--secondary);">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Module</div>
+                        <div id="adm-module" style="font-weight:500;">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">Device Module</div>
+                        <div id="adm-device-module" style="font-weight:500;">—</div>
+                    </div>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #eee;margin:14px 0;">
+
+                <!-- Serial Number / Part Number -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                    <div style="background:#f4f6f9;border-radius:8px;padding:12px;">
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;"><i class="fas fa-barcode" style="margin-right:4px;"></i>Serial Number</div>
+                        <div id="adm-sn" style="font-family:'Source Code Pro',monospace;font-size:0.9rem;font-weight:700;color:#003570;word-break:break-all;">—</div>
+                    </div>
+                    <div style="background:#f4f6f9;border-radius:8px;padding:12px;">
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;"><i class="fas fa-hashtag" style="margin-right:4px;"></i>Part Number</div>
+                        <div id="adm-pn" style="font-family:'Source Code Pro',monospace;font-size:0.9rem;font-weight:700;color:#003570;word-break:break-all;">—</div>
+                    </div>
+                    <div style="background:#f4f6f9;border-radius:8px;padding:12px;">
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;"><i class="fas fa-user" style="margin-right:4px;"></i>PIC</div>
+                        <div id="adm-pic" style="font-weight:600;color:var(--secondary);">—</div>
+                    </div>
+                    <div style="background:#f4f6f9;border-radius:8px;padding:12px;">
+                        <div style="font-size:0.7rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;"><i class="fas fa-calendar" style="margin-right:4px;"></i>Tanggal Visit</div>
+                        <div id="adm-date" style="font-weight:600;color:var(--secondary);">—</div>
+                    </div>
+                </div>
+
+                <!-- Operational Status -->
+                <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:8px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,107,0,0.2);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-server" style="color:var(--primary);font-size:1.2rem;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="color:#aaa;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Operational Status</div>
+                        <div id="adm-op-status" style="color:white;font-weight:700;font-size:1rem;">—</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:#aaa;font-size:0.72rem;margin-bottom:4px;">SLA</div>
+                        <div id="adm-sla" style="font-weight:700;font-size:0.9rem;color:white;">—</div>
+                    </div>
+                </div>
+
+                <!-- Notes jika ada -->
+                <div id="adm-notes-wrap" style="display:none;background:#fff8f0;border-left:3px solid var(--primary);border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:16px;">
+                    <div style="font-size:0.7rem;color:#888;text-transform:uppercase;margin-bottom:3px;">Catatan</div>
+                    <div id="adm-notes" style="font-size:0.85rem;color:#444;">—</div>
+                </div>
+
+                <!-- Footer tombol -->
+                <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:4px;">
+                    <button class="btn btn-outline btn-sm" onclick="closeAssetDetailModal()"><i class="fas fa-times"></i> Tutup</button>
+                    <button class="btn btn-primary btn-sm" id="adm-btn-goto" onclick="closeAssetDetailModal();switchTab('report');"><i class="fas fa-external-link-alt"></i> Lihat di Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- PDF HIDDEN TEMPLATE -->
     <div id="pdf-hidden-container">
         <div id="pdf-template" class="pdf-template">
@@ -2117,6 +2219,8 @@
                     loadUsers();
                     // Bersihkan dokumen _uploading yang tertinggal dari sesi gagal sebelumnya
                     cleanupStaleUploads();
+                    // ── ASSET TAGGING: cek URL param ?assetId= setelah login ──
+                    setTimeout(() => checkAssetIdParam(), 800);
                 });
                 
                 document.getElementById("inpDate").valueAsDate = new Date();
@@ -4320,7 +4424,9 @@
             setTimeout(() => {
                 items.forEach(d => {
                     const rid = d._id || d.id;
-                    const qrVal = `ID:${d.labelId||""}|SITE:${d.siteCode||""}|SN:${d.serialNumber||""}|LOC:${d.rackNo||""}/${d.floor||""}|MOD:${d.module||""}`;
+                    // ── ASSET TAGGING: QR berisi URL langsung ke detail aset ──
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const qrVal  = `${baseUrl}?assetId=${encodeURIComponent(d.labelId||rid)}`;
                     lpGenerateQR(rid, qrVal);
                 });
             }, 150);
@@ -4366,14 +4472,138 @@
             }
         };
 
+        // ══════════════════════════════════════════════════════════
+        //  ASSET TAGGING — Modal Detail & URL Parameter Handler
+        // ══════════════════════════════════════════════════════════
+
+        // Hitung SLA (reuse logic dari lpModule)
+        function adCalcSla(d) {
+            const moduleMap = { 'NETWORK': 7, 'POWER': 14, 'IT': 30, 'GA': 30 };
+            const mod = (d.module||'').toUpperCase();
+            const slaDay = moduleMap[mod] || 14;
+            if (!d.date) return { text: 'NO DATE', cls: 'lp-urgent' };
+            const visit = new Date(d.date);
+            const now   = new Date();
+            const diff  = Math.ceil((visit.getTime() + slaDay*24*3600*1000 - now.getTime()) / (24*3600*1000));
+            if (diff < 0) return { text: `OVERDUE ${Math.abs(diff)}HK`, cls: 'lp-overdue' };
+            if (diff <= 2) return { text: `URGENT ${diff}HK`, cls: 'lp-urgent' };
+            return { text: `OK ${diff}HK`, cls: 'lp-ok' };
+        }
+
+        // Buka modal dengan data aset
+        window.openAssetDetailModal = function(labelId) {
+            // Cari data dari lpAllData (sudah di-load saat tab label-print aktif)
+            // Fallback: load dari Firebase langsung
+            const tryOpen = () => {
+                let d = (window.lpAllData||[]).find(x => x.labelId === labelId || x._id === labelId || x.id === labelId);
+                if (d) {
+                    _renderAssetDetailModal(d);
+                } else {
+                    // Coba load dari Firebase jika data belum ada di memory
+                    if (typeof db !== 'undefined') {
+                        db.collection("visitData").where("labelId","==",labelId).limit(1).get()
+                            .then(snap => {
+                                if (!snap.empty) {
+                                    const doc = snap.docs[0];
+                                    _renderAssetDetailModal({ ...doc.data(), _id: doc.id });
+                                } else {
+                                    showToast(`Asset "${labelId}" tidak ditemukan.`, "error");
+                                }
+                            }).catch(() => showToast("Gagal memuat data aset.", "error"));
+                    } else {
+                        showToast(`Asset "${labelId}" tidak ditemukan di data lokal.`, "error");
+                    }
+                }
+            };
+            tryOpen();
+        };
+
+        function _renderAssetDetailModal(d) {
+            const sla = adCalcSla(d);
+            const assetName = `${d.deviceModule||''} ${d.boardName||''}`.trim() || '—';
+            const location  = [d.rackNo, d.floor].filter(Boolean).join(' / ') || '—';
+            const dateStr   = d.date
+                ? (() => { const [y,m,dd]=d.date.split('-'); return `${dd}/${m}/${y}`; })()
+                : '—';
+
+            document.getElementById('adm-label-id').textContent      = d.labelId || '—';
+            document.getElementById('adm-asset-name').textContent     = assetName;
+            document.getElementById('adm-site-code').textContent      = d.siteCode || '—';
+            document.getElementById('adm-location').textContent       = location;
+            document.getElementById('adm-module').textContent         = d.module || '—';
+            document.getElementById('adm-device-module').textContent  = d.deviceModule || '—';
+            document.getElementById('adm-sn').textContent             = d.serialNumber || '—';
+            document.getElementById('adm-pn').textContent             = d.partNumber || d.pn || '—';
+            document.getElementById('adm-pic').textContent            = d.picName || '—';
+            document.getElementById('adm-date').textContent           = dateStr;
+            document.getElementById('adm-op-status').textContent      = d.operationalStatus || d._status || '—';
+            document.getElementById('adm-sla').textContent            = sla.text;
+
+            // Status pill
+            const statusEl = document.getElementById('adm-status-pill');
+            const st = d._status || d.status || 'Draft';
+            statusEl.textContent  = st;
+            statusEl.className    = `status-pill status-${st}`;
+
+            // SLA color
+            const slaEl = document.getElementById('adm-sla');
+            const slaColors = { 'lp-ok': '#22a85a', 'lp-urgent': '#F47920', 'lp-overdue': '#dc3545' };
+            slaEl.style.color = slaColors[sla.cls] || 'white';
+
+            // Notes
+            const notesWrap = document.getElementById('adm-notes-wrap');
+            if (d.notes || d.catatan) {
+                document.getElementById('adm-notes').textContent = d.notes || d.catatan;
+                notesWrap.style.display = 'block';
+            } else {
+                notesWrap.style.display = 'none';
+            }
+
+            // Tampilkan modal
+            const modal = document.getElementById('asset-detail-modal');
+            modal.style.display = 'flex';
+        }
+
+        window.closeAssetDetailModal = function() {
+            document.getElementById('asset-detail-modal').style.display = 'none';
+            // Bersihkan param URL tanpa reload halaman
+            const url = new URL(window.location.href);
+            url.searchParams.delete('assetId');
+            window.history.replaceState({}, '', url.toString());
+        };
+
+        // Tutup modal saat klik overlay
+        document.getElementById('asset-detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) window.closeAssetDetailModal();
+        });
+
+        // ── AUTO-DETECT URL PARAMETER saat app dibuka via QR scan ──
+        // Dipanggil setelah user login & app siap
+        window.checkAssetIdParam = function() {
+            const params   = new URLSearchParams(window.location.search);
+            const assetId  = params.get('assetId');
+            if (!assetId) return;
+
+            // Pastikan data sudah ter-load; jika belum, load dulu
+            if (!(window.lpAllData && window.lpAllData.length)) {
+                // Load data visitData dari Firebase, lalu buka modal
+                if (typeof db !== 'undefined') {
+                    db.collection("visitData").where("labelId","==",assetId).limit(1).get()
+                        .then(snap => {
+                            if (!snap.empty) {
+                                const doc = snap.docs[0];
+                                _renderAssetDetailModal({ ...doc.data(), _id: doc.id });
+                            } else {
+                                showToast(`Asset ID "${assetId}" tidak ditemukan.`, "error");
+                            }
+                        }).catch(() => showToast("Gagal memuat data aset dari URL.", "error"));
+                }
+            } else {
+                openAssetDetailModal(assetId);
+            }
+        };
+
         // END SCRIPT
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
