@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VICTORY v10.2 — Asset Management</title>
+    <title>VICTORY v10.3 — Asset Management</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Barlow+Condensed:wght@400;600;700;800&family=Source+Code+Pro:wght@500;700&display=swap" rel="stylesheet">
@@ -2057,6 +2057,109 @@
     .dab-title { font-size: 11px; font-weight: 700; color: var(--fs-amber); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
 </style>
 
+    </style>
+    <style>
+        /* ═══════════════════════════════════════════════
+           VICTORY v10.1 — LAYOUT STABILITY FIX
+           Pastikan semua non-form view sections ter-layout dengan benar
+           ═══════════════════════════════════════════════ */
+
+        /* Force sidebar & main layout tidak terpengaruh CSS dari FS Form Engine */
+        #app-container {
+            display: flex !important;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 260px !important;
+            min-width: 260px !important;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            z-index: 100 !important;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            margin-left: 260px !important;
+            width: calc(100% - 260px) !important;
+            padding: 20px !important;
+            min-height: 100vh;
+            box-sizing: border-box !important;
+            overflow-x: hidden;
+        }
+
+        /* Semua view section harus full width dalam main-content */
+        .view-section {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Non-form view sections: consistent styling */
+        #view-dashboard,
+        #view-report,
+        #view-review,
+        #view-history,
+        #view-reference,
+        #view-ref-site,
+        #view-user-management,
+        #view-label-print {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Dashboard cards layout fix */
+        .dashboard-cards {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Table container full width */
+        .table-container {
+            width: 100% !important;
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 10px;
+        }
+
+        /* Header title fix */
+        .header-title {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            margin-bottom: 15px !important;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Mobile responsive - sidebar collapse */
+        @media (max-width: 768px) {
+            .sidebar { 
+                width: 0 !important; 
+                min-width: 0 !important;
+                overflow: hidden !important; 
+            }
+            .main-content { 
+                margin-left: 0 !important; 
+                width: 100% !important; 
+            }
+            #app-container.mobile-nav-active .sidebar { 
+                width: 260px !important; 
+                min-width: 260px !important;
+                z-index: 1000 !important; 
+            }
+            .dashboard-cards {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -10897,7 +11000,7 @@ ${sigSection}
   // ── Init: IDB ──
   _openIDB().catch(e => console.warn('[IDB Init]', e));
 
-  // ── Expose Form Engine functions ke window (dipanggil dari HTML onclick) ──
+  // ── Expose Form Engine functions ke window ──
   window.openCamModal = openCamModal;
   window.openScanner = openScanner;
   window._acFilter = _acFilter;
