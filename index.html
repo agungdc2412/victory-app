@@ -3804,7 +3804,7 @@
             snList.splice(idx, 1);
             updateSnDisplay();
         };
-        document.getElementById("manualSN").addEventListener("keydown", (e) => {
+        (document.getElementById("manualSN")||{addEventListener:function(){}}).addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
                 e.preventDefault();
                 const val = e.target.value.trim();
@@ -4095,7 +4095,7 @@
         const locationDisplay = document.getElementById("locationDisplay");
         const validationDisplay = document.getElementById("validationDisplay");
 
-        document.getElementById("btnCaptureLocation").addEventListener("click", () => {
+        (document.getElementById("btnCaptureLocation")||{addEventListener:function(){}}).addEventListener("click", () => {
             if (!navigator.geolocation) {
                 locationDisplay.textContent = "Error: Geolokasi tidak didukung oleh browser ini.";
                 locationDisplay.style.color = 'red';
@@ -4196,7 +4196,7 @@
         };
 
         // Trigger validation if Site Code changes after capture
-        document.getElementById("inpSiteCode").addEventListener("change", validateLocation);
+        (document.getElementById("inpSiteCode")||{addEventListener:function(){}}).addEventListener("change", validateLocation);
         
         // --- END GEOLOCATION CAPTURE ---
 
@@ -5879,7 +5879,7 @@
             
         });
 
-        document.getElementById('inpDeviceModule').addEventListener('change', () => {
+        (document.getElementById('inpDeviceModule')||{addEventListener:function(){}}).addEventListener('change', () => {
             const module = document.getElementById('inpModule').value;
             const device = document.getElementById('inpDeviceModule').value;
             const ref = referenceData.filter(d => d.module === module && d.deviceModule === device);
@@ -8915,9 +8915,7 @@ map.on('click',function(e){
     document.getElementById('valOverlay').classList.remove('active');
   }
 
-  document.getElementById('valOverlay').addEventListener('click', function(e) {
-    if (e.target === this) closeValModal();
-  });
+  (function(){var el=document.getElementById('valOverlay');if(el)el.addEventListener('click',function(e){if(e.target===this)closeValModal();});})();
 
   function validateForm() {
     if (!currentActivity) {
@@ -10874,86 +10872,102 @@ ${sigSection}
 
 
 
-        // ── Expose FS functions to global window scope (needed for onclick handlers) ──
-        if (typeof addDevice !== "undefined") window.addDevice = addDevice;
-        if (typeof addSubModule !== "undefined") window.addSubModule = addSubModule;
-        if (typeof applyManualCoord !== "undefined") window.applyManualCoord = applyManualCoord;
-        if (typeof captureLocation !== "undefined") window.captureLocation = captureLocation;
-        if (typeof clearPhoto !== "undefined") window.clearPhoto = clearPhoto;
-        if (typeof clearPicPhoto !== "undefined") window.clearPicPhoto = clearPicPhoto;
-        if (typeof clearSig !== "undefined") window.clearSig = clearSig;
-        if (typeof closeCamModal !== "undefined") window.closeCamModal = closeCamModal;
-        if (typeof closeDupSnModal !== "undefined") window.closeDupSnModal = closeDupSnModal;
-        if (typeof closeGuidelines !== "undefined") window.closeGuidelines = closeGuidelines;
-        if (typeof closeMapClick !== "undefined") window.closeMapClick = closeMapClick;
-        if (typeof closePhotoPreview !== "undefined") window.closePhotoPreview = closePhotoPreview;
-        if (typeof closeResetModal !== "undefined") window.closeResetModal = closeResetModal;
-        if (typeof closeScanner !== "undefined") window.closeScanner = closeScanner;
-        if (typeof closeSig !== "undefined") window.closeSig = closeSig;
-        if (typeof closeValModal !== "undefined") window.closeValModal = closeValModal;
-        if (typeof closeAddPopup !== "undefined") window.closeAddPopup = closeAddPopup;
-        if (typeof confirmMapClick !== "undefined") window.confirmMapClick = confirmMapClick;
-        if (typeof confirmReset !== "undefined") window.confirmReset = confirmReset;
-        if (typeof copyCollectId !== "undefined") window.copyCollectId = copyCollectId;
-        if (typeof copyKelolaToken !== "undefined") window.copyKelolaToken = copyKelolaToken;
-        if (typeof deletePreviewPhoto !== "undefined") window.deletePreviewPhoto = deletePreviewPhoto;
-        if (typeof duplicateDevice !== "undefined") window.duplicateDevice = duplicateDevice;
-        if (typeof duplicateSubModule !== "undefined") window.duplicateSubModule = duplicateSubModule;
-        if (typeof generateExcel !== "undefined") window.generateExcel = generateExcel;
-        if (typeof generatePDF !== "undefined") window.generatePDF = generatePDF;
-        if (typeof openGuidelines !== "undefined") window.openGuidelines = openGuidelines;
-        if (typeof openMapClick !== "undefined") window.openMapClick = openMapClick;
-        if (typeof openPhotoPreview !== "undefined") window.openPhotoPreview = openPhotoPreview;
-        if (typeof openResetModal !== "undefined") window.openResetModal = openResetModal;
-        if (typeof openSignature !== "undefined") window.openSignature = openSignature;
-        if (typeof regenCollectId !== "undefined") window.regenCollectId = regenCollectId;
-        if (typeof removeDevice !== "undefined") window.removeDevice = removeDevice;
-        if (typeof removeSitePhoto !== "undefined") window.removeSitePhoto = removeSitePhoto;
-        if (typeof removeSubModule !== "undefined") window.removeSubModule = removeSubModule;
-        if (typeof saveSig !== "undefined") window.saveSig = saveSig;
-        if (typeof searchMapClick !== "undefined") window.searchMapClick = searchMapClick;
-        if (typeof selectRole !== "undefined") window.selectRole = selectRole;
-        if (typeof sendEmail !== "undefined") window.sendEmail = sendEmail;
-        if (typeof sendEmailWithZip !== "undefined") window.sendEmailWithZip = sendEmailWithZip;
-        if (typeof setActivity !== "undefined") window.setActivity = setActivity;
-        if (typeof setDeviceStatus !== "undefined") window.setDeviceStatus = setDeviceStatus;
-        if (typeof snapPhoto !== "undefined") window.snapPhoto = snapPhoto;
-        if (typeof startSTT !== "undefined") window.startSTT = startSTT;
-        if (typeof startSTTInline !== "undefined") window.startSTTInline = startSTTInline;
-        if (typeof switchCamera !== "undefined") window.switchCamera = switchCamera;
-        if (typeof switchCoordMode !== "undefined") window.switchCoordMode = switchCoordMode;
-        if (typeof switchGdlTab !== "undefined") window.switchGdlTab = switchGdlTab;
-        if (typeof switchPhotoTab !== "undefined") window.switchPhotoTab = switchPhotoTab;
-        if (typeof toggleAddPopup !== "undefined") window.toggleAddPopup = toggleAddPopup;
-        if (typeof toggleCamFlash !== "undefined") window.toggleCamFlash = toggleCamFlash;
-        if (typeof toggleDevice !== "undefined") window.toggleDevice = toggleDevice;
-        if (typeof toggleKelolaToken !== "undefined") window.toggleKelolaToken = toggleKelolaToken;
-        if (typeof togglePhotoZoom !== "undefined") window.togglePhotoZoom = togglePhotoZoom;
-        if (typeof toggleProgressPopup !== "undefined") window.toggleProgressPopup = toggleProgressPopup;
-        if (typeof toggleResetItem !== "undefined") window.toggleResetItem = toggleResetItem;
-        if (typeof toggleSubModule !== "undefined") window.toggleSubModule = toggleSubModule;
-        if (typeof toggleTokenVis !== "undefined") window.toggleTokenVis = toggleTokenVis;
-        if (typeof triggerPhoto !== "undefined") window.triggerPhoto = triggerPhoto;
-        if (typeof triggerPicPhoto !== "undefined") window.triggerPicPhoto = triggerPicPhoto;
-        if (typeof triggerSubPhoto !== "undefined") window.triggerSubPhoto = triggerSubPhoto;
-        if (typeof triggerUpload !== "undefined") window.triggerUpload = triggerUpload;
-        if (typeof tryPrint !== "undefined") window.tryPrint = tryPrint;
-        if (typeof updateDevice !== "undefined") window.updateDevice = updateDevice;
-        if (typeof updateDeviceTitle !== "undefined") window.updateDeviceTitle = updateDeviceTitle;
-        if (typeof updatePhotoProgress !== "undefined") window.updatePhotoProgress = updatePhotoProgress;
-        if (typeof updateSubModule !== "undefined") window.updateSubModule = updateSubModule;
-        if (typeof validateForm !== "undefined") window.validateForm = validateForm;
-        if (typeof renderDevices !== "undefined") window.renderDevices = renderDevices;
-        if (typeof renderSitePhotos !== "undefined") window.renderSitePhotos = renderSitePhotos;
-        if (typeof selectObjectName !== "undefined") window.selectObjectName = selectObjectName;
-        if (typeof escHtml !== "undefined") window.escHtml = escHtml;
-        if (typeof getFormData !== "undefined") window.getFormData = getFormData;
-        if (typeof doLogout !== "undefined") window.doLogout = doLogout;
-        if (typeof clearDevicePhoto !== "undefined") window.clearDevicePhoto = clearDevicePhoto;
-        if (typeof clearSubPhoto !== "undefined") window.clearSubPhoto = clearSubPhoto;
-        if (typeof _stripSpaces !== "undefined") window._stripSpaces = _stripSpaces;
         // ════════ END FS FORM ENGINE ════════
+
+        // ── Expose all FS form functions to window (required for HTML onclick= handlers) ──
+        window.addDevice = addDevice;
+        window.addSubModule = addSubModule;
+        window.applyManualCoord = applyManualCoord;
+        window.captureLocation = captureLocation;
+        window.clearPhoto = clearPhoto;
+        window.clearPicPhoto = clearPicPhoto;
+        window.clearSig = clearSig;
+        window.closeCamModal = closeCamModal;
+        window.closeDupSnModal = closeDupSnModal;
+        window.closeGuidelines = closeGuidelines;
+        window.closeMapClick = closeMapClick;
+        window.closePhotoPreview = closePhotoPreview;
+        window.closeResetModal = closeResetModal;
+        window.closeScanner = closeScanner;
+        window.closeSig = closeSig;
+        window.closeValModal = closeValModal;
+        window.closeAddPopup = closeAddPopup;
+        window.confirmMapClick = confirmMapClick;
+        window.confirmReset = confirmReset;
+        window.copyCollectId = copyCollectId;
+        window.copyKelolaToken = copyKelolaToken;
+        window.deletePreviewPhoto = deletePreviewPhoto;
+        window.duplicateDevice = duplicateDevice;
+        window.duplicateSubModule = duplicateSubModule;
+        window.generateExcel = generateExcel;
+        window.generatePDF = generatePDF;
+        window.openGuidelines = openGuidelines;
+        window.openMapClick = openMapClick;
+        window.openPhotoPreview = openPhotoPreview;
+        window.openResetModal = openResetModal;
+        window.openSignature = openSignature;
+        window.regenCollectId = regenCollectId;
+        window.removeDevice = removeDevice;
+        window.removeSitePhoto = removeSitePhoto;
+        window.removeSubModule = removeSubModule;
+        window.saveSig = saveSig;
+        window.searchMapClick = searchMapClick;
+        window.selectRole = selectRole;
+        window.sendEmail = sendEmail;
+        window.sendEmailWithZip = sendEmailWithZip;
+        window.setActivity = setActivity;
+        window.setDeviceStatus = setDeviceStatus;
+        window.snapPhoto = snapPhoto;
+        window.startSTT = startSTT;
+        window.startSTTInline = startSTTInline;
+        window.switchCamera = switchCamera;
+        window.switchCoordMode = switchCoordMode;
+        window.switchGdlTab = switchGdlTab;
+        window.switchPhotoTab = switchPhotoTab;
+        window.toggleAddPopup = toggleAddPopup;
+        window.toggleCamFlash = toggleCamFlash;
+        window.toggleDevice = toggleDevice;
+        window.toggleKelolaToken = toggleKelolaToken;
+        window.togglePhotoZoom = togglePhotoZoom;
+        window.toggleProgressPopup = toggleProgressPopup;
+        window.toggleResetItem = toggleResetItem;
+        window.toggleSubModule = toggleSubModule;
+        window.toggleTokenVis = toggleTokenVis;
+        window.triggerPhoto = triggerPhoto;
+        window.triggerPicPhoto = triggerPicPhoto;
+        window.triggerSubPhoto = triggerSubPhoto;
+        window.triggerUpload = triggerUpload;
+        window.tryPrint = tryPrint;
+        window.updateDevice = updateDevice;
+        window.updateDeviceTitle = updateDeviceTitle;
+        window.updatePhotoProgress = updatePhotoProgress;
+        window.updateSubModule = updateSubModule;
+        window.validateForm = validateForm;
+        window.renderDevices = renderDevices;
+        window.renderSitePhotos = renderSitePhotos;
+        window.escHtml = escHtml;
+        window.getFormData = getFormData;
+        window.clearDevicePhoto = clearDevicePhoto;
+        window.clearSubPhoto = clearSubPhoto;
+        window.refreshCatalog = refreshCatalog;
         // END SCRIPT
     </script>
+
+    <!-- FS Validation Modal -->
+    <div class="val-overlay" id="valOverlay">
+      <div class="val-modal">
+        <div class="val-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="val-header-title">Data Belum Lengkap</div>
+        </div>
+        <div class="val-body">
+          <div class="val-intro">Perbaiki item berikut sebelum melanjutkan:</div>
+          <div class="val-list" id="valList"></div>
+        </div>
+        <div class="val-footer">
+          <button class="btn-val-close" onclick="closeValModal()">Mengerti, akan diperbaiki</button>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
