@@ -5191,7 +5191,41 @@
             });
         };
         
-        // Add modal functions and form submission logic for User Management (omitted for brevity but required for full app)
+        // User Management Modal Functions
+        function openUserModal(userId, userEmail) {
+          const modal = document.getElementById('user-modal');
+          if (!modal) return;
+          const title = document.getElementById('userModalTitle');
+          const idInput = document.getElementById('userIdInput');
+          const emailInput = document.getElementById('userEmail');
+          const pwdGroup = document.getElementById('userPasswordGroup');
+          const submitBtn = document.getElementById('userSubmitBtn');
+          if (userId) {
+            if (title) title.textContent = 'Edit User';
+            if (idInput) idInput.value = userId;
+            if (emailInput) { emailInput.value = userEmail || ''; emailInput.readOnly = true; }
+            if (pwdGroup) pwdGroup.style.display = 'none';
+            if (submitBtn) submitBtn.textContent = 'SIMPAN PERUBAHAN';
+          } else {
+            if (title) title.textContent = 'Tambah User Baru';
+            if (idInput) idInput.value = '';
+            if (emailInput) { emailInput.value = ''; emailInput.readOnly = false; }
+            if (pwdGroup) pwdGroup.style.display = '';
+            if (submitBtn) submitBtn.textContent = 'TAMBAH USER';
+            const form = document.getElementById('userForm');
+            if (form) form.reset();
+          }
+          modal.style.display = 'flex';
+        }
+        window.openUserModal = openUserModal;
+
+        function closeUserModal() {
+          const modal = document.getElementById('user-modal');
+          if (modal) modal.style.display = 'none';
+          const form = document.getElementById('userForm');
+          if (form) form.reset();
+        }
+        window.closeUserModal = closeUserModal;
 
 
         // ═══════════════════════════════════════════════════════════
@@ -11008,6 +11042,8 @@ ${sigSection}
   window._acSelect = _acSelect;
   window._acKeyNav = _acKeyNav;
   window._acSelectModule = _acSelectModule;
+  window._stripSpaces = _stripSpaces;
+  window.regenKelolaToken = regenKelolaToken;
 
 
 
