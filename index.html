@@ -9403,8 +9403,7 @@ ${mapLink}
   <tbody>${rows}</tbody>
 </table>
 <div class="footer">${picSection}${sigSection}</div>
-
-
+<script>
   // tunggu semua gambar load baru print
   const imgs = document.images;
   let loaded = 0;
@@ -10967,6 +10966,10 @@ ${sigSection}
         window.triggerUpload = triggerUpload;
         window.tryPrint = tryPrint;
         window.updateDevice = updateDevice;
+        window.openCamModal = openCamModal;
+        window.openScanner = openScanner;
+        window._acFilter = _acFilter;
+        window._acFilterModule = _acFilterModule;
         window.updateDeviceTitle = updateDeviceTitle;
         window.updatePhotoProgress = updatePhotoProgress;
         window.updateSubModule = updateSubModule;
