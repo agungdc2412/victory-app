@@ -2933,6 +2933,33 @@
                 <input type="file"   id="photoType">
                 <form id="dataForm"></form>
                 <button id="btnCaptureLocation" style="display:none;"></button>
+
+                <!-- FS-specific element stubs to prevent null crashes -->
+                <div id="offlineBanner" style="display:none;"></div>
+                <div id="pinScreen" style="display:none;"></div>
+                <div id="pinMsg" style="display:none;"></div>
+                <span id="formStatus" style="display:none;"></span>
+                <div id="sessionBar" style="display:none;"></div>
+                <span id="sessionUserLabel"></span>
+                <span id="sessionTimeLabel"></span>
+                <div id="kelolaTokenPanel" style="display:none;"></div>
+                <div id="kelolaTokenRows" style="display:none;"></div>
+                <input type="text" id="tokenInput" style="display:none;">
+                <button id="btnKelolaToken" style="display:none;"></button>
+                <button id="btnCopyHashAsset" style="display:none;"></button>
+                <button id="btnZip" style="display:none;"></button>
+                <div id="defaultTokenWarning" style="display:none;"></div>
+                <span id="eyeIconShow" style="display:none;"></span>
+                <span id="eyeIconHide" style="display:none;"></span>
+                <button id="scannerFallbackBtn" style="display:none;"></button>
+                <input type="file" id="picPhotoInput" accept="image/*" style="display:none;">
+                <input type="file" id="siteFileInput" accept="image/*" multiple style="display:none;">
+                <input type="file" id="globalUploadInput" accept="image/*" style="display:none;">
+                <input type="file" id="globalFileInput" accept="image/*" capture="environment" style="display:none;">
+                <div id="emailAttachReminder" style="display:none;"></div>
+                <span id="zipFileName"></span>
+                <div id="zipInfoBox" style="display:none;"></div>
+                <button id="btnEmail" style="display:none;"></button>
                 <select id="inpDeviceModule"></select>
                 <select id="inpModulType"></select>
                 <input type="text" id="inpRackNo">
@@ -6688,7 +6715,7 @@
   function triggerPicPhoto() {
     document.getElementById('picPhotoInput').click();
   }
-  document.getElementById('picPhotoInput').addEventListener('change', async function() {
+  (document.getElementById('picPhotoInput')||{addEventListener:function(){}}).addEventListener('change', async function() {
     if (!this.files[0]) return;
     const file = this.files[0];
     showToast('Memproses foto PIC…', 1500);
@@ -6943,7 +6970,7 @@
   }
 
   // Close on overlay click
-  document.getElementById('scannerOverlay').addEventListener('click', function(e) {
+  (document.getElementById('scannerOverlay')||{addEventListener:function(){}}).addEventListener('click', function(e) {
     if (e.target === this) closeScanner();
   });
 
@@ -7549,7 +7576,7 @@ map.on('click',function(e){
     _mapClickPendingLng = null;
   }
 
-  document.getElementById('mapClickOverlay').addEventListener('click', function(e) {
+  (document.getElementById('mapClickOverlay')||{addEventListener:function(){}}).addEventListener('click', function(e) {
     if (e.target === this) closeMapClick();
   });
 
@@ -7632,7 +7659,7 @@ map.on('click',function(e){
     sitePhotos.splice(idx, 1);
     renderSitePhotos();
   }
-  document.getElementById('siteFileInput').addEventListener('change', async function () {
+  (document.getElementById('siteFileInput')||{addEventListener:function(){}}).addEventListener('change', async function () {
     const files = Array.from(this.files);
     if (!files.length) return;
     this.value = '';
@@ -8478,7 +8505,7 @@ map.on('click',function(e){
     showToast('✅ Form berhasil direset!', 3000);
   }
 
-  document.getElementById('resetOverlay').addEventListener('click', function(e) {
+  (document.getElementById('resetOverlay')||{addEventListener:function(){}}).addEventListener('click', function(e) {
     if (e.target === this) closeResetModal();
   });
 
@@ -8722,7 +8749,7 @@ map.on('click',function(e){
     inp.click();
   }
 
-  document.getElementById('globalUploadInput').addEventListener('change', async function () {
+  (document.getElementById('globalUploadInput')||{addEventListener:function(){}}).addEventListener('change', async function () {
     if (!_currentPhotoTarget || !this.files[0]) return;
     const { devId, type, smId } = _currentPhotoTarget;
     _processPhotoFile(this.files[0], devId, type, smId);
@@ -8862,7 +8889,7 @@ map.on('click',function(e){
   }
 
   // globalFileInput: legacy capture="environment" - route through new processor
-  document.getElementById('globalFileInput').addEventListener('change', async function () {
+  (document.getElementById('globalFileInput')||{addEventListener:function(){}}).addEventListener('change', async function () {
     if (!_currentPhotoTarget || !this.files[0]) return;
     const { devId, type, smId } = _currentPhotoTarget;
     await _processPhotoFile(this.files[0], devId, type, smId);
@@ -9901,7 +9928,7 @@ ${sigSection}
     sigDrawing = false;
   }
 
-  document.getElementById('sigOverlay').addEventListener('click', function(e) {
+  (document.getElementById('sigOverlay')||{addEventListener:function(){}}).addEventListener('click', function(e) {
     if (e.target === this) closeSig();
   });
 
@@ -9910,12 +9937,13 @@ ${sigSection}
   renderSitePhotos();
   if (!STT_SUPPORTED) document.getElementById('sttUnsupported').classList.add('show');
   // Hide rack section and all context fields until activity chosen
-  document.getElementById('sectionRack').style.display = 'none';
+  (function(){var el=document.getElementById('sectionRack');if(el)el.style.display='none';})();
   document.querySelectorAll('.ctx-field').forEach(el => el.classList.remove('show'));
 
   // ── Offline Mode ──────────────────────────────────────
   function _updateOfflineBanner() {
     const banner = document.getElementById('offlineBanner');
+    if (!banner) return;
     if (!navigator.onLine) banner.classList.add('show');
     else banner.classList.remove('show');
   }
@@ -10056,7 +10084,7 @@ ${sigSection}
   });
 
   // Update Collect ID saat Site ID berubah — selalu generate ulang agar Site ID masuk ke CID
-  document.getElementById('fSiteId').addEventListener('input', function() {
+  (document.getElementById('fSiteId')||{addEventListener:function(){}}).addEventListener('input', function() {
     if (currentActivity) {
       currentCollectId = _genCollectId(currentActivity);
       _renderCollectId(currentCollectId, currentActivity);
