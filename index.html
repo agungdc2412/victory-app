@@ -182,8 +182,8 @@
             color: #999;
         }
 
-        .view-section { display: none; animation: fadeIn 0.2s ease-in-out; width: 100%; box-sizing: border-box; }
-        .view-section.active { display: block; width: 100%; box-sizing: border-box; }
+        .view-section { display: none !important; animation: fadeIn 0.2s ease-in-out; width: 100%; box-sizing: border-box; }
+        .view-section.active { display: block !important; width: 100%; box-sizing: border-box; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -2208,10 +2208,11 @@
             .dashboard-cards { grid-template-columns: 1fr !important; }
         }
 
-        /* Semua view section harus full width dalam main-content */
+        /* Semua view section harus full width dalam main-content — display dihandle oleh .active class */
         .view-section {
             width: 100% !important;
             box-sizing: border-box !important;
+            /* JANGAN override display di sini — sudah diatur via .view-section / .view-section.active di atas */
         }
 
         /* Non-form view sections: consistent styling */
@@ -2307,15 +2308,15 @@
                 <div id="user-display" style="font-size: 0.8rem; color: #bbb; margin-top: 5px;">User</div>    
             </div>
             <ul class="nav-links">
-                <li class="active" onclick="switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</li>
-                <li onclick="switchTab('input')"><i class="fas fa-edit"></i> Visit Site (Form)</li>
-                <li onclick="switchTab('report')"><i class="fas fa-table"></i> Report Visit</li>
-                <li id="nav-review" onclick="switchTab('review')"><i class="fas fa-check-double"></i> Review & Approval</li>
-                <li onclick="switchTab('history')"><i class="fas fa-history"></i> Log History SN/PN</li> 
-                <li id="nav-ref-asset" onclick="switchTab('reference')"><i class="fas fa-database"></i> Ref. Asset (Modul)</li>
-                <li id="nav-ref-site" onclick="switchTab('ref-site')"><i class="fas fa-map-marked-alt"></i> Ref. Site</li>
-                <li id="nav-user-management" onclick="switchTab('user-management')"><i class="fas fa-users-cog"></i> User Management</li> <!-- NEW TAB -->
-                <li id="nav-label-print" onclick="switchTab('label-print')"><i class="fas fa-tags"></i> Cetak Label</li>
+                <li data-tab="dashboard" class="active" onclick="switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</li>
+                <li data-tab="input" onclick="switchTab('input')"><i class="fas fa-edit"></i> Visit Site (Form)</li>
+                <li data-tab="report" onclick="switchTab('report')"><i class="fas fa-table"></i> Report Visit</li>
+                <li data-tab="review" id="nav-review" onclick="switchTab('review')"><i class="fas fa-check-double"></i> Review & Approval</li>
+                <li data-tab="history" onclick="switchTab('history')"><i class="fas fa-history"></i> Log History SN/PN</li>
+                <li data-tab="reference" id="nav-ref-asset" onclick="switchTab('reference')"><i class="fas fa-database"></i> Ref. Asset (Modul)</li>
+                <li data-tab="ref-site" id="nav-ref-site" onclick="switchTab('ref-site')"><i class="fas fa-map-marked-alt"></i> Ref. Site</li>
+                <li data-tab="user-management" id="nav-user-management" onclick="switchTab('user-management')"><i class="fas fa-users-cog"></i> User Management</li>
+                <li data-tab="label-print" id="nav-label-print" onclick="switchTab('label-print')"><i class="fas fa-tags"></i> Cetak Label</li>
                 <li onclick="logoutApp()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</li>
             </ul>
         </nav>
@@ -4258,19 +4259,29 @@
             applyNavigationPermissions();
         };
 
+
         const applyNavigationPermissions = () => {
-            document.getElementById('nav-review').style.display = 'none';
-            document.getElementById('nav-ref-asset').style.display = 'none';
-            document.getElementById('nav-ref-site').style.display = 'none';
+            // Sembunyikan semua menu yang membutuhkan role khusus
+            document.getElementById('nav-review').style.display         = 'none';
+            document.getElementById('nav-ref-asset').style.display      = 'none';
+            document.getElementById('nav-ref-site').style.display       = 'none';
             document.getElementById('nav-user-management').style.display = 'none';
+            document.getElementById('nav-label-print').style.display    = 'none';
 
             if (currentUserRole === 'Administrator') {
-                document.getElementById('nav-review').style.display = 'flex';
-                document.getElementById('nav-ref-asset').style.display = 'flex';
-                document.getElementById('nav-ref-site').style.display = 'flex';
+                // Administrator: akses penuh ke semua menu
+                document.getElementById('nav-review').style.display         = 'flex';
+                document.getElementById('nav-ref-asset').style.display      = 'flex';
+                document.getElementById('nav-ref-site').style.display       = 'flex';
                 document.getElementById('nav-user-management').style.display = 'flex';
+                document.getElementById('nav-label-print').style.display    = 'flex';
             } else if (currentUserRole === 'Checker' || currentUserRole === 'Approver') {
-                document.getElementById('nav-review').style.display = 'flex';
+                // Checker/Approver: dapat review + cetak label
+                document.getElementById('nav-review').style.display      = 'flex';
+                document.getElementById('nav-label-print').style.display = 'flex';
+            } else {
+                // User biasa: hanya cetak label
+                document.getElementById('nav-label-print').style.display = 'flex';
             }
         };
 
@@ -4321,23 +4332,25 @@
         });
 
         window.switchTab = (tabId) => {
+            // 1. Switch view sections
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${tabId}`).classList.add('active');
-            document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
-            
-            const navMap = {
-                'dashboard': 0, 'input': 1, 'report': 2, 'review': 3, 'history': 4, 'reference': 5, 'ref-site': 6, 'user-management': 7
-            };
-            const navLinks = document.querySelectorAll('.nav-links li:not(.logout-link)');
-            if (navMap[tabId] !== undefined && navLinks[navMap[tabId]]) {
-                navLinks[navMap[tabId]].classList.add('active');
-            }
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.add('active');
 
-            if (tabId === 'dashboard') refreshDashboard();
-            if (tabId === 'report')    { if(currentUser) loadReportVisit(); }
-            if (tabId === 'review')    loadReviewData();
-            if (tabId === 'ref-site')  loadSites();
-            if (tabId === 'user-management') loadUsers(); 
+            // 2. Sync sidebar active state via data-tab attribute (robust, tidak bergantung DOM index)
+            document.querySelectorAll('.nav-links li[data-tab]').forEach(el => {
+                el.classList.toggle('active', el.getAttribute('data-tab') === tabId);
+            });
+
+            // 3. Load data per tab
+            if      (tabId === 'dashboard')       refreshDashboard();
+            else if (tabId === 'report')          { if (currentUser) loadReportVisit(); }
+            else if (tabId === 'review')          loadReviewData();
+            else if (tabId === 'history')         { /* search manual oleh user */ }
+            else if (tabId === 'reference')       loadReferences();
+            else if (tabId === 'ref-site')        loadSites();
+            else if (tabId === 'user-management') loadUsers();
+            else if (tabId === 'label-print')     { if (typeof lpLoad === 'function') lpLoad(); }
         };
 
         // --- GEOLOCATION CAPTURE ---
@@ -6609,20 +6622,7 @@
             setTimeout(() => window.print(), 900);
         };
 
-        // Auto-load when switching to label-print tab
-        const _origSwitchTab = window.switchTab;
-        window.switchTab = function(tabId) {
-            _origSwitchTab(tabId);
-            if (tabId === 'label-print') {
-                // update navMap — label-print is index 8
-                const navLinks = document.querySelectorAll('.nav-links li:not(.logout-link)');
-                if (navLinks[8]) {
-                    document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
-                    navLinks[8].classList.add('active');
-                }
-                lpLoad();
-            }
-        };
+        // label-print tab handling sudah terintegrasi di dalam window.switchTab utama
 
         // ══════════════════════════════════════════════════════════
         //  ASSET TAGGING — Modal Detail & URL Parameter Handler
