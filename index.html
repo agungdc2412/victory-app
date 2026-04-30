@@ -2096,6 +2096,112 @@
             overflow-x: hidden;
         }
 
+        /* ═══ PAGE-LEVEL LAYOUT: semua view sections ═══ */
+        /* Header title row */
+        .header-title {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            margin-bottom: 20px !important;
+        }
+        .header-title h1 {
+            font-size: 1.3rem !important;
+            color: var(--dark, #003570) !important;
+            margin: 0 !important;
+        }
+        .header-title small {
+            display: block !important;
+            color: #666 !important;
+            font-size: 0.8rem !important;
+        }
+        /* inline button groups in header */
+        .header-title .inline,
+        .header-title > div:last-child {
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+        }
+
+        /* Table full width and scrollable */
+        .table-container table { width: 100%; border-collapse: collapse; }
+        .table-container th, .table-container td {
+            padding: 8px 10px; text-align: left;
+            border-bottom: 1px solid #eee; font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .table-container th { background: #f8f9fa; font-weight: 600; color: #333; }
+        .table-container tr:hover { background: #f5f8ff; }
+
+        /* Pagination bar */
+        .pagination {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 12px 0 4px !important;
+            flex-wrap: wrap !important;
+        }
+
+        /* Status pills */
+        .status-pill {
+            display: inline-block; padding: 2px 10px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; white-space: nowrap;
+        }
+        .status-Draft    { background: #fff3cd; color: #856404; }
+        .status-Submitted{ background: #cff4fc; color: #055160; }
+        .status-Active   { background: #d1e7dd; color: #0f5132; }
+        .status-Approved { background: #d1e7dd; color: #0f5132; }
+        .status-Damage   { background: #f8d7da; color: #842029; }
+        .status-Spare    { background: #e2e3e5; color: #383d41; }
+        .status-Rejected { background: #f8d7da; color: #842029; }
+
+        /* Ref-Asset filter row */
+        #view-reference .card .grid-3,
+        #view-ref-site .card .grid-3 {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 12px !important;
+            align-items: end !important;
+        }
+
+        /* User Management table */
+        #view-user-management .table-container { margin-top: 0; }
+
+        /* Cetak Label - preview panel */
+        #lp-preview-panel { overflow-x: auto; }
+
+        /* Log History search area */
+        #view-history .card .inline-search {
+            display: flex !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }
+        #view-history .card .inline-search input { flex: 1 !important; }
+
+        /* Report Visit filter row */
+        #view-report .card {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #view-report .card > * { flex-shrink: 0; }
+        #view-report .card input[type="text"] { flex: 1; min-width: 160px; }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #view-reference .card .grid-3,
+            #view-ref-site .card .grid-3 { grid-template-columns: 1fr 1fr !important; }
+            .dashboard-cards { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 480px) {
+            #view-reference .card .grid-3,
+            #view-ref-site .card .grid-3 { grid-template-columns: 1fr !important; }
+            .dashboard-cards { grid-template-columns: 1fr !important; }
+        }
+
         /* Semua view section harus full width dalam main-content */
         .view-section {
             width: 100% !important;
@@ -4219,7 +4325,7 @@
             }
 
             if (tabId === 'dashboard') refreshDashboard();
-            if (tabId === 'report')    loadReportVisit();
+            if (tabId === 'report')    { if(currentUser) loadReportVisit(); }
             if (tabId === 'review')    loadReviewData();
             if (tabId === 'ref-site')  loadSites();
             if (tabId === 'user-management') loadUsers(); 
@@ -4566,6 +4672,7 @@
         // --- REVIEW DATA LOGIC (RESTORED) ---
 
         window.loadReviewData = () => {
+            if (!currentUser) { return; }
             reviewData = reportData.filter(d => d.status === 'Submitted');
             renderReviewTable();
         };
@@ -4750,6 +4857,7 @@
             renderRefTable();
         };
         
+        document.getElementById("refFilterModule").addEventListener("change", () => { currentRefPage = 1; renderRefTable(); });
         document.getElementById("refFilterDeviceModule").addEventListener("change", () => { currentRefPage = 1; renderRefTable(); });
         document.getElementById("refSearchText").addEventListener("input", () => { currentRefPage = 1; renderRefTable(); });
         document.getElementById("refRowsPerPageSelect").addEventListener("change", () => { currentRefPage = 1; renderRefTable(); });
@@ -5946,14 +6054,14 @@
                 container.innerHTML += `
                     <div class="card" style="border-left: 5px solid var(--secondary); margin-bottom: 10px;">
                         <div class="grid-2">
-                            <div><strong>labelId:</strong> ${labelId || '-'}</div>
+                            <div><strong>labelId:</strong> ${d.labelId || '-'}</div>
                             <div><strong>Site Code:</strong> ${d.siteCode || '-'}</div>
                             <div><strong>Module:</strong> ${d.module || '-'} (${d.deviceModule || ''})</div>
                             <div><strong>SN/PN:</strong> ${d.serialNumber || d.partNumber || '-'}</div>
                             <div><strong>Status Visit:</strong> <span class="status-pill status-${finalStatusClass}">${currentStatus}</span></div>
                             <div><strong>Tanggal Visit:</strong> ${d.date || '-'}</div>
                             <div style="grid-column: span 2;">
-                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${labelId}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
+                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${d.labelId || \'\'}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
                             </div>
                         </div>
                     </div>
@@ -6197,9 +6305,7 @@
         };
 
 
-        // --- INIT FILTER & EVENTS ---
-        document.getElementById("siteSearchInput").addEventListener("input", () => { currentSitePage = 1; renderSiteTable(); });
-        document.getElementById("siteFilterCity").addEventListener("change", () => { currentSitePage = 1; renderSiteTable(); });
+        // --- INIT FILTER & EVENTS (duplicate removed) ---
 
         // ═══════════════════════════════════════════════════════════
         //  MODUL CETAK LABEL — terintegrasi dengan data visit_data
