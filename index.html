@@ -34,7 +34,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
         
-        body { background-color: var(--bg-light); color: var(--text-dark); overflow-x: hidden; }
+        body { background-color: var(--bg-light); color: var(--text-dark); overflow-x: auto; }
 
         a { text-decoration: none; color: inherit; }
         .chip {
@@ -158,9 +158,11 @@
         }
 
         .main-content {
-            margin-left: var(--sidebar-width);
+            margin-left: 260px;
             padding: 20px;
-            width: calc(100% - var(--sidebar-width));
+            width: calc(100% - 260px);
+            box-sizing: border-box;
+            overflow-x: auto;
         }
 
         .header-title {
@@ -180,8 +182,8 @@
             color: #999;
         }
 
-        .view-section { display: none; animation: fadeIn 0.2s ease-in-out; }
-        .view-section.active { display: block; }
+        .view-section { display: none; animation: fadeIn 0.2s ease-in-out; width: 100%; box-sizing: border-box; }
+        .view-section.active { display: block; width: 100%; box-sizing: border-box; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -2060,17 +2062,21 @@
            Pastikan semua non-form view sections ter-layout dengan benar
            ═══════════════════════════════════════════════ */
 
-        /* Force sidebar & main layout tidak terpengaruh CSS dari FS Form Engine */
-        /* NOTE: display diatur oleh JS (onAuthStateChanged), jangan override di sini */
-        #app-container {
-            min-height: 100vh;
-            position: relative;
-        }
+        /* ═══════════════════════════════════════════════
+           VICTORY v10.1 — LAYOUT STABILITY FIX
+           ═══════════════════════════════════════════════ */
+
+        /* app-container: dikontrol JS (display:none saat login, display:flex saat masuk) */
+        /* Pastikan flex tetap row direction dan sidebar tidak menggeser konten */
         #app-container[style*="display: flex"],
         #app-container[style*="display:flex"] {
             display: flex !important;
+            flex-direction: row !important;
+            align-items: stretch !important;
+            min-height: 100vh !important;
         }
 
+        /* Sidebar: fixed di kiri, tidak mempengaruhi flow normal */
         .sidebar {
             width: 260px !important;
             min-width: 260px !important;
@@ -2079,17 +2085,21 @@
             top: 0 !important;
             bottom: 0 !important;
             z-index: 100 !important;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
 
+        /* Main content: selalu 260px dari kiri karena sidebar fixed */
         .main-content {
             margin-left: 260px !important;
             width: calc(100% - 260px) !important;
+            max-width: calc(100% - 260px) !important;
             padding: 20px !important;
-            min-height: 100vh;
+            min-height: 100vh !important;
             box-sizing: border-box !important;
-            overflow-x: hidden;
+            overflow-x: auto !important;
+            position: relative !important;
+            flex: 0 0 auto !important;
         }
 
         /* ═══ PAGE-LEVEL LAYOUT: semua view sections ═══ */
@@ -4270,6 +4280,9 @@
                 currentUser = user; currentUserId = user.uid;
                 document.getElementById("login-container").style.display = "none";
                 document.getElementById("app-container").style.display = "flex";
+                // Pastikan layout sidebar-main konsisten setelah login
+                const mc = document.querySelector('.main-content');
+                if (mc) { mc.style.marginLeft = '260px'; mc.style.width = 'calc(100% - 260px)'; }
                 document.getElementById("user-display").textContent = user.email.split('@')[0];
                 
                 checkUserRoleAndApplyPermissions(user).then(() => {
