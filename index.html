@@ -2065,10 +2065,14 @@
            ═══════════════════════════════════════════════ */
 
         /* Force sidebar & main layout tidak terpengaruh CSS dari FS Form Engine */
+        /* NOTE: display diatur oleh JS (onAuthStateChanged), jangan override di sini */
         #app-container {
-            display: flex !important;
             min-height: 100vh;
             position: relative;
+        }
+        #app-container[style*="display: flex"],
+        #app-container[style*="display:flex"] {
+            display: flex !important;
         }
 
         .sidebar {
@@ -4333,6 +4337,7 @@
 
         // === DASHBOARD & REPORTING LOGIC (FIXED) ===
         function loadReportData() {
+            if (!currentUser) { console.warn('[loadReportData] dipanggil sebelum auth - diabaikan'); return; }
             const q = query(collection(db, "visit_data"));
             onSnapshot(q, (snap) => {
                 reportData = []; 
@@ -4444,7 +4449,7 @@
             chartInstances.d = new Chart(ctx2, { type: 'bar', data: { labels: Object.keys(dData), datasets: [{ data: Object.values(dData), backgroundColor: '#005a9c' }] } });
         }
 
-        window.refreshDashboard = () => { loadSites(); };
+        window.refreshDashboard = () => { if (currentUser) loadSites(); };
         
         // --- REPORTING TABLE LOGIC (RESTORED) ---
 
@@ -4618,6 +4623,7 @@
         // --- ASSET REFERENCE LOGIC (UPDATED COLLECTION NAME) ---
 
         window.loadReferences = () => {
+            if (!currentUser) { console.warn("[loadReferences] belum auth"); return; }
             // PERBAIKAN: Menggunakan nama koleksi yang konsisten: "references"
             const q = query(collection(db, "references")); 
             onSnapshot(q, (snap) => {
@@ -4900,6 +4906,7 @@
         // --- SITE REFERENCE LOGIC (UPDATED PAGINATION LOGIC) ---
 
         window.loadSites = () => {
+            if (!currentUser) { console.warn("[loadSites] belum auth"); return; }
             const q = query(collection(db, "reference_sites"));
             onSnapshot(q, (snap) => {
                 allSiteData = [];
@@ -5151,6 +5158,7 @@
         // --- USER MANAGEMENT LOGIC (RESTORED) ---
         
         window.loadUsers = () => {
+            if (!currentUser) { console.warn("[loadUsers] belum auth"); return; }
             const q = query(collection(db, "user_roles"));
             onSnapshot(q, (snap) => {
                 allUserData = [];
