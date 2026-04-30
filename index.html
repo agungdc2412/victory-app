@@ -6061,7 +6061,7 @@
                             <div><strong>Status Visit:</strong> <span class="status-pill status-${finalStatusClass}">${currentStatus}</span></div>
                             <div><strong>Tanggal Visit:</strong> ${d.date || '-'}</div>
                             <div style="grid-column: span 2;">
-                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${d.labelId || \'\'}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
+                                <button class="btn btn-sm btn-outline" onclick="loadAndRenderLogHistory('${d.id}', '${d.labelId || ''}')"><i class="fas fa-list-alt"></i> Tampilkan Log History</button>
                             </div>
                         </div>
                     </div>
